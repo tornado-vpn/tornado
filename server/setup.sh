@@ -96,6 +96,7 @@ resolve_packages() {
             PKG_NGINX="nginx"
             PKG_WIREGUARD="wireguard"
             PKG_NET="iptables socat"
+            PKG_UNBOUND="unbound"
             NOLOGIN_SHELL="/usr/sbin/nologin"
             PKG_IPTABLES_PERSIST="iptables-persistent"
             ;;
@@ -108,6 +109,7 @@ resolve_packages() {
             PKG_NGINX="nginx"
             PKG_WIREGUARD="wireguard-tools"
             PKG_NET="iptables socat"
+            PKG_UNBOUND="unbound"
             NOLOGIN_SHELL="/sbin/nologin"
             PKG_IPTABLES_PERSIST="iptables-services"
             ;;
@@ -120,6 +122,7 @@ resolve_packages() {
             PKG_NGINX="nginx"
             PKG_WIREGUARD="wireguard-tools"
             PKG_NET="iptables socat"
+            PKG_UNBOUND="unbound"
             NOLOGIN_SHELL="/usr/bin/nologin"
             PKG_IPTABLES_PERSIST=""   # arch uses iptables-save natively, no extra package
             ;;
@@ -132,6 +135,7 @@ resolve_packages() {
             PKG_NGINX="nginx"
             PKG_WIREGUARD="wireguard-tools"
             PKG_NET="iptables socat"
+            PKG_UNBOUND="unbound"
             NOLOGIN_SHELL="/usr/sbin/nologin"
             PKG_IPTABLES_PERSIST=""   # suse uses iptables-save natively, no extra package
             ;;
@@ -520,15 +524,27 @@ else
     pkg_install $PKG_WIREGUARD
 fi
 
-
 # ─────────────────────────────────────────────
-# DNSMASQ SETUP
+# DNS (UNBOUND) SETUP
 # ─────────────────────────────────────────────
-echo "🌐 Installing and configuring dnsmasq..."
-pkg_install dnsmasq
+echo "🌍 Installing Unbound DNS server..."
+pkg_install $PKG_UNBOUND
 
+echo "⚙️ Configuring Unbound..."
+# Ensure the unbound directory exists
+sudo mkdir -p /etc/unbound
 
+# Write the minimal config using tee (replaces manual nano)
+sudo tee /etc/unbound/unbound.conf > /dev/null <<'UNBOUNDCONF'
+server:
+    interface: 10.8.0.1
+    access-control: 10.8.0.0/24 allow
+    verbosity: 1
+UNBOUNDCONF
 
+echo "🚀 Enabling and starting Unbound..."
+sudo systemctl enable unbound
+sudo systemctl restart unbound
 
 
 # ─────────────────────────────────────────────
@@ -573,20 +589,6 @@ sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
 sudo systemctl enable tornado
 sudo systemctl start tornado
-
-
-
-echo "⚙️ Configuring dnsmasq for VPN DNS..."
-sudo tee /etc/dnsmasq.d/tornado-vpn.conf > /dev/null <<'DNSCONF'
-interface=wg0
-listen-address=10.8.0.1
-bind-interfaces
-server=1.1.1.1
-server=8.8.8.8
-DNSCONF
-
-sudo systemctl enable dnsmasq
-sudo systemctl restart dnsmasq
 
 # ─────────────────────────────────────────────
 # STATUS CHECK
