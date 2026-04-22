@@ -519,11 +519,40 @@ else
 fi
 
 # ─────────────────────────────────────────────
+# WIREGUARD SETUP
+# ─────────────────────────────────────────────
+echo "🔐 Installing WireGuard..."
+
+# On RHEL 8 WireGuard needs the EPEL + elrepo-kernel repos; warn the user
+if [[ "$PKG_FAMILY" == "rhel" ]]; then
+    OS_MAJOR=$(. /etc/os-release; echo "$VERSION_ID" | cut -d. -f1)
+    if [[ "$OS_MAJOR" -le 8 ]] && ! rpm -q wireguard-tools &>/dev/null 2>&1; then
+        echo "  ⚠️  On RHEL/CentOS 8 WireGuard requires EPEL and elrepo-kernel."
+        echo "     Run the following before re-running this script:"
+        echo "       sudo dnf install epel-release -y"
+        echo "       sudo dnf install elrepo-release -y"
+        echo "       sudo dnf install kmod-wireguard wireguard-tools -y"
+        echo "     Skipping WireGuard install for now."
+    else
+        pkg_install $PKG_WIREGUARD
+    fi
+else
+    pkg_install $PKG_WIREGUARD
+fi
+
+
+# ─────────────────────────────────────────────
 # DNSMASQ SETUP
 # ─────────────────────────────────────────────
 echo "🌐 Installing and configuring dnsmasq..."
-# Using your cross-distro package wrapper instead of hardcoded apt
 pkg_install dnsmasq
+
+# 🔥 THE FIX: Allow dnsmasq to bind to the VPN IP before the interface exists
+echo "📡 Allowing non-local IP binding for VPN..."
+sudo sysctl -w net.ipv4.ip_nonlocal_bind=1
+if ! grep -q "^net.ipv4.ip_nonlocal_bind" /etc/sysctl.conf; then
+    echo "net.ipv4.ip_nonlocal_bind=1" | sudo tee -a /etc/sysctl.conf
+fi
 
 echo "⚙️ Configuring dnsmasq for VPN DNS..."
 sudo tee /etc/dnsmasq.d/tornado-vpn.conf > /dev/null <<'DNSCONF'
@@ -534,9 +563,9 @@ server=1.1.1.1
 server=8.8.8.8
 DNSCONF
 
-# Enable and start/restart the service
 sudo systemctl enable dnsmasq
 sudo systemctl restart dnsmasq
+
 
 # ─────────────────────────────────────────────
 # PERMISSIONS
