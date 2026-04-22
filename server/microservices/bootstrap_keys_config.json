@@ -1,0 +1,15 @@
+{
+  "keys": {
+    "dir": "/opt/tornado/keys/jwt",
+    "overlap_dir": "overlap"
+  },
+  "socket": {
+    "dir": "/run/tornado",
+    "path": "/run/tornado/bootstrap_keys.sock",
+    "group": "tornado-runner",
+    "permissions": "0660"
+  },
+  "pid_file": "/run/tornado/bootstrap_keys.pid",
+  "rotator_pid_file": "/run/tornado/key_rotator.pid",
+  "log_level": "INFO"
+}

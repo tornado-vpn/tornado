@@ -1,0 +1,79 @@
+site_name: Tornado VPN Docs
+site_description: Comprehensive System Documentation for Tornado VPN
+repo_url: https://github.com/yourusername/tornado-vpn
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+theme:
+  name: material
+  logo: assets/tornadoVPN.svg  
+  favicon: assets/icon.ico
+  # NEW: Custom Typography instantly elevates the professional feel
+  font:
+    text: Inter
+    code: Fira Code
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo # Swapped 'blue' for 'indigo' or 'teal' which often feel a bit more modern, but you can change back!
+      accent: light blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: light blue
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    # NEW UI ENHANCEMENTS:
+    - navigation.sections       # Groups sidebar items into bolded sections
+    - navigation.path           # Adds breadcrumbs at the top of pages (Home > Setup > Linux)
+    - toc.integrate             # Merges the Table of Contents into the left sidebar for a cleaner look
+    - content.code.copy         # MUST-HAVE: Adds a "copy" button to all code blocks
+    - content.code.annotate     # Allows you to add interactive [+] popups in code blocks
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  # NEW EXTENSIONS:
+  - pymdownx.tabbed:            # Allows you to create tabbed content (e.g., Windows vs Linux commands)
+      alternate_style: true
+  - pymdownx.tasklist:          # Creates beautifully styled checkboxes for your Operations Runbook
+      custom_checkbox: true
+
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Security: security.md
+  - API Reference: api_reference.md
+  - Operations Runbook: operations.md
+  - Operator Cheat Sheet: cheatsheet.md
+  - Setup and Installation: setup.md
+  - Code Walkthrough: code_walkthrough.md
+  - Project Structure: project_structure.md
+  - Client Build Guides:
+      - Linux Build: build_linux.md
+      - Windows Build: build_windows.md
+
+site_dir: site/docs

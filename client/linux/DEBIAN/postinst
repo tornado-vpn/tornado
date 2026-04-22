@@ -1,0 +1,10 @@
+#!/bin/bash
+set -e
+
+# Create the sudoers drop-in file for WireGuard
+echo "ALL ALL=(root) NOPASSWD: /usr/bin/wg-quick, /usr/bin/wg" > /etc/sudoers.d/tornadovpn-client
+
+# Secure the file permissions (sudoers strictly requires 0440)
+chmod 0440 /etc/sudoers.d/tornadovpn-client
+
+exit 0

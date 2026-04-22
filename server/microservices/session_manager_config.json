@@ -1,0 +1,26 @@
+{
+    "socket": {
+        "dir": "/run/tornado",
+        "path": "/run/tornado/session.sock",
+        "group": "tornado-services",
+        "dir_mode": "0o775",
+        "permissions": "0o660"
+    },
+    "redis": {
+        "url": "redis://localhost:6379/0"
+    },
+    "session": {
+        "heartbeat_ttl": 90,
+        "hard_ttl": 300,
+        "watch_interval": 10
+    },
+    "wireguard": {
+        "interface": "wg0",
+        "proxy_interface": "wg1",
+        "bin": "wg",
+        "stats_interval_sec": 5
+    },
+    "ipam": {
+        "socket_path": "/run/tornado/ipam.sock"
+    }
+}

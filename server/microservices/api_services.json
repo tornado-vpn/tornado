@@ -1,0 +1,36 @@
+{
+    "api_public": {
+        "cmd": [
+            "/opt/tornado/venv/bin/python3",
+            "-m",
+            "uvicorn",
+            "main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "8000"
+        ],
+        "cwd": "/opt/tornado/web-interfaces/admin-dashboard",
+        "health_url": "http://127.0.0.1:8000/health",
+        "restart_delay": 3,
+        "description": "Public FastAPI — port 8000",
+        "enabled": true
+    },
+    "api_internal": {
+        "cmd": [
+            "/opt/tornado/venv/bin/python3",
+            "-m",
+            "uvicorn",
+            "main:app",
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "4605"
+        ],
+        "cwd": "/opt/tornado/web-interfaces/client-connect",
+        "health_url": "http://127.0.0.1:4605/health",
+        "restart_delay": 3,
+        "description": "Internal FastAPI — port 4605",
+        "enabled": true
+    }
+}

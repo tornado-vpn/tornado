@@ -1,0 +1,1466 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>System Dashboard</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+        <style>
+            /* Instrument Sans */
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-400-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-500-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 600;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-600-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 700;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-700-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: italic;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-400-italic.woff2")
+                    format("woff2");
+            }
+
+            /* Geist Mono */
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 300;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-300-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-400-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-500-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 600;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-600-normal.woff2")
+                    format("woff2");
+            }
+            :root {
+                --bg: #f5f6f8;
+                --bg1: #ffffff;
+                --bg2: #f5f6f8;
+                --bg3: #eef0f5;
+                --bg4: #e2e5ec;
+                --border: #d9dce0;
+                --border2: #c4c8d0;
+                --text: #1a1f36;
+                --text2: #3a3f5c;
+                --text3: #6c757d;
+                --text4: #9ba3af;
+                --accent: #0066cc;
+                --accent2: #0052a3;
+                --accent-glow: rgba(0, 102, 204, 0.12);
+                --red: #dc3545;
+                --red-bg: rgba(220, 53, 69, 0.08);
+                --red-border: rgba(220, 53, 69, 0.25);
+                --green: #28a745;
+                --green-bg: rgba(40, 167, 69, 0.08);
+                --green-border: rgba(40, 167, 69, 0.2);
+                --amber: #d97706;
+                --amber-bg: rgba(217, 119, 6, 0.08);
+                --amber-border: rgba(217, 119, 6, 0.2);
+                --info: #0891b2;
+                --info-bg: rgba(8, 145, 178, 0.08);
+                --purple: #6d28d9;
+                --purple-bg: rgba(109, 40, 217, 0.08);
+                --font: "Instrument Sans", system-ui, sans-serif;
+                --mono: "Geist Mono", monospace;
+                --radius: 8px;
+                --radius-lg: 12px;
+                --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+            }
+
+            *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+            html, body {
+                height: 100%;
+                font-family: var(--font);
+                background: var(--bg);
+                color: var(--text);
+                -webkit-font-smoothing: antialiased;
+                font-size: 14px;
+            }
+
+            ::-webkit-scrollbar { width: 5px; height: 5px; }
+            ::-webkit-scrollbar-track { background: transparent; }
+            ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+            /* ── Layout ── */
+            .app { display: flex; flex-direction: column; min-height: 100vh; }
+
+            /* ── Topbar ── */
+            .topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 24px;
+                height: 52px;
+                background: var(--bg1);
+                border-bottom: 1px solid var(--border);
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                box-shadow: var(--shadow);
+                flex-shrink: 0;
+            }
+            .topbar-left { display: flex; align-items: center; gap: 16px; }
+            .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+            .brand-icon {
+                width: 28px; height: 28px; border-radius: 7px;
+                background: linear-gradient(135deg, var(--accent), var(--purple));
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 2px 8px var(--accent-glow);
+            }
+            .brand-icon svg { width: 14px; height: 14px; color: #fff; }
+            .brand-name { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+            .brand-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.5px; }
+
+            .topbar-right { display: flex; align-items: center; gap: 10px; }
+            .conn-pill {
+                display: flex; align-items: center; gap: 6px;
+                padding: 4px 10px; border-radius: 100px;
+                font-size: 11px; font-weight: 600;
+                background: var(--green-bg); color: var(--green);
+                border: 1px solid var(--green-border);
+                font-family: var(--mono);
+            }
+            .conn-dot {
+                width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+                animation: pulse-dot 2s ease-in-out infinite;
+            }
+            @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+            .time-range-selector {
+                display: flex;
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+            .time-range-btn {
+                padding: 5px 12px;
+                border: none;
+                background: transparent;
+                color: var(--text3);
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                font-family: var(--font);
+                transition: all 0.15s;
+                white-space: nowrap;
+            }
+            .time-range-btn:not(:last-child) { border-right: 1px solid var(--border); }
+            .time-range-btn:hover { background: var(--bg3); color: var(--text2); }
+            .time-range-btn.active { background: var(--accent); color: white; }
+
+            /* ── Page ── */
+            .page { padding: 24px; max-width: 1600px; margin: 0 auto; width: 100%; }
+
+            /* ── Section header ── */
+            .section-header {
+                display: flex; justify-content: space-between; align-items: center;
+                margin-bottom: 14px; margin-top: 28px;
+            }
+            .section-header:first-child { margin-top: 0; }
+            .section-title {
+                font-size: 10px; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.7px; color: var(--text3);
+            }
+
+            /* ── KPI Cards ── */
+            .kpi-grid {
+                display: grid;
+                grid-template-columns: repeat(6, 1fr);
+                gap: 12px;
+                margin-bottom: 28px;
+            }
+            .kpi-card {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 16px;
+                position: relative;
+                overflow: hidden;
+                transition: all 0.2s;
+                box-shadow: var(--shadow);
+            }
+            .kpi-card::after {
+                content: "";
+                position: absolute; top: 0; left: 0; right: 0;
+                height: 3px;
+                border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            }
+            .kpi-card.blue::after { background: linear-gradient(90deg, var(--accent), var(--purple)); }
+            .kpi-card.green::after { background: var(--green); }
+            .kpi-card.amber::after { background: var(--amber); }
+            .kpi-card.red::after { background: var(--red); }
+            .kpi-card.info::after { background: var(--info); }
+            .kpi-card.purple::after { background: var(--purple); }
+            .kpi-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+            .kpi-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+            .kpi-icon-wrap {
+                width: 46px; height: 46px; border-radius: 8px;
+                display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0;
+            }
+            .kpi-icon-wrap img { width: 25px; height: 25px; }
+            .blue .kpi-icon-wrap { background: var(--accent-glow); }
+            .blue .kpi-icon-wrap img { filter: invert(29%) sepia(89%) saturate(1562%) hue-rotate(196deg) brightness(97%) contrast(101%); }
+            .green .kpi-icon-wrap { background: var(--green-bg); }
+            .green .kpi-icon-wrap img { filter: invert(44%) sepia(72%) saturate(426%) hue-rotate(83deg) brightness(95%) contrast(90%); }
+            .amber .kpi-icon-wrap { background: var(--amber-bg); }
+            .amber .kpi-icon-wrap img { filter: invert(50%) sepia(60%) saturate(800%) hue-rotate(10deg) brightness(95%) contrast(95%); }
+            .red .kpi-icon-wrap { background: var(--red-bg); }
+            .red .kpi-icon-wrap img { filter: invert(27%) sepia(85%) saturate(1200%) hue-rotate(334deg) brightness(95%) contrast(95%); }
+            .info .kpi-icon-wrap { background: var(--info-bg); }
+            .info .kpi-icon-wrap img { filter: invert(38%) sepia(80%) saturate(700%) hue-rotate(168deg) brightness(90%) contrast(95%); }
+            .purple .kpi-icon-wrap { background: var(--purple-bg); }
+            .purple .kpi-icon-wrap img { filter: invert(22%) sepia(90%) saturate(1200%) hue-rotate(258deg) brightness(85%) contrast(95%); }
+
+            .kpi-label {
+                font-size: 10px; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.6px; color: var(--text3); margin-bottom: 6px;
+            }
+            .kpi-val {
+                font-size: 26px; font-weight: 700; letter-spacing: -1px;
+                line-height: 1; font-family: var(--mono); margin-bottom: 6px;
+            }
+            .blue .kpi-val { color: var(--accent); }
+            .green .kpi-val { color: var(--green); }
+            .amber .kpi-val { color: var(--amber); }
+            .red .kpi-val { color: var(--red); }
+            .info .kpi-val { color: var(--info); }
+            .purple .kpi-val { color: var(--purple); }
+
+            .kpi-sub { font-size: 11px; color: var(--text3); }
+            .kpi-badge {
+                display: inline-flex; align-items: center; gap: 3px;
+                padding: 2px 6px; border-radius: 4px;
+                font-size: 10px; font-weight: 600; font-family: var(--mono);
+            }
+            .kpi-badge.up { background: var(--green-bg); color: var(--green); }
+            .kpi-badge.down { background: var(--red-bg); color: var(--red); }
+            .kpi-badge.neutral { background: var(--bg3); color: var(--text3); }
+
+            /* ── Charts Grid ── */
+            .charts-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+                margin-bottom: 28px;
+            }
+            .chart-panel {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                overflow: hidden;
+                box-shadow: var(--shadow);
+            }
+            .chart-head {
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--border);
+                display: flex; align-items: center; justify-content: space-between;
+            }
+            .chart-head-left { display: flex; align-items: center; gap: 10px; }
+            .chart-head-icon {
+                width: 30px; height: 30px; border-radius: 7px;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .chart-head-icon img { width: 24px; height: 24px; }
+            .chart-head-icon.blue { background: var(--accent-glow); }
+            .chart-head-icon.blue img { filter: invert(29%) sepia(89%) saturate(1562%) hue-rotate(196deg) brightness(97%) contrast(101%); }
+            .chart-head-icon.green { background: var(--green-bg); }
+            .chart-head-icon.green img { filter: invert(44%) sepia(72%) saturate(426%) hue-rotate(83deg) brightness(95%) contrast(90%); }
+            .chart-head-icon.amber { background: var(--amber-bg); }
+            .chart-head-icon.amber img { filter: invert(50%) sepia(60%) saturate(800%) hue-rotate(10deg) brightness(95%) contrast(95%); }
+            .chart-head-icon.info { background: var(--info-bg); }
+            .chart-head-icon.info img { filter: invert(38%) sepia(80%) saturate(700%) hue-rotate(168deg) brightness(90%) contrast(95%); }
+
+            .chart-panel.loading .chart-body { opacity: 0.4; }
+            .chart-panel.loading .chart-head::after {
+                content: 'Loading…';
+                position: absolute; right: 16px;
+                font-size: 10px; font-family: var(--mono);
+                color: var(--text4);
+            }
+            .chart-head { position: relative; 
+                font-size: 12px; font-weight: 700; color: var(--text);
+                letter-spacing: -0.1px;
+            }
+            .chart-title {
+                font-size: 12px; font-weight: 700; color: var(--text);
+                font-family: var(--font); letter-spacing: -0.1px;
+            }
+            .chart-sub { font-size: 10px; color: var(--text3); margin-top: 1px; font-family: var(--font); }
+
+            .chart-body { padding: 16px; position: relative; height: 280px; }
+
+            /* ── Live Metrics ── */
+            .live-panel {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                overflow: hidden;
+                box-shadow: var(--shadow);
+                margin-bottom: 28px;
+            }
+            .live-panel-head {
+                padding: 14px 16px;
+                border-bottom: 1px solid var(--border);
+                background: var(--bg2);
+                display: flex; align-items: center; justify-content: space-between;
+            }
+            .live-head-left { display: flex; align-items: center; gap: 8px; }
+            .live-pill {
+                display: flex; align-items: center; gap: 5px;
+                padding: 3px 8px; border-radius: 100px;
+                font-size: 10px; font-weight: 600; font-family: var(--mono);
+                background: var(--green-bg); color: var(--green);
+                border: 1px solid var(--green-border);
+            }
+            .live-dot {
+                width: 5px; height: 5px; border-radius: 50%;
+                background: currentColor;
+                animation: pulse-dot 1.5s ease-in-out infinite;
+            }
+            .live-metrics-grid {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+            }
+            .live-metric-item {
+                padding: 20px 20px;
+                border-right: 1px solid var(--border);
+            }
+            .live-metric-item:last-child { border-right: none; }
+            .live-metric-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+            .live-metric-icon {
+                width: 28px; height: 28px; border-radius: 6px;
+                display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0;
+            }
+            .live-metric-icon img { width: 23px; height: 23px; }
+            .live-metric-label {
+                font-size: 10px; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.6px; color: var(--text3);
+            }
+            .live-metric-val {
+                font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+                font-family: var(--mono); margin-bottom: 8px; color: var(--text);
+            }
+            .status-badge {
+                display: inline-flex; align-items: center; gap: 4px;
+                padding: 3px 8px; border-radius: 4px;
+                font-size: 10px; font-weight: 700;
+            }
+            .status-badge.normal { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+            .status-badge.warning { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+            .status-badge.critical { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+            .status-badge.active { background: var(--info-bg); color: var(--info); border: 1px solid rgba(8,145,178,0.25); }
+            .status-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+
+            /* ── Error message ── */
+            .error-banner {
+                background: var(--red-bg); border: 1px solid var(--red-border);
+                color: var(--red); padding: 10px 14px; border-radius: var(--radius);
+                margin-bottom: 16px; font-size: 12px; font-weight: 600;
+                display: none; animation: view-in 0.2s ease;
+            }
+            .error-banner.show { display: block; }
+            @keyframes view-in {
+                from { opacity: 0; transform: translateY(-6px); }
+                to { opacity: 1; transform: none; }
+            }
+
+            /* ── Responsive ── */
+            @media (max-width: 1200px) {
+                .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+                .charts-grid { grid-template-columns: 1fr; }
+                .live-metrics-grid { grid-template-columns: repeat(3, 1fr); }
+                .live-metric-item:nth-child(3) { border-right: none; }
+                .live-metric-item:nth-child(4) { border-top: 1px solid var(--border); }
+                .live-metric-item:nth-child(5) { border-top: 1px solid var(--border); border-right: none; }
+            }
+            @media (max-width: 768px) {
+                .page { padding: 14px; }
+                .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+                .live-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            }
+            @media (max-width: 480px) {
+                .kpi-grid { grid-template-columns: 1fr; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="app">
+            <!-- ── Topbar ── -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <a class="brand" href="#">
+                        <div class="brand-icon">
+                            <img
+                                src="/static/icons/overview.svg"
+                                width="20"
+                                height="20"
+                                alt="dashboard"
+                                style="filter: brightness(0) invert(1)"
+                            />
+                        </div>
+                        <div>
+                            <div class="brand-name">SysMon</div>
+                            <div class="brand-sub">System Dashboard</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="topbar-right">
+                    <div class="conn-pill">
+                        <span class="conn-dot"></span>
+                        <span>Live</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ── Page Content ── -->
+            <div class="page">
+                <div class="error-banner" id="errorBanner"></div>
+
+                <!-- ── KEY METRICS ── -->
+                <div class="section-header">
+                    <span class="section-title">Key Metrics</span>
+                    <span
+                        style="
+                            font-size: 11px;
+                            color: var(--text4);
+                            font-family: var(--mono);
+                        "
+                        >Real-time</span
+                    >
+                </div>
+
+                <div class="kpi-grid">
+                    <!-- Total Sessions -->
+                    <div class="kpi-card blue">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img
+                                    src="/static/icons/total_sessions.svg"
+                                    width="25"
+                                    height="25"
+                                    alt="sessions"
+                                />
+                            </div>
+                            <span class="kpi-badge neutral">All</span>
+                        </div>
+                        <div class="kpi-label">Total Sessions</div>
+                        <div class="kpi-val" id="metricTotal">—</div>
+                        <div class="kpi-sub">Real-time tracking</div>
+                    </div>
+
+                    <!-- Online Sessions -->
+                    <div class="kpi-card green">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img
+                                    src="/static/icons/online.svg"
+                                    width="16"
+                                    height="16"
+                                    alt="online"
+                                />
+                            </div>
+                            <span class="kpi-badge up">↑ Live</span>
+                        </div>
+                        <div class="kpi-label">Online Sessions</div>
+                        <div class="kpi-val" id="metricOnline">—</div>
+                        <div class="kpi-sub">Active connections</div>
+                    </div>
+
+                    <!-- Offline Sessions -->
+                    <div class="kpi-card amber">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img
+                                    src="/static/icons/offline.svg"
+                                    width="16"
+                                    height="16"
+                                    alt="offline"
+                                />
+                            </div>
+                            <span class="kpi-badge down">↓ Lost</span>
+                        </div>
+                        <div class="kpi-label">Offline Sessions</div>
+                        <div class="kpi-val" id="metricOffline">—</div>
+                        <div class="kpi-sub">Disconnected</div>
+                    </div>
+
+                    <!-- Active Users -->
+                    <div class="kpi-card info">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img
+                                    src="/static/icons/active_users.svg"
+                                    width="16"
+                                    height="16"
+                                    alt="users"
+                                />
+                            </div>
+                            <span class="kpi-badge neutral">Unique</span>
+                        </div>
+                        <div class="kpi-label">Active Users</div>
+                        <div class="kpi-val" id="metricUsers">—</div>
+                        <div class="kpi-sub">Unique accounts</div>
+                    </div>
+
+                    <!-- Active Devices -->
+                    <div class="kpi-card purple">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img
+                                    src="/static/icons/active_devices.svg"
+                                    width="16"
+                                    height="16"
+                                    alt="devices"
+                                />
+                            </div>
+                            <span class="kpi-badge neutral">Connected</span>
+                        </div>
+                        <div class="kpi-label">Active Devices</div>
+                        <div class="kpi-val" id="metricDevices">—</div>
+                        <div class="kpi-sub">Connected devices</div>
+                    </div>
+
+                    <!-- Session Recoveries -->
+                    <div class="kpi-card red">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img
+                                    src="/static/icons/recovery.svg"
+                                    width="16"
+                                    height="16"
+                                    alt="recoveries"
+                                />
+                            </div>
+                            <span class="kpi-badge up">↑ Recovery</span>
+                        </div>
+                        <div class="kpi-label">Recoveries</div>
+                        <div class="kpi-val" id="metricRecoveries">—</div>
+                        <div class="kpi-sub">Reconnections</div>
+                    </div>
+                </div>
+
+                <!-- ── CHARTS ── -->
+                <div class="section-header">
+                    <span class="section-title">System Performance</span>
+                    <div class="time-range-selector" id="timeRangeSelector">
+                        <button class="time-range-btn active" data-range="live">
+                            Live
+                        </button>
+                        <button class="time-range-btn" data-range="1h">
+                            1 Hour
+                        </button>
+                        <button class="time-range-btn" data-range="24h">
+                            24 Hours
+                        </button>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <!-- CPU Chart -->
+                    <div class="chart-panel">
+                        <div class="chart-head">
+                            <div class="chart-head-left">
+                                <div class="chart-head-icon blue">
+                                    <img
+                                        src="/static/icons/cpu.svg"
+                                        width="14"
+                                        height="14"
+                                        alt="cpu"
+                                    />
+                                </div>
+                                <div>
+                                    <div class="chart-title">CPU Usage</div>
+                                    <div class="chart-sub">
+                                        Processor utilization over time
+                                    </div>
+                                </div>
+                            </div>
+                            <span
+                                style="
+                                    font-family: var(--mono);
+                                    font-size: 13px;
+                                    font-weight: 700;
+                                    color: var(--accent);
+                                "
+                                id="cpuLive"
+                                >--%</span
+                            >
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="cpuChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Memory & Disk Chart -->
+                    <div class="chart-panel">
+                        <div class="chart-head">
+                            <div class="chart-head-left">
+                                <div class="chart-head-icon info">
+                                    <img
+                                        src="/static/icons/storage.svg"
+                                        width="14"
+                                        height="14"
+                                        alt="memory"
+                                    />
+                                </div>
+                                <div>
+                                    <div class="chart-title">
+                                        Memory & Disk Usage
+                                    </div>
+                                    <div class="chart-sub">
+                                        RAM and storage consumption
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 12px;
+                                    align-items: center;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-family: var(--mono);
+                                        font-size: 11px;
+                                        color: var(--text3);
+                                    "
+                                    >MEM
+                                    <span
+                                        id="memLive"
+                                        style="
+                                            font-weight: 700;
+                                            color: var(--info);
+                                        "
+                                        >--%</span
+                                    ></span
+                                >
+                                <span
+                                    style="
+                                        font-family: var(--mono);
+                                        font-size: 11px;
+                                        color: var(--text3);
+                                    "
+                                    >DSK
+                                    <span
+                                        id="diskLive"
+                                        style="
+                                            font-weight: 700;
+                                            color: var(--green);
+                                        "
+                                        >--%</span
+                                    ></span
+                                >
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="memoryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Network Chart -->
+                    <div class="chart-panel">
+                        <div class="chart-head">
+                            <div class="chart-head-left">
+                                <div class="chart-head-icon green">
+                                    <img
+                                        src="/static/icons/network.svg"
+                                        width="14"
+                                        height="14"
+                                        alt="network"
+                                    />
+                                </div>
+                                <div>
+                                    <div class="chart-title">
+                                        Network Traffic
+                                    </div>
+                                    <div class="chart-sub">
+                                        Inbound and outbound KB/s
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 12px;
+                                    align-items: center;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-family: var(--mono);
+                                        font-size: 11px;
+                                        color: var(--text3);
+                                    "
+                                    >RX
+                                    <span
+                                        id="rxLive"
+                                        style="
+                                            font-weight: 700;
+                                            color: var(--green);
+                                        "
+                                        >-- KB/s</span
+                                    ></span
+                                >
+                                <span
+                                    style="
+                                        font-family: var(--mono);
+                                        font-size: 11px;
+                                        color: var(--text3);
+                                    "
+                                    >TX
+                                    <span
+                                        id="txLive"
+                                        style="
+                                            font-weight: 700;
+                                            color: var(--accent);
+                                        "
+                                        >-- KB/s</span
+                                    ></span
+                                >
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="networkChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Session Trends -->
+                    <div class="chart-panel">
+                        <div class="chart-head">
+                            <div class="chart-head-left">
+                                <div class="chart-head-icon amber">
+                                    <img
+                                        src="/static/icons/session_metrics.svg"
+                                        width="14"
+                                        height="14"
+                                        alt="trends"
+                                    />
+                                </div>
+                                <div>
+                                    <div class="chart-title">
+                                        Session Trends
+                                    </div>
+                                    <div class="chart-sub">
+                                        Active sessions over time
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ── LIVE METRICS ── -->
+                <div class="section-header">
+                    <span class="section-title">Live System Metrics</span>
+                    <div class="live-pill">
+                        <span class="live-dot"></span>
+                        <span>Updating</span>
+                    </div>
+                </div>
+
+                <div class="live-panel">
+                    <div class="live-panel-head">
+                        <div class="live-head-left">
+                            <img
+                                src="/static/icons/performance.svg"
+                                width="24"
+                                height="24"
+                                alt="activity"
+                                style="opacity: 0.5"
+                            />
+                            <span
+                                style="
+                                    font-size: 12px;
+                                    font-weight: 700;
+                                    color: var(--text);
+                                "
+                                >Current Performance Metrics</span
+                            >
+                        </div>
+                        <span
+                            style="
+                                font-size: 10px;
+                                font-family: var(--mono);
+                                color: var(--text4);
+                            "
+                            id="lastUpdated"
+                            >—</span
+                        >
+                    </div>
+
+                    <div class="live-metrics-grid">
+                        <!-- CPU -->
+                        <div class="live-metric-item">
+                            <div class="live-metric-top">
+                                <div
+                                    class="live-metric-icon"
+                                    style="background: var(--accent-glow)"
+                                >
+                                    <img
+                                        src="/static/icons/cpu.svg"
+                                        width="13"
+                                        height="13"
+                                        alt="cpu"
+                                    />
+                                </div>
+                                <span class="live-metric-label">CPU Usage</span>
+                            </div>
+                            <div class="live-metric-val" id="liveMetricCpu">
+                                -- %
+                            </div>
+                            <div class="status-badge normal" id="cpuStatus">
+                                <span class="status-dot"></span>Normal
+                            </div>
+                        </div>
+
+                        <!-- Memory -->
+                        <div class="live-metric-item">
+                            <div class="live-metric-top">
+                                <div
+                                    class="live-metric-icon"
+                                    style="background: var(--info-bg)"
+                                >
+                                    <img
+                                        src="static/icons/ram.svg"
+                                        width="13"
+                                        height="13"
+                                        alt="memory"
+                                    />
+                                </div>
+                                <span class="live-metric-label"
+                                    >Memory Usage</span
+                                >
+                            </div>
+                            <div class="live-metric-val" id="liveMetricMemory">
+                                -- %
+                            </div>
+                            <div class="status-badge normal" id="memoryStatus">
+                                <span class="status-dot"></span>Normal
+                            </div>
+                        </div>
+
+                        <!-- Disk -->
+                        <div class="live-metric-item">
+                            <div class="live-metric-top">
+                                <div
+                                    class="live-metric-icon"
+                                    style="background: var(--green-bg)"
+                                >
+                                    <img
+                                        src="/static/icons/storage.svg"
+                                        width="13"
+                                        height="13"
+                                        alt="disk"
+                                    />
+                                </div>
+                                <span class="live-metric-label"
+                                    >Disk Usage</span
+                                >
+                            </div>
+                            <div class="live-metric-val" id="liveMetricDisk">
+                                -- %
+                            </div>
+                            <div class="status-badge normal" id="diskStatus">
+                                <span class="status-dot"></span>Normal
+                            </div>
+                        </div>
+
+                        <!-- Network RX -->
+                        <div class="live-metric-item">
+                            <div class="live-metric-top">
+                                <div
+                                    class="live-metric-icon"
+                                    style="background: var(--green-bg)"
+                                >
+                                    <img
+                                        src="/static/icons/receive.svg"
+                                        width="13"
+                                        height="13"
+                                        alt="rx"
+                                    />
+                                </div>
+                                <span class="live-metric-label"
+                                    >Network RX</span
+                                >
+                            </div>
+                            <div class="live-metric-val" id="liveMetricRx">
+                                -- KB/s
+                            </div>
+                            <div class="status-badge active">
+                                <span class="status-dot"></span>Active
+                            </div>
+                        </div>
+
+                        <!-- Network TX -->
+                        <div class="live-metric-item">
+                            <div class="live-metric-top">
+                                <div
+                                    class="live-metric-icon"
+                                    style="background: var(--accent-glow)"
+                                >
+                                    <img
+                                        src="/static/icons/transmit.svg"
+                                        width="13"
+                                        height="13"
+                                        alt="tx"
+                                    />
+                                </div>
+                                <span class="live-metric-label"
+                                    >Network TX</span
+                                >
+                            </div>
+                            <div class="live-metric-val" id="liveMetricTx">
+                                -- KB/s
+                            </div>
+                            <div class="status-badge active">
+                                <span class="status-dot"></span>Active
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end .page -->
+        </div>
+        <!-- end .app -->
+
+        <script>
+            // ── State ──
+            let cpuChart, memChart, netChart, trendsChart;
+            let wsConnection = null;
+            let liveWsConnection = null;
+            let currentTimeRange = "live";
+            let latestSessionCount = 0;
+
+
+            // Use a single shared object — arrays are mutated in-place so chart references stay valid
+            const data = {
+                timestamps: [],
+                cpu: [],
+                memory: [],
+                disk: [],
+                rx: [],
+                tx: [],
+                sessions: [],
+            };
+
+            const BASE_CHART_OPTS = {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: "top",
+                        labels: {
+                            font: {
+                                family: "'Geist Mono', monospace",
+                                size: 11,
+                                weight: "600",
+                            },
+                            color: "#6c757d",
+                            padding: 14,
+                            usePointStyle: true,
+                            pointStyleWidth: 8,
+                        },
+                    },
+                    tooltip: {
+                        enabled: true,
+                        mode: "index",
+                        intersect: false,
+                        backgroundColor: "rgba(26,31,54,0.96)",
+                        titleColor: "#fff",
+                        bodyColor: "rgba(255,255,255,0.8)",
+                        borderColor: "rgba(255,255,255,0.1)",
+                        borderWidth: 1,
+                        padding: 12,
+                        cornerRadius: 8,
+                        displayColors: true,
+                        boxPadding: 6,
+                        titleFont: {
+                            size: 11,
+                            weight: "bold",
+                            family: "'Geist Mono', monospace",
+                        },
+                        bodyFont: {
+                            size: 11,
+                            family: "'Geist Mono', monospace",
+                        },
+                    },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            color: "#9ba3af",
+                            font: {
+                                family: "'Geist Mono', monospace",
+                                size: 10,
+                            },
+                            maxTicksLimit: 5,
+                        },
+                        grid: { color: "#eef0f5", drawBorder: false },
+                    },
+                    x: {
+                        ticks: {
+                            color: "#9ba3af",
+                            font: {
+                                family: "'Geist Mono', monospace",
+                                size: 10,
+                            },
+                            maxTicksLimit: 8,
+                            maxRotation: 0,
+                        },
+                        grid: { color: "#eef0f5", drawBorder: false },
+                    },
+                },
+            };
+
+            const NET_OPTS = JSON.parse(JSON.stringify(BASE_CHART_OPTS));
+            NET_OPTS.scales.y.max = undefined;
+            const BAR_OPTS = JSON.parse(JSON.stringify(BASE_CHART_OPTS));
+            BAR_OPTS.scales.y.max = undefined;
+
+            function initCharts() {
+                cpuChart = new Chart(document.getElementById("cpuChart"), {
+                    type: "line",
+                    data: {
+                        labels: data.timestamps,
+                        datasets: [
+                            {
+                                label: "CPU %",
+                                data: data.cpu,
+                                borderColor: "#0066cc",
+                                backgroundColor: "rgba(0,102,204,0.07)",
+                                tension: 0.4,
+                                fill: true,
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                pointHoverRadius: 5,
+                            },
+                        ],
+                    },
+                    options: BASE_CHART_OPTS,
+                });
+
+                memChart = new Chart(document.getElementById("memoryChart"), {
+                    type: "line",
+                    data: {
+                        labels: data.timestamps,
+                        datasets: [
+                            {
+                                label: "Memory %",
+                                data: data.memory,
+                                borderColor: "#0891b2",
+                                backgroundColor: "rgba(8,145,178,0.07)",
+                                tension: 0.4,
+                                fill: true,
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                pointHoverRadius: 5,
+                            },
+                            {
+                                label: "Disk %",
+                                data: data.disk,
+                                borderColor: "#28a745",
+                                backgroundColor: "rgba(40,167,69,0.07)",
+                                tension: 0.4,
+                                fill: true,
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                pointHoverRadius: 5,
+                            },
+                        ],
+                    },
+                    options: BASE_CHART_OPTS,
+                });
+
+                netChart = new Chart(document.getElementById("networkChart"), {
+                    type: "line",
+                    data: {
+                        labels: data.timestamps,
+                        datasets: [
+                            {
+                                label: "RX KB/s",
+                                data: data.rx,
+                                borderColor: "#28a745",
+                                backgroundColor: "rgba(40,167,69,0.07)",
+                                tension: 0.4,
+                                fill: true,
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                pointHoverRadius: 5,
+                            },
+                            {
+                                label: "TX KB/s",
+                                data: data.tx,
+                                borderColor: "#0066cc",
+                                backgroundColor: "rgba(0,102,204,0.07)",
+                                tension: 0.4,
+                                fill: true,
+                                borderWidth: 2,
+                                pointRadius: 0,
+                                pointHoverRadius: 5,
+                            },
+                        ],
+                    },
+                    options: NET_OPTS,
+                });
+
+                trendsChart = new Chart(
+                    document.getElementById("trendsChart"),
+                    {
+                        type: "bar",
+                        data: {
+                            labels: data.timestamps,
+                            datasets: [
+                                {
+                                    label: "Active Sessions",
+                                    data: data.sessions,
+                                    backgroundColor: "rgba(0,102,204,0.7)",
+                                    borderRadius: 4,
+                                    hoverBackgroundColor: "#0052a3",
+                                },
+                            ],
+                        },
+                        options: BAR_OPTS,
+                    },
+                );
+            }
+
+            // Clears arrays IN-PLACE so chart references remain valid
+            function clearData() {
+                Object.keys(data).forEach((k) => {
+                    data[k].length = 0;
+                });
+            }
+
+            // Re-bind chart dataset arrays then update — required after clearData()
+            function rebindAndUpdate() {
+                if (cpuChart) {
+                    cpuChart.data.labels = data.timestamps;
+                    cpuChart.data.datasets[0].data = data.cpu;
+                    cpuChart.update();
+                }
+                if (memChart) {
+                    memChart.data.labels = data.timestamps;
+                    memChart.data.datasets[0].data = data.memory;
+                    memChart.data.datasets[1].data = data.disk;
+                    memChart.update();
+                }
+                if (netChart) {
+                    netChart.data.labels = data.timestamps;
+                    netChart.data.datasets[0].data = data.rx;
+                    netChart.data.datasets[1].data = data.tx;
+                    netChart.update();
+                }
+                if (trendsChart) {
+                    trendsChart.data.labels = data.timestamps;
+                    trendsChart.data.datasets[0].data = data.sessions;
+                    trendsChart.update();
+                }
+            }
+
+            function updateCharts() {
+                if (cpuChart) cpuChart.update("none");
+                if (memChart) memChart.update("none");
+                if (netChart) netChart.update("none");
+                if (trendsChart) trendsChart.update("none");
+            }
+
+            function updateMetrics(stats) {
+                const set = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = val ?? "—";
+                };
+                set("metricTotal", stats.total);
+                set("metricOnline", stats.online);
+                set("metricOffline", stats.offline);
+                set("metricUsers", stats.active_users);
+                set("metricDevices", stats.active_devices);
+                set("metricRecoveries", stats.session_recoveries);
+            }
+
+            function updateLiveMetrics(d) {
+                const fmt = (v, unit) =>
+                    v != null ? v.toFixed(1) + unit : "--" + unit;
+                const fmtKb = (v) =>
+                    v != null ? v.toFixed(1) + " KB/s" : "-- KB/s";
+
+                // Live metric strip
+                document.getElementById("liveMetricCpu").textContent = fmt(
+                    d.cpu_percent,
+                    "%",
+                );
+                document.getElementById("liveMetricMemory").textContent = fmt(
+                    d.memory_percent,
+                    "%",
+                );
+                document.getElementById("liveMetricDisk").textContent = fmt(
+                    d.disk_percent,
+                    "%",
+                );
+                document.getElementById("liveMetricRx").textContent = fmtKb(
+                    d.rx_kbps,
+                );
+                document.getElementById("liveMetricTx").textContent = fmtKb(
+                    d.tx_kbps,
+                );
+
+                // Chart header live values
+                document.getElementById("cpuLive").textContent = fmt(
+                    d.cpu_percent,
+                    "%",
+                );
+                document.getElementById("memLive").textContent = fmt(
+                    d.memory_percent,
+                    "%",
+                );
+                document.getElementById("diskLive").textContent = fmt(
+                    d.disk_percent,
+                    "%",
+                );
+                document.getElementById("rxLive").textContent = fmtKb(
+                    d.rx_kbps,
+                );
+                document.getElementById("txLive").textContent = fmtKb(
+                    d.tx_kbps,
+                );
+
+                document.getElementById("lastUpdated").textContent =
+                    new Date().toLocaleTimeString("en-US", { hour12: false });
+
+                updateStatusBadge("cpuStatus", d.cpu_percent);
+                updateStatusBadge("memoryStatus", d.memory_percent);
+                updateStatusBadge("diskStatus", d.disk_percent);
+
+                // Only append to chart data while in live mode
+                if (currentTimeRange === "live") {
+                    const ts = new Date().toLocaleTimeString("en-US", {
+                        hour12: false,
+                    });
+                    data.timestamps.push(ts);
+                    data.cpu.push(d.cpu_percent || 0);
+                    data.memory.push(d.memory_percent || 0);
+                    data.disk.push(d.disk_percent || 0);
+                    data.rx.push(d.rx_kbps || 0);
+                    data.tx.push(d.tx_kbps || 0);
+                    data.sessions.push(latestSessionCount); // sessions come from ws/dashboard, not live metrics
+
+                    // Keep rolling window of 60 points
+                    if (data.timestamps.length > 60) {
+                        data.timestamps.shift();
+                        data.cpu.shift();
+                        data.memory.shift();
+                        data.disk.shift();
+                        data.rx.shift();
+                        data.tx.shift();
+                        data.sessions.shift();
+                    }
+                    updateCharts();
+                }
+            }
+
+            function updateStatusBadge(id, val) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (val > 80) {
+                    el.className = "status-badge critical";
+                    el.innerHTML = '<span class="status-dot"></span>Critical';
+                } else if (val > 60) {
+                    el.className = "status-badge warning";
+                    el.innerHTML = '<span class="status-dot"></span>Warning';
+                } else {
+                    el.className = "status-badge normal";
+                    el.innerHTML = '<span class="status-dot"></span>Normal';
+                }
+            }
+
+            function showError(msg) {
+                const el = document.getElementById("errorBanner");
+                el.textContent = msg;
+                el.classList.add("show");
+                setTimeout(() => el.classList.remove("show"), 5000);
+            }
+
+            // ── Time range selector ──
+            document.querySelectorAll(".time-range-btn").forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const range = btn.dataset.range;
+                    if (range === currentTimeRange) return;
+                    currentTimeRange = range;
+                    document
+                        .querySelectorAll(".time-range-btn")
+                        .forEach((b) =>
+                            b.classList.toggle("active", b === btn),
+                        );
+
+                    // Clear in-place so chart references remain valid
+                    clearData();
+                    rebindAndUpdate();
+
+                    if (range !== "live") {
+                        fetchHistorical(range);
+                    }
+                    // When switching back to 'live', data will refill naturally from the WS stream
+                });
+            });
+
+            async function fetchHistorical(range) {
+                const endpoint =
+                    range === "1h"
+                        ? "/api/metrics/last_1h"
+                        : "/api/metrics/last_24h";
+                try {
+                    const r = await fetch(endpoint);
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    const json = await r.json();
+                    const metrics = json.metrics || json.data?.metrics || [];
+                    if (!metrics.length) {
+                        showError(`No data returned for ${range}`);
+                        return;
+                    }
+
+                    metrics.forEach((m) => {
+                        // Format timestamp label nicely depending on range
+                        let label = m.timestamp || "";
+                        if (label) {
+                            const d = new Date(label);
+                            label =
+                                range === "24h"
+                                    ? d.toLocaleTimeString("en-US", {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                          hour12: false,
+                                      })
+                                    : d.toLocaleTimeString("en-US", {
+                                          hour: "2-digit",
+                                          minute: "2-digit",
+                                          second: "2-digit",
+                                          hour12: false,
+                                      });
+                        }
+                        data.timestamps.push(label);
+                        data.cpu.push(m.cpu_percent || 0);
+                        data.memory.push(m.memory_percent || 0);
+                        data.disk.push(m.disk_percent || 0);
+                        data.rx.push(m.rx_kbps || 0);
+                        data.tx.push(m.tx_kbps || 0);
+                        data.sessions.push(m.active_sessions || 0);
+                    });
+
+                    rebindAndUpdate();
+                } catch (e) {
+                    showError(`Failed to load ${range} metrics: ${e.message}`);
+                }
+            }
+
+            // ── WebSocket connections ──
+            function connectWebSocket() {
+                const protocol =
+                    location.protocol === "https:" ? "wss:" : "ws:";
+
+                // Dashboard stats WS (session counts etc.)
+                wsConnection = new WebSocket(
+                    `${protocol}//${location.host}/ws/dashboard`,
+                );
+                wsConnection.onmessage = (e) => {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (msg.type === "init" || msg.type === "stats_update") {
+                            updateMetrics(msg.stats);
+                            // Save latest online session count for chart use
+                            latestSessionCount = msg.stats.online ?? 0;
+                        }
+                    } catch (_) {}
+                };
+                wsConnection.onerror = () =>
+                    showError("Connection error. Retrying…");
+                wsConnection.onclose = () => setTimeout(connectWebSocket, 3000);
+
+                // Live metrics WS (cpu/mem/disk/net)
+                liveWsConnection = new WebSocket(
+                    `${protocol}//${location.host}/ws/metrics/live`,
+                );
+                liveWsConnection.onmessage = (e) => {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (msg.type === "live_metrics")
+                            updateLiveMetrics(msg.data);
+                    } catch (_) {}
+                };
+                liveWsConnection.onerror = () => {};
+                liveWsConnection.onclose = () =>
+                    setTimeout(() => {
+                        liveWsConnection = new WebSocket(
+                            `${protocol}//${location.host}/ws/metrics/live`,
+                        );
+                    }, 3000);
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                initCharts();
+                connectWebSocket();
+            });
+        </script>
+    </body>
+</html>

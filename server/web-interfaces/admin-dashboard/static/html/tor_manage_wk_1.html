@@ -1,0 +1,1159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tor Relay Control · Enterprise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:          #f0f2f7;
+  --surface:     #ffffff;
+  --surface2:    #f8f9fc;
+  --surface3:    #eef0f6;
+  --border:      #e1e6f0;
+  --border2:     #cdd4e8;
+  --text:        #0d1320;
+  --text-mid:    #3d4a5c;
+  --text-dim:    #64748b;
+  --text-xdim:   #94a3b8;
+  --blue:        #2563eb;
+  --blue-light:  #eff6ff;
+  --blue-mid:    #bfdbfe;
+  --blue-dark:   #1e40af;
+  --green:       #059669;
+  --green-light: #ecfdf5;
+  --green-mid:   #a7f3d0;
+  --amber:       #d97706;
+  --amber-light: #fffbeb;
+  --amber-mid:   #fde68a;
+  --red:         #dc2626;
+  --red-light:   #fef2f2;
+  --red-mid:     #fecaca;
+  --violet:      #7c3aed;
+  --violet-light:#f5f3ff;
+  --shadow-sm:   0 1px 3px rgba(13,19,32,0.07), 0 1px 2px rgba(13,19,32,0.04);
+  --shadow:      0 4px 18px rgba(13,19,32,0.09), 0 1px 4px rgba(13,19,32,0.05);
+  --shadow-lg:   0 8px 32px rgba(13,19,32,0.12), 0 2px 8px rgba(13,19,32,0.06);
+  --radius:      12px;
+  --radius-sm:   8px;
+  --radius-xs:   6px;
+  --mono:        'JetBrains Mono', monospace;
+  --sans:        'DM Sans', sans-serif;
+  --display:     'Bebas Neue', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+
+/* ── HEADER ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  position: sticky; top: 0; z-index: 200;
+}
+.header-inner {
+  max-width: 1440px; margin: 0 auto; padding: 0 2rem;
+  height: 58px; display: flex; align-items: center; gap: 1.25rem;
+}
+.logo { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; flex-shrink: 0; }
+.logo-icon {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 3px 10px rgba(37,99,235,0.32);
+}
+.logo-icon svg { width: 16px; height: 16px; }
+.logo-text { font-family: var(--display); font-size: 1.05rem; color: var(--text); letter-spacing: 0.1em; }
+.logo-sub  { font-family: var(--mono); font-size: 0.56rem; color: var(--text-dim); letter-spacing: 0.14em; margin-top: 1px; }
+.hdiv { width: 1px; height: 20px; background: var(--border2); }
+.hbread {
+  font-family: var(--mono); font-size: 0.63rem; color: var(--text-dim);
+  letter-spacing: 0.07em; display: flex; align-items: center; gap: 0.35rem;
+}
+.hbread span { color: var(--blue); }
+.hspace { flex: 1; }
+
+.status-chip {
+  display: inline-flex; align-items: center; gap: 0.42rem;
+  padding: 0.26rem 0.9rem; border-radius: 20px;
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  letter-spacing: 0.09em; text-transform: uppercase; border: 1px solid;
+  transition: all 0.35s;
+}
+.status-chip.online  { background: var(--green-light); color: var(--green);    border-color: var(--green-mid); }
+.status-chip.booting { background: var(--amber-light); color: var(--amber);    border-color: var(--amber-mid); }
+.status-chip.maint   { background: var(--violet-light); color: var(--violet);  border-color: #ddd6fe; }
+.status-chip.stopped { background: var(--surface3);     color: var(--text-dim); border-color: var(--border2); }
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.status-chip.online  .chip-dot { animation: pulse 2s ease-in-out infinite; }
+.status-chip.booting .chip-dot { animation: pulse 0.65s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.15} }
+
+/* ── PAGE LAYOUT ── */
+.page {
+  max-width: 1440px; margin: 0 auto;
+  padding: 1.5rem 2rem 2rem;
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  grid-template-rows: auto auto auto auto;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.relay-card    { grid-column: 1; grid-row: 1 / 4; }
+.topo-card     { grid-column: 2; grid-row: 1; }
+.stream-card   { grid-column: 2; grid-row: 2; }
+.routing-card  { grid-column: 2; grid-row: 3; }
+.circuits-card { grid-column: 1 / 3; grid-row: 4; }
+
+/* ── CARD BASE ── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  animation: cardIn 0.4s ease backwards;
+}
+.card:hover { border-color: var(--border2); box-shadow: var(--shadow); }
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.75rem 1.2rem; border-bottom: 1px solid var(--border);
+  background: var(--surface2); gap: 0.75rem;
+}
+.card-title {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 700;
+  color: var(--text-dim); letter-spacing: 0.14em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0;
+}
+.card-title-accent { color: var(--blue); }
+.card-badge {
+  font-family: var(--mono); font-size: 0.57rem; color: var(--text-dim);
+  background: var(--surface3); border: 1px solid var(--border2);
+  padding: 0.12rem 0.5rem; border-radius: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+@keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.relay-card    { animation-delay: 0.03s; }
+.topo-card     { animation-delay: 0.07s; }
+.stream-card   { animation-delay: 0.11s; }
+.routing-card  { animation-delay: 0.15s; }
+.circuits-card { animation-delay: 0.19s; }
+
+/* ── RELAY CARD ── */
+.relay-status-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.45rem 1.2rem; border-bottom: 1px solid var(--border);
+  background: var(--surface3);
+}
+.relay-status-label { font-family: var(--mono); font-size: 0.57rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; }
+.relay-status-val   { font-family: var(--mono); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; }
+.rsv-green { color: var(--green); } .rsv-amber { color: var(--amber); }
+.rsv-red   { color: var(--red); }   .rsv-dim   { color: var(--text-dim); }
+
+.relay-visual {
+  padding: 1.5rem 1.25rem 1rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+.relay-visual::before {
+  content: ''; position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+  width: 180px; height: 180px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(37,99,235,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.server-btn-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.55rem; }
+.server-svg-link {
+  display: block; cursor: pointer; position: relative;
+  width: 92px; height: 92px; border-radius: 50%;
+  transition: transform 0.2s; outline: none;
+}
+.server-svg-link:focus-visible { box-shadow: 0 0 0 3px rgba(37,99,235,0.4); }
+.server-svg-link:hover .server-svg-wrap { filter: brightness(1.08); }
+.server-svg-link:active { transform: scale(0.94); }
+.server-svg-wrap { width: 92px; height: 92px; transition: filter 0.4s, opacity 0.4s; }
+.server-svg-wrap.online  { animation: float 4s ease-in-out infinite; filter: drop-shadow(0 8px 18px rgba(37,99,235,0.22)); }
+.server-svg-wrap.offline { filter: drop-shadow(0 4px 10px rgba(13,19,32,0.1)) grayscale(0.55); opacity: 0.55; }
+.server-svg-wrap.booting { animation: float 2.5s ease-in-out infinite; filter: drop-shadow(0 8px 18px rgba(217,119,6,0.26)); }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+/* Inline start/stop label overlay on the server icon */
+.srv-label {
+  position: absolute; inset: 0; border-radius: 50%;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 6px;
+  opacity: 0; transition: opacity 0.18s;
+  pointer-events: none;
+}
+.server-svg-link:hover .srv-label { opacity: 1; }
+.srv-label-inner {
+  display: inline-flex; align-items: center; gap: 0.28rem;
+  padding: 0.18rem 0.55rem; border-radius: 20px;
+  font-family: var(--mono); font-size: 0.5rem; font-weight: 700;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  white-space: nowrap;
+}
+.srv-label-inner.start { background: rgba(37,99,235,0.88); color: #fff; }
+.srv-label-inner.stop  { background: rgba(220,38,38,0.88);  color: #fff; }
+
+.relay-tagline {
+  font-size: 0.7rem; color: var(--text-mid); text-align: center;
+  line-height: 1.55; min-height: 1.5em; padding: 0 0.5rem;
+}
+
+.net-btn {
+  width: 100%; padding: 0.62rem 1rem; border-radius: var(--radius-sm);
+  border: none; cursor: pointer; font-family: var(--sans); font-size: 0.76rem;
+  font-weight: 600; letter-spacing: 0.01em;
+  display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+  transition: all 0.18s;
+}
+.net-btn.enable { background: linear-gradient(135deg, var(--blue), var(--blue-dark)); color: #fff; box-shadow: 0 4px 14px rgba(37,99,235,0.28); }
+.net-btn.enable:hover  { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(37,99,235,0.38); }
+.net-btn.disable { background: var(--red-light); color: var(--red); border: 1px solid var(--red-mid); }
+.net-btn.disable:hover { background: #fee2e2; }
+.net-btn:disabled { opacity: 0.42; cursor: not-allowed; transform: none !important; }
+
+.relay-action-wrap { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.9rem 1.1rem; border-bottom: 1px solid var(--border); }
+.btn-row { display: flex; gap: 0.45rem; }
+.btn-row .net-btn { flex: 1; font-size: 0.67rem; padding: 0.48rem 0.6rem; }
+.net-btn.start { background: linear-gradient(135deg, #059669, #047857); color: #fff; box-shadow: 0 4px 14px rgba(5,150,105,0.28); }
+.net-btn.start:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(5,150,105,0.38); }
+.net-btn.stopb { background: var(--surface3); color: var(--text-dim); border: 1px solid var(--border2); }
+.net-btn.stopb:hover  { background: var(--red-light); color: var(--red); border-color: var(--red-mid); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { width: 12px; height: 12px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.65s linear infinite; flex-shrink: 0; }
+
+.meta-section { padding: 0; }
+.meta-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.5rem 1.2rem; border-bottom: 1px solid var(--border);
+  transition: background 0.14s; gap: 0.5rem;
+}
+.meta-row:last-child { border-bottom: none; }
+.meta-row:hover { background: var(--surface2); }
+.meta-key { font-family: var(--mono); font-size: 0.57rem; color: var(--text-dim); letter-spacing: 0.08em; text-transform: uppercase; flex-shrink: 0; }
+.meta-val { font-family: var(--mono); font-size: 0.68rem; font-weight: 600; color: var(--text-mid); text-align: right; word-break: break-all; }
+.mv-green { color: var(--green); } .mv-amber { color: var(--amber); } .mv-red { color: var(--red); } .mv-blue { color: var(--blue); } .mv-dim { color: var(--text-dim); }
+
+.uptime-pill {
+  font-family: var(--mono); font-size: 0.57rem; color: var(--text-dim);
+  background: var(--surface3); border: 1px solid var(--border2);
+  padding: 0.12rem 0.48rem; border-radius: 4px; white-space: nowrap;
+}
+
+/* ── TOPOLOGY CARD ── */
+.topo-body {
+  padding: 1.35rem 1.1rem 0.9rem;
+  display: flex; align-items: center; min-height: 175px; overflow-x: auto;
+}
+
+/* Enterprise topology SVG container */
+#topoSvg { overflow: visible; }
+
+.topo-state-bar { padding: 0.48rem 1.2rem; border-top: 1px solid var(--border); background: var(--surface2); font-family: var(--mono); font-size: 0.59rem; color: var(--text-dim); display: flex; align-items: center; gap: 0.45rem; }
+.topo-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+
+
+/* ── BOOTSTRAP STREAM ── */
+.boot-log {
+  background: #fafbfd; border-top: 1px solid var(--border);
+  font-family: var(--mono); font-size: 0.65rem; line-height: 1.9;
+  padding: 0.8rem 1.2rem; max-height: 126px; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--border2) transparent;
+}
+.boot-log:empty::after { content: '// awaiting stream…'; color: var(--text-dim); }
+.ev-progress { color: var(--amber); } .ev-done { color: var(--green); }
+.ev-error { color: var(--red); }     .ev-heartbeat { color: var(--text-xdim); }
+
+/* ── ROUTING CARD ── */
+.routing-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+}
+.r-cell { padding: 0.85rem 1rem; border-right: 1px solid var(--border); transition: background 0.14s; }
+.r-cell:last-child { border-right: none; }
+.r-cell:hover { background: var(--surface2); }
+.r-lbl { font-family: var(--mono); font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.38rem; white-space: nowrap; }
+.r-val { font-family: var(--mono); font-size: 0.7rem; font-weight: 600; color: var(--text-mid); word-break: break-all; line-height: 1.4; }
+.r-val.green { color: var(--green); } .r-val.amber { color: var(--amber); } .r-val.blue { color: var(--blue); } .r-val.dim { color: var(--text-dim); }
+
+/* ── CIRCUITS CARD ── */
+.circ-toolbar { display: flex; align-items: center; gap: 0.7rem; }
+.btn-ghost {
+  background: none; border: 1px solid var(--border2); border-radius: var(--radius-xs);
+  color: var(--text-dim); font-family: var(--mono); font-size: 0.57rem;
+  padding: 0.2rem 0.58rem; cursor: pointer; letter-spacing: 0.08em; transition: all 0.14s;
+}
+.btn-ghost:hover { border-color: var(--blue-mid); color: var(--blue); background: var(--blue-light); }
+
+.circ-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: 0.7rem; padding: 1.1rem;
+}
+.circ-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 0.85rem 0.95rem;
+  transition: all 0.18s;
+}
+.circ-item:hover { border-color: var(--blue-mid); box-shadow: 0 2px 12px rgba(37,99,235,0.07); }
+.circ-id { font-family: var(--mono); font-size: 0.55rem; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.55rem; }
+.circ-path { display: flex; align-items: center; gap: 0.28rem; flex-wrap: wrap; }
+.circ-node {
+  display: inline-flex; flex-direction: column;
+  padding: 0.25rem 0.5rem; border-radius: var(--radius-xs);
+  font-family: var(--mono); font-size: 0.58rem; line-height: 1.4;
+  border: 1px solid; gap: 1px;
+}
+.circ-node.guard  { background: var(--blue-light);  border-color: var(--blue-mid);  color: var(--blue); }
+.circ-node.middle { background: var(--amber-light); border-color: var(--amber-mid); color: var(--amber); }
+.circ-node.exit   { background: var(--green-light); border-color: var(--green-mid); color: var(--green); }
+.circ-node-role { font-size: 0.46rem; opacity: 0.55; letter-spacing: 0.12em; text-transform: uppercase; }
+.circ-arr { color: var(--text-dim); font-size: 0.68rem; }
+.circ-empty { padding: 2.25rem 1.2rem; font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim); text-align: center; grid-column: 1 / -1; }
+
+/* ── TOASTS ── */
+.toast-wrap { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.45rem; }
+.toast {
+  padding: 0.6rem 0.95rem; border-radius: var(--radius-sm);
+  font-family: var(--mono); font-size: 0.65rem; border: 1px solid;
+  box-shadow: var(--shadow); animation: toastIn 0.22s ease;
+  max-width: 320px; display: flex; align-items: center; gap: 0.45rem;
+}
+@keyframes toastIn { from{opacity:0;transform:translateY(6px) scale(0.97)} to{opacity:1;transform:none} }
+.toast.success { background: var(--green-light); border-color: var(--green-mid); color: var(--green); }
+.toast.error   { background: var(--red-light);   border-color: var(--red-mid);   color: var(--red); }
+.toast.info    { background: var(--blue-light);  border-color: var(--blue-mid);  color: var(--blue); }
+
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-4px)} 40%{transform:translateX(4px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} }
+.shake { animation: shake 0.32s ease; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
+
+@media (max-width: 960px) {
+  .page { grid-template-columns: 1fr; padding: 1rem; }
+  .relay-card,.topo-card,.stream-card,.circuits-card,.routing-card { grid-column: 1; grid-row: auto; }
+  .routing-grid { grid-template-columns: repeat(2, 1fr); }
+  .r-cell { border-bottom: 1px solid var(--border); }
+  .topo-node-icon { width: 44px; height: 44px; }
+  .topo-node-icon img { width: 28px; height: 28px; }
+  .topo-connector { padding-top: 21px; }
+}
+</style>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<header>
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.5" opacity="0.35"/>
+          <circle cx="12" cy="12" r="5.5" stroke="white" stroke-width="1.5" opacity="0.65"/>
+          <circle cx="12" cy="12" r="2.2" fill="white"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-text">TOR RELAY</div>
+        <div class="logo-sub">CONTROL PLANE</div>
+      </div>
+    </a>
+    <div class="hdiv"></div>
+    <div class="hbread">RELAY &rsaquo; <span>NODE_0</span> &rsaquo; TRANSPARENT PROXY</div>
+    <div class="hspace"></div>
+    <div class="status-chip stopped" id="globalChip">
+      <div class="chip-dot"></div>
+      <span id="globalTxt">—</span>
+    </div>
+  </div>
+</header>
+
+<div class="page">
+  <div class="card relay-card">
+    <div class="card-header">
+      <span class="card-title">RELAY <span class="card-title-accent">NODE_0</span></span>
+      <span class="uptime-pill" id="uptimeLbl">—</span>
+    </div>
+
+    <div class="relay-status-bar">
+      <span class="relay-status-label">STATUS</span>
+      <span class="relay-status-val rsv-dim" id="rsStatus">—</span>
+    </div>
+
+    <div class="relay-visual">
+      <div class="server-btn-wrap">
+        <a class="server-svg-link" role="button" tabindex="0" id="serverLink"
+           title="Click to start / stop Tor process"
+           onclick="onServerClick()"
+           onkeydown="if(event.key==='Enter'||event.key===' ')onServerClick()">
+          <div class="server-svg-wrap offline" id="serverSvg">
+            <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+              <path d="M529.024595 370.352223c0-7.446623-4.534177-16.11014-10.118548-19.334549L208.567367 171.84387C199.260874 166.46906 191.702326 172.184409 191.702326 184.59386v642.162307c0 9.928037 6.046363 21.480186 13.492986 25.780986l276.603832 159.696373c26.064372 15.048037 47.225451-0.947795 47.225451-35.701879V370.352223z" fill="#4E6FBB"/>
+              <path d="M831.552298 190.544967c0-4.608-2.805284-6.729823-6.260689-4.734214l-300.586865 173.544187c-3.455405 1.995609-6.26307 7.35613-6.26307 11.96413v617.019535c0 25.345191 15.433823 37.011647 34.442121 26.035795l272.407814-157.272112c3.455405-1.995609 6.260688-7.358512 6.260689-11.966511V190.544967z" fill="#4D6FBB"/>
+              <path d="M540.207628 9.082642c-19.01306-10.978233-47.8208-12.171312-64.288149-2.664782L204.514233 163.113674c-16.464967 9.50653-14.397916 26.138195 4.617525 37.116428l275.613172 159.124838c19.01306 10.978233 47.8208 12.173693 64.288149 2.664781l271.405247-156.695814c16.467349-9.50653 14.397916-26.138195-4.615145-37.116428L540.207628 9.082642z" fill="#6D8ACA"/>
+              <path d="M540.207628 663.661544c-19.01306-10.978233-47.8208-12.173693-64.288149-2.664781L204.514233 817.692577c-16.464967 9.50653-14.397916 26.138195 4.617525 37.116428l275.613172 159.124837c19.01306 10.978233 47.8208 12.173693 64.288149 2.664781l271.405247-156.695814c16.467349-9.50653 14.397916-26.138195-4.615145-37.116428l-275.615553-159.124837z" fill="#4D6FBB"/>
+              <path d="M513.252614 533.239665L193.40026 348.571981v36.425824l319.852354 184.665302v-36.423442zM815.780316 358.573842l-302.527702 174.665823v36.423442l302.527702-174.663442v-36.425823z" fill="#4467AE"/>
+              <path d="M454.636949 659.105935c0-2.138493-1.300242-4.62467-2.902921-5.551033l-210.898754-121.760744c-1.602679-0.926363-2.905302 0.057153-2.905302 2.195647v69.703442c0 2.136112 1.302623 4.622288 2.905302 5.548651l210.898754 121.763125c1.602679 0.923981 2.902921-0.059535 2.902921-2.195646v-69.703442zM454.636949 809.276726c0-2.136112-1.300242-4.622288-2.902921-5.548652l-210.898754-121.763125c-1.602679-0.923981-2.905302 0.059535-2.905302 2.195646v69.703442c0 2.138493 1.302623 4.62467 2.905302 5.548651l210.898754 121.763126c1.602679 0.926363 2.902921-0.057153 2.902921-2.195647v-69.703441z" fill="#6D8ACA"/>
+              <path d="M440.348577 355.316093c7.887181 4.550847 14.288372 18.879702 14.288372 31.977377 0 13.095293-6.401191 20.032298-14.288372 15.47907-7.8848-4.553228-14.288372-18.882084-14.288372-31.977377 0-13.097674 6.403572-20.032298 14.288372-15.47907zM440.348577 421.995163c7.887181 4.550847 14.288372 18.879702 14.288372 31.977377 0 13.095293-6.401191 20.032298-14.288372 15.479069-7.8848-4.553228-14.288372-18.882084-14.288372-31.977376 0-13.097674 6.403572-20.032298 14.288372-15.47907z" fill="#c8d4ef"/>
+            </svg>
+          </div>
+          <!-- Inline hover pill: shows "CLICK TO START" or "CLICK TO STOP" -->
+          <div class="srv-label" id="srvLabel">
+            <span class="srv-label-inner start" id="srvLabelInner">
+              <svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              CLICK TO START
+            </span>
+          </div>
+        </a>
+      </div>
+      <div class="relay-tagline" id="relayTagLine">—</div>
+      <button class="net-btn enable" id="toggleBtn" onclick="toggleNetwork()" disabled>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Enable Network
+      </button>
+    </div>
+
+    <div class="relay-action-wrap">
+      <div class="btn-row">
+        <button class="net-btn start" id="startBtn" onclick="startService()">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Start
+        </button>
+        <button class="net-btn stopb" id="stopBtn" onclick="stopService()" disabled>
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Stop
+        </button>
+      </div>
+    </div>
+
+    <div class="meta-section">
+      <div class="meta-row"><span class="meta-key">TransPort</span>   <span class="meta-val mv-blue" id="mTrans">—</span></div>
+      <div class="meta-row"><span class="meta-key">SocksPort</span>   <span class="meta-val"        id="mSocks">—</span></div>
+      <div class="meta-row"><span class="meta-key">ControlPort</span> <span class="meta-val"        id="mCtrl">—</span></div>
+      <div class="meta-row"><span class="meta-key">DNSPort</span>     <span class="meta-val"        id="mDns">—</span></div>
+      <div class="meta-row"><span class="meta-key">Maint Port</span>  <span class="meta-val"        id="mMaint">—</span></div>
+      <div class="meta-row"><span class="meta-key">WG Traffic</span>  <span class="meta-val mv-dim" id="mWgTraffic">—</span></div>
+      <div class="meta-row"><span class="meta-key">nftables</span>    <span class="meta-val mv-dim" id="mNft">—</span></div>
+    </div>
+  </div>
+
+  <div class="card topo-card">
+  <div class="card-header">
+    <span class="card-title">NETWORK <span class="card-title-accent">TOPOLOGY</span></span>
+    <span class="card-badge" id="topoBadge">—</span>
+  </div>
+  <div style="padding: 1.2rem 1rem 0.6rem; overflow-x: auto;">
+    <svg id="topoSvg" width="100%" style="display:block;" viewBox="0 0 780 110" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+  <div class="topo-state-bar" id="topoStateBar">
+    <div class="topo-dot" style="background:var(--text-xdim)"></div>
+    <span>Waiting for backend…</span>
+  </div>
+</div>
+
+  <div class="card stream-card">
+    <div class="card-header">
+      <span class="card-title">BOOTSTRAP <span class="card-title-accent">STREAM</span></span>
+      <div style="display:flex;align-items:center;gap:0.35rem;font-family:var(--mono);font-size:0.58rem;padding:0.18rem 0.55rem;border-radius:5px;background:var(--surface3);border:1px solid var(--border2);color:var(--text-dim);" id="wsBadgeInner">
+        <div style="width:5px;height:5px;border-radius:50%;background:currentColor;" id="wsDot"></div>
+        <span id="wsLbl">disconnected</span>
+      </div>
+    </div>
+    <div class="boot-log" id="bootLog"></div>
+  </div>
+
+  <div class="card routing-card">
+    <div class="card-header">
+      <span class="card-title">ROUTING <span class="card-title-accent">CONFIG</span></span>
+      <span class="card-badge" id="routeBadge">—</span>
+    </div>
+    <div class="routing-grid">
+      <div class="r-cell"><div class="r-lbl">Architecture</div><div class="r-val"        id="rArch">—</div></div>
+      <div class="r-cell"><div class="r-lbl">TransPort</div>   <div class="r-val green"  id="rTrans">—</div></div>
+      <div class="r-cell"><div class="r-lbl">SocksPort</div>   <div class="r-val"        id="rSocks">—</div></div>
+      <div class="r-cell"><div class="r-lbl">DNS Port</div>    <div class="r-val"        id="rDns">—</div></div>
+      <div class="r-cell"><div class="r-lbl">Maint Server</div><div class="r-val amber"  id="rMaint">—</div></div>
+      <div class="r-cell"><div class="r-lbl">Down State</div>  <div class="r-val dim"    id="rDownState">—</div></div>
+    </div>
+  </div>
+
+  <div class="card circuits-card">
+    <div class="card-header">
+      <span class="card-title">ACTIVE <span class="card-title-accent">CIRCUITS</span></span>
+      <div class="circ-toolbar">
+        <span class="card-badge" id="circCount">—</span>
+        <button class="btn-ghost" onclick="loadCircuits()">↻ REFRESH</button>
+      </div>
+    </div>
+    <div class="circ-grid" id="circGrid">
+      <div class="circ-empty">—</div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+const S = {
+  processRunning: null,
+  networkEnabled: null,
+  pct:            null,
+  summary:        null,
+  uptime:         null,
+  transBind:      null,
+  dnsBind:        null,
+  transPort:      null,
+  dnsPort:        null,
+  socksPort:      null,
+  controlPort:    null,
+  maintPort:      null,
+  _circuits:      [],
+  _circError:     null,
+};
+
+const WS_LOG = [];
+let ws = null, wsLive = false, _busy = false, _wsTimer = null;
+let _circRetryTimers = [];
+let _circLoading = false;
+
+// ── HELPERS ──────────────────────────────────────────
+const _a   = (b, p) => (b && p != null) ? `${b}:${p}` : '—';
+const tAddr = () => _a(S.transBind, S.transPort);
+const dAddr = () => _a(S.dnsBind,   S.dnsPort);
+const sAddr = () => S.socksPort    != null ? `127.0.0.1:${S.socksPort}` : '—';
+const cAddr = () => S.controlPort  != null ? `127.0.0.1:${S.controlPort}` : '—';
+const mAddr = () => S.maintPort    != null ? `127.0.0.1:${S.maintPort}` : '—';
+const fmtUp = s => {
+  if (!s) return '—';
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
+  return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${sec}s` : `${sec}s`;
+};
+
+// ── API ──────────────────────────────────────────────
+async function api(path, method = 'GET') {
+  const r = await fetch(path, { method, headers: { 'Content-Type': 'application/json' } });
+  const d = await r.json();
+  if (!r.ok || d.error) throw new Error(d.detail || d.error || `HTTP ${r.status}`);
+  return d;
+}
+
+// ── WS BADGE ─────────────────────────────────────────
+function setWsUi(live) {
+  wsLive = live;
+  const badge = document.getElementById('wsBadgeInner');
+  const lbl   = document.getElementById('wsLbl');
+  const dot   = document.getElementById('wsDot');
+  if (!badge) return;
+  if (live) {
+    badge.style.cssText = 'display:flex;align-items:center;gap:0.35rem;font-family:var(--mono);font-size:0.58rem;padding:0.18rem 0.55rem;border-radius:5px;background:var(--green-light);border:1px solid var(--green-mid);color:var(--green);';
+    dot.style.animation = 'pulse 1.5s infinite';
+    lbl.textContent = 'live';
+  } else {
+    badge.style.cssText = 'display:flex;align-items:center;gap:0.35rem;font-family:var(--mono);font-size:0.58rem;padding:0.18rem 0.55rem;border-radius:5px;background:var(--surface3);border:1px solid var(--border2);color:var(--text-dim);';
+    dot.style.animation = 'none';
+    lbl.textContent = 'disconnected';
+  }
+}
+
+// ── WEBSOCKET ────────────────────────────────────────
+function scheduleReconnect() {
+  if (!S.processRunning || S.pct === 100 || _wsTimer) return;
+  _wsTimer = setTimeout(() => { _wsTimer = null; if (S.processRunning && !ws) openWS(); }, 3000);
+}
+
+function openWS() {
+  if (_wsTimer) { clearTimeout(_wsTimer); _wsTimer = null; }
+  if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+  setWsUi(false);
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const sock  = new WebSocket(`${proto}://${location.host}/ws/bootstrap/relay-0`);
+  ws = sock;
+  sock.onopen  = () => { if (ws === sock) setWsUi(true); };
+  sock.onerror = () => {};
+  sock.onclose = () => { if (ws === sock) { ws = null; setWsUi(false); scheduleReconnect(); } };
+  sock.onmessage = evt => {
+    if (ws !== sock) return;
+    let msg; try { msg = JSON.parse(evt.data); } catch (_) { return; }
+    const type = msg.type || '';
+    const ts   = new Date().toLocaleTimeString('en-GB', { hour12: false });
+    if (msg.bootstrap_pct   != null) S.pct           = msg.bootstrap_pct;
+    if (msg.bootstrap_summary)       S.summary        = msg.bootstrap_summary;
+    if (msg.running         != null) S.processRunning = msg.running;
+    if (msg.uptime          != null) S.uptime         = msg.uptime;
+    if (msg.network_enabled != null) S.networkEnabled = msg.network_enabled;
+    if (msg.trans_bind)              S.transBind      = msg.trans_bind;
+    if (msg.dns_bind)                S.dnsBind        = msg.dns_bind;
+    if (type === 'done')  { S.pct = 100; S.processRunning = true; }
+    if (type === 'error') { S.processRunning = false; }
+
+    const detail = type === 'progress'   ? `${msg.bootstrap_pct}% · ${msg.bootstrap_summary || ''}`
+                 : type === 'done'       ? '100% · bootstrapped'
+                 : type === 'error'      ? (msg.error || 'error')
+                 : type === 'heartbeat'  ? '♥'
+                 : type;
+    WS_LOG.push({ type, line: `${ts}  ${type.padEnd(10)} ${detail}` });
+    if (WS_LOG.length > 60) WS_LOG.shift();
+    renderBootLog();
+    renderAll();
+    if (type === 'done') scheduleCircuitLoads([8000, 20000, 40000]);
+  };
+}
+
+function closeWS() {
+  if (_wsTimer) { clearTimeout(_wsTimer); _wsTimer = null; }
+  if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+  setWsUi(false);
+}
+
+function renderBootLog() {
+  const el = document.getElementById('bootLog');
+  el.innerHTML = WS_LOG.slice(-30).map(e =>
+    `<div class="ev-${e.type}">${e.line}</div>`
+  ).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function scheduleCircuitLoads(delays = [12000, 28000, 50000]) {
+  _circRetryTimers.forEach(t => clearTimeout(t));
+  _circRetryTimers = delays.map(d => setTimeout(() => {
+    if (S.processRunning && S.networkEnabled) loadCircuits();
+  }, d));
+}
+
+// ── CONTROLS ─────────────────────────────────────────
+async function onServerClick() {
+  if (_busy) {
+    const l = document.getElementById('serverLink');
+    l.classList.add('shake'); setTimeout(() => l.classList.remove('shake'), 340);
+    toast('Action in progress…', 'info'); return;
+  }
+  if (S.processRunning) { await stopService(); } else { await startService(); }
+}
+
+async function toggleNetwork() {
+  if (_busy) return; _busy = true;
+  const btn = document.getElementById('toggleBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Working…';
+  try {
+    if (S.networkEnabled) {
+      await api('/down', 'POST');
+      S.networkEnabled = false;
+      S._circuits  = [];
+      S._circError = null;
+      renderCircuits();
+      toast('Network disabled', 'info');
+    } else {
+      await api('/up', 'POST');
+      S.networkEnabled = true;
+      toast('Network enabled — circuits rebuilding…', 'info');
+      if (!ws) openWS();
+      scheduleCircuitLoads([12000, 28000, 50000]);
+    }
+  } catch (e) { toast(e.message, 'error'); }
+  _busy = false;
+  await doRefresh();
+}
+
+async function startService() {
+  if (_busy) return; _busy = true;
+  _setBtns(true, '<span class="spinner"></span> Working…', '<span class="spinner"></span> Starting…', null);
+  try {
+    const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 320000);
+    const r = await fetch('/start_service', { method: 'POST', signal: ctrl.signal });
+    const d = await r.json();
+    if (d.error === 'relay_already_running') {
+      toast('Already running — enabling network…', 'info');
+      await fetch('/up', { method: 'POST' });
+      if (!ws) openWS();
+    } else if (d.error) {
+      toast(d.detail || d.error, 'error');
+    } else {
+      toast('Tor process started', 'success');
+      if (!ws) openWS();
+    }
+    scheduleCircuitLoads([15000, 35000, 65000]);
+  } catch (e) { toast(e.message, 'error'); }
+  _busy = false;
+  await doRefresh();
+}
+
+async function stopService() {
+  if (_busy) return; _busy = true;
+  _setBtns(true, null, null, '<span class="spinner"></span> Stopping…');
+  try {
+    await api('/stop_service', 'POST');
+    S.processRunning = false; S.networkEnabled = false; S.pct = null;
+    S._circuits  = [];
+    S._circError = null;
+    toast('Tor process stopped', 'info');
+    closeWS();
+    renderCircuits();
+    _circRetryTimers.forEach(t => clearTimeout(t));
+    _circRetryTimers = [];
+  } catch (e) { toast(e.message, 'error'); }
+  _busy = false;
+  await doRefresh();
+}
+
+function _setBtns(disabled, toggleHtml, startHtml, stopHtml) {
+  const t = document.getElementById('toggleBtn');
+  const a = document.getElementById('startBtn');
+  const o = document.getElementById('stopBtn');
+  if (disabled != null) { t.disabled = disabled; a.disabled = disabled; o.disabled = disabled; }
+  if (toggleHtml) t.innerHTML = toggleHtml;
+  if (startHtml)  a.innerHTML = startHtml;
+  if (stopHtml)   o.innerHTML = stopHtml;
+}
+
+// ── DATA REFRESH ─────────────────────────────────────
+async function doRefresh() {
+  try {
+    const d = await api('/status');
+    if (d.running         != null) S.processRunning = d.running;
+    if (d.network_enabled != null) S.networkEnabled = d.network_enabled;
+    if (d.uptime          != null) S.uptime         = d.uptime;
+    if (d.maint_port      != null) S.maintPort      = d.maint_port;
+    if (d.trans_port      != null) S.transPort      = d.trans_port;
+    if (d.socks_port      != null) S.socksPort      = d.socks_port;
+    if (d.control_port    != null) S.controlPort    = d.control_port;
+    if (d.dns_port        != null) S.dnsPort        = d.dns_port;
+    if (d.trans_bind)              S.transBind      = d.trans_bind;
+    if (d.dns_bind)                S.dnsBind        = d.dns_bind;
+    if (d.bootstrap_pct   != null) S.pct            = d.bootstrap_pct;
+    if (d.bootstrap_summary)       S.summary        = d.bootstrap_summary;
+    if (S.processRunning && S.networkEnabled && (S.pct ?? 0) < 100 && !ws) openWS();
+    if (!S.processRunning && ws) closeWS();
+  } catch (e) {
+    if (S.processRunning === null) S.processRunning = false;
+  }
+  renderAll();
+  if (S.processRunning && S.networkEnabled) {
+    loadCircuits();
+  }
+}
+
+// ── CIRCUIT LOADER ───────────────────────────────────
+async function loadCircuits() {
+  if (!S.processRunning || !S.networkEnabled) {
+    if (S.processRunning === false || S.networkEnabled === false) {
+      S._circuits  = [];
+      S._circError = null;
+    }
+    renderCircuits();
+    return;
+  }
+  if (_circLoading) return;
+  _circLoading = true;
+  try {
+    const d = await api('/circuits');
+    if (d.fetch_error) {
+      S._circError = d.fetch_error;
+    } else {
+      S._circuits  = d.circuits || [];
+      S._circError = null;
+    }
+  } catch (e) {
+    S._circError = e.message;
+  } finally {
+    _circLoading = false;
+  }
+  renderCircuits();
+}
+
+// ── RENDER ───────────────────────────────────────────
+function renderAll() {
+  const pct = S.pct ?? 0, run = S.processRunning, netUp = S.networkEnabled, known = run !== null;
+
+  const chip = document.getElementById('globalChip'), ctxt = document.getElementById('globalTxt');
+  if (!known)       { chip.className = 'status-chip stopped'; ctxt.textContent = '—'; }
+  else if (!run)    { chip.className = 'status-chip stopped'; ctxt.textContent = 'STOPPED'; }
+  else if (!netUp)  { chip.className = 'status-chip maint';   ctxt.textContent = 'MAINTENANCE'; }
+  else if (pct < 100){ chip.className = 'status-chip booting'; ctxt.textContent = `BOOT ${pct}%`; }
+  else              { chip.className = 'status-chip online';  ctxt.textContent = 'ONLINE'; }
+
+  document.getElementById('serverSvg').className = 'server-svg-wrap ' +
+    (!run ? 'offline' : (netUp && pct === 100 ? 'online' : 'booting'));
+
+  const srvInner = document.getElementById('srvLabelInner');
+  if (srvInner) {
+    if (run) {
+      srvInner.className = 'srv-label-inner stop';
+      srvInner.innerHTML = '<svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> CLICK TO STOP';
+    } else {
+      srvInner.className = 'srv-label-inner start';
+      srvInner.innerHTML = '<svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> CLICK TO START';
+    }
+  }
+
+  const rs = document.getElementById('rsStatus');
+  if (!known)        { rs.textContent = '—';                       rs.className = 'relay-status-val rsv-dim'; }
+  else if (!run)     { rs.textContent = 'stopped';                 rs.className = 'relay-status-val rsv-red'; }
+  else if (!netUp)   { rs.textContent = 'maintenance';             rs.className = 'relay-status-val rsv-amber'; }
+  else if (pct < 100){ rs.textContent = `bootstrapping ${pct}%`;  rs.className = 'relay-status-val rsv-amber'; }
+  else               { rs.textContent = 'healthy · online';        rs.className = 'relay-status-val rsv-green'; }
+
+  const tg = document.getElementById('relayTagLine');
+  if (!known)        tg.textContent = '—';
+  else if (!run)     tg.textContent = 'Click the server icon or Start to launch Tor';
+  else if (!netUp)   tg.textContent = `Maintenance · WG → nftables → ${mAddr()}`;
+  else if (pct === 100) tg.textContent = `Fully bootstrapped · routing via ${tAddr()}`;
+  else               tg.textContent = S.summary || 'Connecting to Tor network…';
+
+  if (!_busy) {
+    const tb = document.getElementById('toggleBtn');
+    const ab = document.getElementById('startBtn');
+    const ob = document.getElementById('stopBtn');
+    tb.disabled = !run;
+    if (run && netUp) {
+      tb.className = 'net-btn disable';
+      tb.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Disable Network';
+    } else {
+      tb.className = 'net-btn enable';
+      tb.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Enable Network';
+    }
+    ab.disabled = !!run;  ab.className = 'net-btn start';
+    ab.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start';
+    ob.disabled = !run;   ob.className = 'net-btn stopb';
+    ob.innerHTML = '<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg> Stop';
+  }
+
+  document.getElementById('uptimeLbl').textContent = fmtUp(S.uptime);
+  document.getElementById('mTrans').textContent = tAddr();
+  document.getElementById('mSocks').textContent = sAddr();
+  document.getElementById('mCtrl').textContent  = cAddr();
+  document.getElementById('mDns').textContent   = dAddr();
+  document.getElementById('mMaint').textContent = mAddr();
+
+  const mw = document.getElementById('mWgTraffic');
+  if (!run)       { mw.textContent = '—';                    mw.className = 'meta-val mv-dim'; }
+  else if (!netUp){ mw.textContent = '→ nftables DNAT/DROP'; mw.className = 'meta-val mv-amber'; }
+  else            { mw.textContent = '→ ' + tAddr();         mw.className = 'meta-val mv-green'; }
+
+  const mn = document.getElementById('mNft');
+  if (!run)       { mn.textContent = '—';                      mn.className = 'meta-val mv-dim'; }
+  else if (!netUp){ mn.textContent = 'DOWN rules active';       mn.className = 'meta-val mv-amber'; }
+  else            { mn.textContent = 'prerouting chain empty';  mn.className = 'meta-val mv-green'; }
+
+  document.getElementById('rArch').textContent  = run ? 'WG subnet → nftables → TransPort' : '—';
+  document.getElementById('rTrans').textContent = tAddr();
+  document.getElementById('rSocks').textContent = sAddr();
+  document.getElementById('rDns').textContent   = dAddr();
+  document.getElementById('rMaint').textContent = mAddr();
+  document.getElementById('routeBadge').textContent = run ? `wg → nftables → ${tAddr()}` : '—';
+
+  const rd = document.getElementById('rDownState');
+  if (!run)       { rd.textContent = '—';                                rd.className = 'r-val dim'; }
+  else if (!netUp){ rd.textContent = `TCP → ${mAddr()} · UDP → DROP`;     rd.className = 'r-val amber'; }
+  else            { rd.textContent = 'inactive — traffic via TransPort';   rd.className = 'r-val green'; }
+
+  renderTopo();
+}
+
+// ── TOPOLOGY ─────────────────────────────────────────
+function renderTopo() {
+  const svg   = document.getElementById('topoSvg');
+  const bar   = document.getElementById('topoStateBar');
+  const badge = document.getElementById('topoBadge');
+  const run = S.processRunning, netUp = S.networkEnabled, pct = S.pct ?? 0;
+
+  if (run === null) {
+    svg.innerHTML = '';
+    bar.innerHTML = '<div class="topo-dot" style="background:var(--text-xdim)"></div><span>Waiting for backend…</span>';
+    badge.textContent = '—';
+    return;
+  }
+
+  const COLORS = {
+    active:   { bg: '#eff6ff', border: '#bfdbfe', label: '#2563eb' },
+    routing:  { bg: '#ecfdf5', border: '#a7f3d0', label: '#059669' },
+    warning:  { bg: '#fffbeb', border: '#fde68a', label: '#d97706' },
+    purple:   { bg: '#f5f3ff', border: '#ddd6fe', label: '#7c3aed' },
+    inactive: { bg: '#f1f5f9', border: '#e2e8f0', label: '#94a3b8' },
+    teal: { bg: '#f0fdfa', border: '#99f6e4', label: '#0d9488' },
+  };
+
+  let nodes, stateColor, stateTxt, badgeTxt, ballColor, animated;
+
+  if (!run) {
+    nodes = [
+      { img: '/static/icons/client.svg',    label: 'WG CLIENT',   sub: 'peer',        cls: 'inactive' },
+      { img: '/static/icons/guard.svg',     label: 'WG RELAY',    sub: 'interface',   cls: 'inactive' },
+      { img: '/static/icons/firewall.svg',  label: 'NFTABLES',    sub: 'tor_mgr',     cls: 'inactive' },
+      { img: '/static/icons/tor_relay.svg', label: 'TOR',         sub: 'not running', cls: 'inactive' },
+      { img: '/static/icons/relay.svg',     label: '3-HOP',       sub: 'circuit',     cls: 'inactive' },
+      { img: '/static/icons/internet.svg',  label: 'INTERNET',   sub: 'offline',     cls: 'inactive' },
+    ];
+    stateColor = '#94a3b8'; stateTxt = 'Tor process stopped'; badgeTxt = 'Process stopped';
+    ballColor = null; animated = false;
+  } else if (!netUp) {
+    nodes = [
+      { img: '/static/icons/client.svg',      label: 'WG CLIENT',  sub: 'peer',       cls: 'active'  },
+      { img: '/static/icons/guard.svg',       label: 'WG RELAY',   sub: 'interface',  cls: 'active'  },
+      { img: '/static/icons/firewall.svg',    label: 'NFTABLES',   sub: 'DOWN rules', cls: 'warning' },
+      { img: '/static/icons/maintenance.svg', label: 'MAINT SRV',  sub: mAddr(),      cls: 'warning' },
+    ];
+    stateColor = '#d97706';
+    stateTxt   = `Maintenance — TCP → ${mAddr()} (HTTP 503) · UDP → DROP`;
+    badgeTxt   = `WG → nftables → DNAT → ${mAddr()}`;
+    ballColor  = '#d97706'; animated = true;
+  } else {
+    const nftC  = pct === 100 ? 'routing' : 'warning';
+    const torC  = pct === 100 ? 'routing' : 'warning';
+    const hopC  = pct > 0     ? (pct === 100 ? 'purple'  : 'warning') : 'inactive';
+    const exitC = pct === 100 ? 'routing' : 'inactive';
+    nodes = [
+      { img: '/static/icons/client.svg',    label: 'WG CLIENT',   sub: 'peer',        cls: 'teal' },
+      { img: '/static/icons/guard.svg',     label: 'WG RELAY',    sub: 'interface',   cls: 'active' },
+      { img: '/static/icons/firewall.svg',  label: 'NFTABLES',    sub: 'passthrough', cls: nftC     },
+      { img: '/static/icons/tor_relay.svg', label: 'TOR TRANSPT', sub: tAddr(),       cls: torC     },
+      { img: '/static/icons/relay.svg',     label: 'TOR 3-HOP',   sub: '3 relays',    cls: hopC     },
+      { img: '/static/icons/internet.svg',  label: 'INTERNET',   sub: 'anonymous',   cls: exitC    },
+    ];
+    stateColor = pct === 100 ? '#059669' : '#d97706';
+    stateTxt   = pct === 100
+      ? `Bootstrapped · traffic → ${tAddr()} → 3-hop → exit`
+      : `Bootstrapping ${pct}% · ${S.summary || 'connecting…'}`;
+    badgeTxt   = pct === 100 ? `WG → nftables → ${tAddr()}` : `WG → nftables → Tor (${pct}%)`;
+    ballColor  = pct === 100 ? '#059669' : '#d97706';
+    animated   = true;
+  }
+
+  // ── Layout constants ─────────────────────────────────
+  const ICON   = 60;
+  const ICONR  = 12;
+  const CY     = 36;
+  const N      = nodes.length;
+  const VW     = 800;
+  const NODE_W = 76;
+  const GAP    = Math.floor((VW - N * NODE_W) / (N + 1));
+  const MARGIN = GAP;
+  const cx     = (i) => MARGIN + i * (NODE_W + GAP) + NODE_W / 2;
+  const VH     = CY + ICON / 2 + 48;
+
+  // ── Per-connector colour ──────────────────────────────
+  const connCols = [];
+  for (let i = 0; i < N - 1; i++) {
+    const both = nodes[i].cls === 'inactive' && nodes[i+1].cls === 'inactive';
+    connCols.push(both ? COLORS.inactive : (COLORS[nodes[i+1].cls] || COLORS.inactive));
+  }
+
+  // ── SVG defs ─────────────────────────────────────────
+  let out = `<defs>`;
+
+  // Glass sheen (top-to-bottom white fade)
+  out += `<linearGradient id="gs" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="white" stop-opacity="0.6"/>
+    <stop offset="40%"  stop-color="white" stop-opacity="0.15"/>
+    <stop offset="100%" stop-color="white" stop-opacity="0.0"/>
+  </linearGradient>`;
+
+  // Blur filter to simulate glassmorphism backdrop
+  out += `<filter id="glass-fx" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+  </filter>`;
+
+  // Per-color node soft shadow
+  const nodeShadows = {
+    active:   '37,99,235',   routing: '5,150,105',
+    warning:  '217,119,6',   purple:  '124,58,237',
+    teal:     '13,148,136',  inactive:'148,163,184',
+  };
+  for (const [cls, rgb] of Object.entries(nodeShadows)) {
+    out += `<filter id="ns-${cls}" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="rgba(${rgb},0.28)"/>
+    </filter>`;
+  }
+
+  // Line shimmer filter (soft glow on the moving sweep)
+  out += `<filter id="lf" x="-10%" y="-400%" width="120%" height="900%">
+    <feGaussianBlur stdDeviation="1.5"/>
+  </filter>`;
+
+  out += `</defs>`;
+
+  // ── Draw connector lines ──────────────────────────────
+  for (let i = 0; i < N - 1; i++) {
+    const x1 = cx(i)     + ICON / 2 + 4;
+    const x2 = cx(i + 1) - ICON / 2 - 4;
+    const segL = x2 - x1;
+    const c  = connCols[i];
+    const isOn = animated && ballColor && nodes[i].cls !== 'inactive';
+
+    // ① Rail — thin faint base line
+    out += `<line x1="${x1}" y1="${CY}" x2="${x2}" y2="${CY}"
+      stroke="${c.border}" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>`;
+
+    if (isOn) {
+      // ② Solid coloured line on top of rail
+      out += `<line x1="${x1}" y1="${CY}" x2="${x2}" y2="${CY}"
+        stroke="${c.label}" stroke-width="2" stroke-linecap="round" opacity="0.35"/>`;
+
+      // ③ Loader shimmer — a bright dash sweeping left→right via stroke-dashoffset
+      //    dasharray: [beam_width, rest_of_segment] so only one beam visible at a time
+      const beam  = Math.round(segL * 0.38);   // beam is 38% of segment width
+      const cycle = segL + beam;                // full animation distance
+      const dur   = (segL / 180).toFixed(2);   // speed: 180px/s
+
+      // Glow halo of the sweep (wider, blurred)
+      out += `<line x1="${x1}" y1="${CY}" x2="${x2}" y2="${CY}"
+        stroke="${c.label}" stroke-width="5" stroke-linecap="round" opacity="0.18"
+        filter="url(#lf)"
+        stroke-dasharray="${beam} ${cycle}"
+        stroke-dashoffset="${beam}">
+        <animate attributeName="stroke-dashoffset"
+          from="${beam}" to="${-(cycle)}"
+          dur="${dur}s" repeatCount="indefinite" calcMode="linear"/>
+      </line>`;
+
+      // Sharp bright core of the sweep
+      out += `<line x1="${x1}" y1="${CY}" x2="${x2}" y2="${CY}"
+        stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.7"
+        stroke-dasharray="${beam * 0.6} ${cycle}"
+        stroke-dashoffset="${beam}">
+        <animate attributeName="stroke-dashoffset"
+          from="${beam}" to="${-(cycle)}"
+          dur="${dur}s" repeatCount="indefinite" calcMode="linear"/>
+      </line>`;
+    }
+  }
+
+  // ── Draw nodes ───────────────────────────────────────
+  for (let i = 0; i < N; i++) {
+    const x  = cx(i) - ICON / 2;
+    const c  = COLORS[nodes[i].cls] || COLORS.inactive;
+    const op = nodes[i].cls === 'inactive' ? '0.38' : '1';
+    const sf = `url(#ns-${nodes[i].cls})`;
+
+    out += `<g opacity="${op}">`;
+
+    // ── Glassmorphism node ──────────────────────────────
+    // Layer 1: blurred tinted backdrop (simulates frosted glass)
+    out += `<rect x="${x+1}" y="${CY-ICON/2+1}" width="${ICON-2}" height="${ICON-2}"
+      rx="${ICONR}" fill="${c.bg}" fill-opacity="0.55"
+      filter="url(#glass-fx)"/>`;
+
+    // Layer 2: main box — semi-transparent fill + coloured border
+    out += `<rect x="${x}" y="${CY-ICON/2}" width="${ICON}" height="${ICON}"
+      rx="${ICONR}"
+      fill="${c.bg}" fill-opacity="0.25"
+      stroke="${c.border}" stroke-width="1.5"
+      filter="${sf}"/>`;
+
+    // Layer 3: inner white border highlight (top-left glass edge)
+    out += `<rect x="${x+0.75}" y="${CY-ICON/2+0.75}" width="${ICON-1.5}" height="${ICON-1.5}"
+      rx="${ICONR-1}" fill="none"
+      stroke="white" stroke-width="0.75" stroke-opacity="0.55"/>`;
+
+    // Layer 4: top sheen gradient overlay
+    out += `<rect x="${x}" y="${CY-ICON/2}" width="${ICON}" height="${ICON*0.5}"
+      rx="${ICONR}" fill="url(#gs)" pointer-events="none"/>`;
+
+    // Icon image (centred)
+    out += `<image href="${nodes[i].img}"
+      x="${x + 11}" y="${CY - ICON/2 + 11}"
+      width="${ICON - 22}" height="${ICON - 22}"/>`;
+
+    // Node label
+    out += `<text x="${cx(i)}" y="${CY + ICON/2 + 13}"
+      text-anchor="middle"
+      font-family="'JetBrains Mono',monospace" font-size="7.5"
+      font-weight="700" letter-spacing="0.09em"
+      fill="${c.label}">${nodes[i].label}</text>`;
+
+    // Sub-label
+    out += `<text x="${cx(i)}" y="${CY + ICON/2 + 24}"
+      text-anchor="middle"
+      font-family="'JetBrains Mono',monospace" font-size="6.2"
+      fill="#94a3b8">${nodes[i].sub}</text>`;
+
+    out += `</g>`;
+  }
+
+  svg.setAttribute('viewBox', `0 0 ${VW} ${VH}`);
+  svg.innerHTML = out;
+
+  bar.innerHTML     = `<div class="topo-dot" style="background:${stateColor}"></div><span style="color:var(--text-dim)">${stateTxt}</span>`;
+  badge.textContent = badgeTxt;
+}
+
+
+
+// ── CIRCUITS ─────────────────────────────────────────
+function renderCircuits() {
+  const grid     = document.getElementById('circGrid');
+  const cnt      = document.getElementById('circCount');
+  const circuits = S._circuits;
+  const err      = S._circError;
+
+  if (!S.processRunning || !S.networkEnabled) {
+    cnt.textContent  = '—';
+    grid.innerHTML   = '<div class="circ-empty">Start relay and enable network to see circuits</div>';
+    return;
+  }
+
+  cnt.textContent = circuits.length
+    ? `${circuits.length} circuit${circuits.length !== 1 ? 's' : ''}`
+    : '—';
+
+  if (!circuits.length) {
+    if (err) {
+      grid.innerHTML = `<div class="circ-empty" style="color:var(--amber)">⚠ Could not fetch circuits — ${err}<br><small style="opacity:0.6">Relay is up. Will retry automatically.</small></div>`;
+    } else if (_circLoading) {
+      grid.innerHTML = '<div class="circ-empty">Loading circuits…</div>';
+    } else {
+      grid.innerHTML = '<div class="circ-empty">No active circuits yet — relay is online, waiting for circuit build</div>';
+    }
+    return;
+  }
+
+  grid.innerHTML = circuits.slice(0, 24).map(c => `
+    <div class="circ-item">
+      <div class="circ-id">CIRCUIT #${c.id}</div>
+      <div class="circ-path">
+        ${(c.path || []).map((nd, i, arr) => `
+          <div class="circ-node ${nd.role || 'guard'}">
+            <span class="circ-node-role">${nd.role || '?'}</span>
+            <span>${nd.nickname || (nd.fingerprint ? nd.fingerprint.slice(0, 8) : '?')}</span>
+          </div>
+          ${i < arr.length - 1 ? '<span class="circ-arr">→</span>' : ''}
+        `).join('')}
+      </div>
+    </div>`).join('');
+}
+
+
+
+// ── TOAST ────────────────────────────────────────────
+function toast(msg, type = 'info') {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${{ success: '✓', error: '✕', info: 'ℹ' }[type] || '·'}</span><span>${msg}</span>`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => {
+    el.style.cssText = 'opacity:0;transform:translateY(4px) scale(0.97);transition:all .22s';
+    setTimeout(() => el.remove(), 240);
+  }, 3500);
+}
+
+// ── INIT ─────────────────────────────────────────────
+window.addEventListener('load', () => {
+  doRefresh();
+  setInterval(doRefresh,    20000);
+  setInterval(loadCircuits, 30000);
+});
+</script>
+</body>
+</html>

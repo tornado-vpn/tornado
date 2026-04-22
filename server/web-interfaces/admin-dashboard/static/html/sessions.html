@@ -1,0 +1,1161 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>VPN Session Management</title>
+
+        <style>
+            /* Instrument Sans */
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-400-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-500-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 600;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-600-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 700;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-700-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: italic;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-400-italic.woff2")
+                    format("woff2");
+            }
+
+            /* Geist Mono */
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 300;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-300-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-400-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-500-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 600;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-600-normal.woff2")
+                    format("woff2");
+            }
+
+            :root {
+                --bg: #f5f6f8;
+                --bg1: #ffffff;
+                --bg2: #f5f6f8;
+                --bg3: #eef0f5;
+                --bg4: #e2e5ec;
+                --border: #d9dce0;
+                --border2: #c4c8d0;
+                --text: #1a1f36;
+                --text2: #3a3f5c;
+                --text3: #6c757d;
+                --text4: #9ba3af;
+                --accent: #0066cc;
+                --accent2: #0052a3;
+                --accent-glow: rgba(0, 102, 204, 0.12);
+                --red: #dc3545;
+                --red-bg: rgba(220, 53, 69, 0.08);
+                --red-border: rgba(220, 53, 69, 0.25);
+                --green: #28a745;
+                --green-bg: rgba(40, 167, 69, 0.08);
+                --green-border: rgba(40, 167, 69, 0.2);
+                --amber: #d97706;
+                --amber-bg: rgba(217, 119, 6, 0.08);
+                --amber-border: rgba(217, 119, 6, 0.2);
+                --info: #0891b2;
+                --info-bg: rgba(8, 145, 178, 0.08);
+                --purple: #6d28d9;
+                --purple-bg: rgba(109, 40, 217, 0.08);
+                --font: "Instrument Sans", system-ui, sans-serif;
+                --mono: "Geist Mono", monospace;
+                --radius: 8px;
+                --radius-lg: 12px;
+                --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            html,
+            body {
+                height: 100%;
+                font-family: var(--font);
+                background: var(--bg);
+                color: var(--text);
+                -webkit-font-smoothing: antialiased;
+                font-size: 14px;
+            }
+
+            ::-webkit-scrollbar {
+                width: 5px;
+                height: 5px;
+            }
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: var(--border2);
+                border-radius: 3px;
+            }
+
+            /* ── Layout ── */
+            .app {
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+            }
+
+            /* ── Topbar ── */
+            .topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 24px;
+                height: 52px;
+                background: var(--bg1);
+                border-bottom: 1px solid var(--border);
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                box-shadow: var(--shadow);
+                flex-shrink: 0;
+            }
+            .topbar-left {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+                color: inherit;
+            }
+            .brand-icon {
+                width: 28px;
+                height: 28px;
+                border-radius: 7px;
+                background: linear-gradient(
+                    135deg,
+                    var(--accent),
+                    var(--purple)
+                );
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px var(--accent-glow);
+            }
+            .brand-icon img {
+                width: 14px;
+                height: 14px;
+                filter: brightness(0) invert(1);
+            }
+            .brand-name {
+                font-size: 15px;
+                font-weight: 700;
+                letter-spacing: -0.3px;
+            }
+            .brand-sub {
+                font-size: 11px;
+                color: var(--text3);
+                font-family: var(--mono);
+                letter-spacing: 0.5px;
+            }
+
+            .topbar-right {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            /* WS status pill */
+            .ws-pill {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 10px;
+                border-radius: 100px;
+                font-size: 11px;
+                font-weight: 600;
+                font-family: var(--mono);
+                transition: all 0.3s;
+            }
+            .ws-pill.connected {
+                background: var(--green-bg);
+                color: var(--green);
+                border: 1px solid var(--green-border);
+            }
+            .ws-pill.disconnected {
+                background: var(--red-bg);
+                color: var(--red);
+                border: 1px solid var(--red-border);
+            }
+            .ws-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+            .ws-pill.connected .ws-dot {
+                animation: pulse-dot 2s ease-in-out infinite;
+            }
+            @keyframes pulse-dot {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.3;
+                }
+            }
+
+            /* ── Page ── */
+            .page {
+                padding: 24px;
+                max-width: 1600px;
+                margin: 0 auto;
+                width: 100%;
+            }
+
+            /* ── Section header ── */
+            .section-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 14px;
+                margin-top: 28px;
+            }
+            .section-header:first-child {
+                margin-top: 0;
+            }
+            .section-title {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.7px;
+                color: var(--text3);
+                font-family: var(--font);
+            }
+
+            /* ── KPI Cards ── */
+            .kpi-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                margin-bottom: 28px;
+            }
+            .kpi-card {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 16px;
+                position: relative;
+                overflow: hidden;
+                transition: all 0.2s;
+                box-shadow: var(--shadow);
+            }
+            .kpi-card::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            }
+            .kpi-card.green::after {
+                background: var(--green);
+            }
+            .kpi-card.blue::after {
+                background: linear-gradient(
+                    90deg,
+                    var(--accent),
+                    var(--purple)
+                );
+            }
+            .kpi-card.amber::after {
+                background: var(--amber);
+            }
+            .kpi-card:hover {
+                border-color: var(--border2);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .kpi-top {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                margin-bottom: 12px;
+            }
+            .kpi-icon-wrap {
+                width: 36px;
+                height: 36px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+            .kpi-icon-wrap img {
+                width: 25px;
+                height: 25px;
+            }
+            .green .kpi-icon-wrap {
+                background: var(--green-bg);
+            }
+            .green .kpi-icon-wrap img {
+                filter: invert(44%) sepia(72%) saturate(426%) hue-rotate(83deg)
+                    brightness(95%) contrast(90%);
+            }
+            .blue .kpi-icon-wrap {
+                background: var(--accent-glow);
+            }
+            .blue .kpi-icon-wrap img {
+                filter: invert(29%) sepia(89%) saturate(1562%)
+                    hue-rotate(196deg) brightness(97%) contrast(101%);
+            }
+            .amber .kpi-icon-wrap {
+                background: var(--amber-bg);
+            }
+            .amber .kpi-icon-wrap img {
+                filter: invert(50%) sepia(60%) saturate(800%) hue-rotate(10deg)
+                    brightness(95%) contrast(95%);
+            }
+
+            .kpi-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text3);
+                margin-bottom: 6px;
+                font-family: var(--font);
+            }
+            .kpi-val {
+                font-size: 26px;
+                font-weight: 700;
+                letter-spacing: -1px;
+                line-height: 1;
+                font-family: var(--mono);
+                margin-bottom: 6px;
+            }
+            .green .kpi-val {
+                color: var(--green);
+            }
+            .blue .kpi-val {
+                color: var(--accent);
+            }
+            .amber .kpi-val {
+                color: var(--amber);
+            }
+            .kpi-sub {
+                font-size: 11px;
+                color: var(--text3);
+                font-family: var(--font);
+            }
+            .kpi-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 3px;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 10px;
+                font-weight: 600;
+                font-family: var(--mono);
+            }
+            .kpi-badge.live {
+                background: var(--green-bg);
+                color: var(--green);
+            }
+            .kpi-badge.neutral {
+                background: var(--bg3);
+                color: var(--text3);
+            }
+
+            /* ── Sessions Grid ── */
+            .sessions-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 14px;
+                margin-bottom: 28px;
+            }
+
+            /* ── Session Card ── */
+            .session-card {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                overflow: hidden;
+                box-shadow: var(--shadow);
+                transition: all 0.2s;
+            }
+            .session-card:hover {
+                border-color: var(--border2);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+            }
+            .session-card.removing {
+                opacity: 0;
+                transform: scale(0.96);
+                transition: all 0.25s ease;
+                pointer-events: none;
+            }
+
+            /* Card head */
+            .sess-head {
+                padding: 13px 16px 11px;
+                border-bottom: 1px solid var(--border);
+                background: var(--bg2);
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 10px;
+            }
+            .sess-head-left {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex: 1;
+                min-width: 0;
+            }
+            .sess-icon-wrap {
+                width: 34px;
+                height: 34px;
+                border-radius: 8px;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .sess-icon-wrap img {
+                width: 16px;
+                height: 16px;
+            }
+            .sess-icon-wrap.online {
+                background: var(--green-bg);
+            }
+            .sess-icon-wrap.online img {
+                filter: invert(44%) sepia(72%) saturate(426%) hue-rotate(83deg)
+                    brightness(95%) contrast(90%);
+            }
+            .sess-icon-wrap.offline {
+                background: var(--red-bg);
+            }
+            .sess-icon-wrap.offline img {
+                filter: invert(27%) sepia(85%) saturate(1200%)
+                    hue-rotate(334deg) brightness(95%) contrast(95%);
+            }
+            .sess-icon-wrap.recovered {
+                background: var(--amber-bg);
+            }
+            .sess-icon-wrap.recovered img {
+                filter: invert(50%) sepia(60%) saturate(800%) hue-rotate(10deg)
+                    brightness(95%) contrast(95%);
+            }
+            .sess-icon-wrap.tor {
+                background: var(--purple-bg);
+            }
+            .sess-icon-wrap.tor img {
+                filter: invert(22%) sepia(90%) saturate(1200%)
+                    hue-rotate(258deg) brightness(85%) contrast(95%);
+            }
+
+            .sess-device {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -0.2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-family: var(--font);
+            }
+            .sess-id {
+                font-size: 10px;
+                color: var(--text4);
+                font-family: var(--mono);
+                margin-top: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Session status badge */
+            .sess-status {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 3px 8px;
+                border-radius: 4px;
+                font-size: 10px;
+                font-weight: 700;
+                font-family: var(--mono);
+                flex-shrink: 0;
+                text-transform: uppercase;
+                letter-spacing: 0.4px;
+            }
+            .sess-status .sdot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+            .sess-status.online {
+                background: var(--green-bg);
+                color: var(--green);
+                border: 1px solid var(--green-border);
+            }
+            .sess-status.online .sdot {
+                animation: pulse-dot 1.5s ease-in-out infinite;
+            }
+            .sess-status.offline {
+                background: var(--red-bg);
+                color: var(--red);
+                border: 1px solid var(--red-border);
+            }
+            .sess-status.recovered {
+                background: var(--amber-bg);
+                color: var(--amber);
+                border: 1px solid var(--amber-border);
+            }
+
+            /* Card body */
+            .sess-body {
+                padding: 12px 16px;
+            }
+
+            /* Info rows grid */
+            .sess-info {
+                display: grid;
+                gap: 1px;
+                background: var(--border);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                overflow: hidden;
+                margin-bottom: 12px;
+            }
+            .sess-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 9px 12px;
+                background: var(--bg1);
+            }
+            .sess-row:not(:last-child) {
+                border-bottom: 1px solid var(--border);
+            }
+            .sess-row-label {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 9px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text4);
+                flex-shrink: 0;
+                font-family: var(--font);
+            }
+            .sess-row-label img {
+                width: 20px;
+                height: 20px;
+                opacity: 0.5;
+            }
+            .sess-row-val {
+                font-size: 11px;
+                font-weight: 600;
+                font-family: var(--mono);
+                color: var(--text2);
+                text-align: right;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .sess-row-val.accent {
+                color: var(--accent);
+            }
+            .sess-row-val.purple {
+                color: var(--purple);
+            }
+
+            /* Terminate button */
+            .sess-terminate {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                background: var(--bg1);
+                border-radius: var(--radius);
+                cursor: pointer;
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--text3);
+                font-family: var(--font);
+                transition: all 0.15s;
+            }
+            .sess-terminate img {
+                width: 20px;
+                height: 20px;
+                opacity: 0.4;
+            }
+            .sess-terminate:hover {
+                border-color: var(--red-border);
+                background: var(--red-bg);
+                color: var(--red);
+            }
+            .sess-terminate:hover img {
+                filter: invert(27%) sepia(85%) saturate(1200%)
+                    hue-rotate(334deg) brightness(95%) contrast(95%);
+                opacity: 1;
+            }
+
+            /* ── Empty State ── */
+            .empty-state {
+                grid-column: 1 / -1;
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 56px 24px;
+                text-align: center;
+                box-shadow: var(--shadow);
+            }
+            .empty-icon {
+                width: 40px;
+                height: 40px;
+                opacity: 0.2;
+                margin: 0 auto 14px;
+                display: block;
+            }
+            .empty-title {
+                font-size: 14px;
+                font-weight: 700;
+                color: var(--text2);
+                margin-bottom: 4px;
+                font-family: var(--font);
+            }
+            .empty-sub {
+                font-size: 12px;
+                color: var(--text4);
+                font-family: var(--font);
+            }
+
+            /* ── Responsive ── */
+            @media (max-width: 1200px) {
+                .sessions-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .kpi-grid {
+                    grid-template-columns: repeat(3, 1fr);
+                }
+            }
+            @media (max-width: 768px) {
+                .page {
+                    padding: 14px;
+                }
+                .kpi-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .sessions-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            @media (max-width: 480px) {
+                .kpi-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="app">
+            <!-- ── Topbar ── -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <a class="brand" href="#">
+                        <div class="brand-icon">
+                            <img src="/static/icons/plug.svg" alt="brand" />
+                        </div>
+                        <div>
+                            <div class="brand-name">SysMon</div>
+                            <div class="brand-sub">VPN Sessions</div>
+                        </div>
+                    </a>
+                </div>
+                <div class="topbar-right">
+                    <div class="ws-pill disconnected" id="wsPill">
+                        <span class="ws-dot"></span>
+                        <span id="wsPillText">Connecting…</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- ── Page ── -->
+            <div class="page">
+                <!-- ── KPI SUMMARY ── -->
+                <div class="section-header">
+                    <span class="section-title">Overview</span>
+                    <span
+                        style="
+                            font-size: 11px;
+                            color: var(--text4);
+                            font-family: var(--mono);
+                        "
+                        id="lastUpdated"
+                        >—</span
+                    >
+                </div>
+
+                <div class="kpi-grid">
+                    <!-- Active Sessions -->
+                    <div class="kpi-card green">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img src="/static/icons/plug.svg" alt="active" />
+                            </div>
+                            <span class="kpi-badge live" id="kpiActiveBadge"
+                                >● Live</span
+                            >
+                        </div>
+                        <div class="kpi-label">Active Sessions</div>
+                        <div class="kpi-val" id="kpiActive">0</div>
+                        <div class="kpi-sub">Live connections</div>
+                    </div>
+
+                    <!-- Total Connections -->
+                    <div class="kpi-card blue">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img
+                                    src="/static/icons/connections.svg"
+                                    alt="total"
+                                />
+                            </div>
+                            <span class="kpi-badge neutral">Session</span>
+                        </div>
+                        <div class="kpi-label">Total Connections</div>
+                        <div class="kpi-val" id="kpiTotal">0</div>
+                        <div class="kpi-sub">Since page load</div>
+                    </div>
+
+                    <!-- Last Update -->
+                    <div class="kpi-card amber">
+                        <div class="kpi-top">
+                            <div class="kpi-icon-wrap">
+                                <img src="/static/icons/update.svg" alt="update" />
+                            </div>
+                            <span class="kpi-badge neutral">Sync</span>
+                        </div>
+                        <div class="kpi-label">Last Update</div>
+                        <div
+                            class="kpi-val"
+                            id="kpiLastUpdate"
+                            style="font-size: 18px; letter-spacing: -0.5px"
+                        >
+                            —
+                        </div>
+                        <div class="kpi-sub">Real-time sync</div>
+                    </div>
+                </div>
+
+                <!-- ── SESSIONS ── -->
+                <div class="section-header">
+                    <span class="section-title">Active Sessions</span>
+                    <span
+                        style="
+                            font-size: 11px;
+                            color: var(--text4);
+                            font-family: var(--mono);
+                        "
+                        id="sessionCount"
+                        >0 sessions</span
+                    >
+                </div>
+
+                <div class="sessions-grid" id="sessionsGrid">
+                    <div class="empty-state">
+                        <img
+                            src="/static/icons/search_empty.svg"
+                            alt="empty"
+                            class="empty-icon"
+                        />
+                        <div class="empty-title">No Active Sessions</div>
+                        <div class="empty-sub">
+                            Waiting for VPN connections…
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end .page -->
+        </div>
+        <!-- end .app -->
+
+        <script>
+            const sessions = new Map();
+            let totalConnectionsEver = 0;
+
+            const grid = document.getElementById("sessionsGrid");
+            const kpiActive = document.getElementById("kpiActive");
+            const kpiTotal = document.getElementById("kpiTotal");
+            const kpiLastUpdate = document.getElementById("kpiLastUpdate");
+            const sessionCount = document.getElementById("sessionCount");
+            const lastUpdated = document.getElementById("lastUpdated");
+            const wsPill = document.getElementById("wsPill");
+            const wsPillText = document.getElementById("wsPillText");
+
+            // ── Helpers ──────────────────────────────────────────────────────────────
+
+            function formatTime(ts) {
+                if (!ts) return "—";
+                // Redis returns strings — coerce to number
+                const n = Number(ts);
+                if (!n) return "—";
+                return new Date(n * 1000).toLocaleTimeString("en-US", {
+                    hour12: false,
+                    timeZone: "UTC"
+                })+ " UTC";
+            }
+
+            function nowTime() {
+                return new Date().toLocaleTimeString("en-US", {
+                    hour12: false,
+                    timeZone: "UTC"
+                })+ " UTC";
+            }
+
+            function getStatus(session) {
+                // Check recovered BEFORE checking state — recovery means back online
+                if (
+                    session.recovered === true ||
+                    session.recovered === "True" ||
+                    session.recovered === "1"
+                )
+                    return "recovered";
+                if (session.state === "offline") return "offline";
+                return "online";
+            }
+
+            // ── KPI updater ──────────────────────────────────────────────────────────
+
+            function updateKpis() {
+                const t = nowTime();
+                kpiActive.textContent = sessions.size;
+                kpiTotal.textContent = totalConnectionsEver;
+                kpiLastUpdate.textContent = t;
+                lastUpdated.textContent = "Updated " + t;
+                sessionCount.textContent = `${sessions.size} session${sessions.size !== 1 ? "s" : ""}`;
+            }
+
+            // ── Empty state ──────────────────────────────────────────────────────────
+
+            function checkEmpty() {
+                if (sessions.size === 0) {
+                    grid.innerHTML = `
+                <div class="empty-state">
+                    <img src="/static/icons/empty.svg" alt="empty" class="empty-icon"/>
+                    <div class="empty-title">No Active Sessions</div>
+                    <div class="empty-sub">Waiting for VPN connections…</div>
+                </div>`;
+                }
+            }
+
+            // ── Card render — returns INNER content only (no wrapper div) ───────────
+
+            function renderCardInner(sessionData) {
+                const id = sessionData.session_id;
+                const status = getStatus(sessionData);
+                const isTor = !!sessionData.tor_ip;
+                const iconKey = isTor ? "tor" : status;
+                const deviceIconSrc = isTor
+                    ? "shield.svg"
+                    : "icon_monitor_device";
+
+                return `
+            <!-- Head -->
+            <div class="sess-head">
+                <div class="sess-head-left">
+                    <div class="sess-icon-wrap ${iconKey}">
+                        <img src="/static/icons/${deviceIconSrc}" alt="device"/>
+                    </div>
+                    <div style="min-width:0">
+                        <div class="sess-device" title="${sessionData.device_id || "Unknown Device"}">
+                            ${sessionData.device_id || "Unknown Device"}
+                        </div>
+                        <div class="sess-id" title="${id}">${id}</div>
+                    </div>
+                </div>
+                <div class="sess-status ${status}">
+                    <span class="sdot"></span>
+                    ${status.toUpperCase()}
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="sess-body">
+                <div class="sess-info">
+                    <div class="sess-row">
+                        <span class="sess-row-label">
+                            <img src="/static/icons/globe.svg" alt="ip"/>
+                            Public IP
+                        </span>
+                        <span class="sess-row-val">${sessionData.client_ip || "—"}</span>
+                    </div>
+                    <div class="sess-row">
+                        <span class="sess-row-label">
+                            <img src="/static/icons/server_rack.svg" alt="vpn"/>
+                            VPN IP
+                        </span>
+                        <span class="sess-row-val accent">${sessionData.vpn_ip || "—"}</span>
+                    </div>
+                    ${
+                        isTor
+                            ? `
+                    <div class="sess-row">
+                        <span class="sess-row-label">
+                            <img src="/static/icons/tor_onion.svg" alt="tor"/>
+                            Tor Exit
+                        </span>
+                        <span class="sess-row-val purple">${sessionData.tor_ip}</span>
+                    </div>`
+                            : ""
+                    }
+                    <div class="sess-row">
+                        <span class="sess-row-label">
+                            <img src="/static/icons/clock.svg" alt="hb"/>
+                            Heartbeat
+                        </span>
+                        <span class="sess-row-val">${formatTime(sessionData.timestamp)}</span>
+                    </div>
+                </div>
+
+                <button class="sess-terminate" onclick="killSession('${id}')">
+                    <img src="/static/icons/close.svg" alt="terminate"/>
+                    Terminate Session
+                </button>
+            </div>`;
+            }
+
+            // ── Create / update card ─────────────────────────────────────────────────
+
+            function createOrUpdateCard(data) {
+                const id = data.session_id;
+
+                const empty = grid.querySelector(".empty-state");
+                if (empty) empty.remove();
+
+                if (sessions.has(id)) {
+                    const existing = sessions.get(id);
+                    data = { ...existing, ...data };
+                    // If recovered, force state to online — old stored state was "offline"
+                    if (
+                        data.recovered === true ||
+                        data.recovered === "True" ||
+                        data.recovered === "1"
+                    ) {
+                        data.state = "online";
+                        data.recovered = true; // normalize to boolean
+                    }
+                } else {
+                    totalConnectionsEver++;
+                }
+
+                sessions.set(id, data);
+
+                const existing = document.getElementById("sess-" + id);
+                if (existing) {
+                    existing.innerHTML = renderCardInner(data);
+                } else {
+                    const el = document.createElement("div");
+                    el.id = "sess-" + id;
+                    el.className = "session-card";
+                    el.innerHTML = renderCardInner(data);
+                    grid.appendChild(el);
+                }
+
+                updateKpis();
+            }
+
+            // ── Remove card ──────────────────────────────────────────────────────────
+
+            function removeCard(id) {
+                const card = document.getElementById("sess-" + id);
+                sessions.delete(id);
+
+                if (card) {
+                    card.classList.add("removing");
+                    setTimeout(() => {
+                        card.remove();
+                        updateKpis();
+                        checkEmpty();
+                    }, 260);
+                } else {
+                    updateKpis();
+                    checkEmpty();
+                }
+            }
+
+            // ── Kill session ─────────────────────────────────────────────────────────
+
+            async function killSession(id) {
+                try {
+                    await fetch(`/api/admin/kill_session/${id}`, {
+                        method: "POST",
+                    });
+                } catch (e) {
+                    console.error("Failed to terminate session:", e);
+                }
+            }
+
+            // ── WebSocket ────────────────────────────────────────────────────────────
+
+            let ws;
+            let reconnectAttempts = 0;
+
+            function setWsPill(connected, label) {
+                wsPill.className = `ws-pill ${connected ? "connected" : "disconnected"}`;
+                wsPillText.textContent = label;
+            }
+
+            function connectWebSocket() {
+                const proto = location.protocol === "https:" ? "wss:" : "ws:";
+                ws = new WebSocket(`${proto}//${location.host}/ws/admin`);
+
+                ws.onopen = () => {
+                    reconnectAttempts = 0;
+                    setWsPill(true, "Live");
+                    console.log("[WS] Connected");
+                };
+
+                ws.onmessage = (e) => {
+                    console.log("[WS] Message received:", e.data); // ← DEBUG: remove after confirming
+                    try {
+                        const msg = JSON.parse(e.data);
+                        console.log(
+                            "[WS] Parsed:",
+                            msg.type || msg.action,
+                            msg,
+                        );
+                        if (msg.type === "snapshot") {
+                            // Clear everything first — stale cards from before reconnect must go
+                            sessions.clear();
+                            grid.innerHTML = "";
+                            // Snapshot sessions are existing connections, not new ones
+                            msg.sessions.forEach((s) => {
+                                sessions.set(s.session_id, s);
+                                const el = document.createElement("div");
+                                el.id = "sess-" + s.session_id;
+                                el.className = "session-card";
+                                el.innerHTML = renderCardInner(s);
+                                grid.appendChild(el);
+                            });
+                            if (!msg.sessions.length) checkEmpty();
+                            updateKpis();
+                        } else if (
+                            msg.action === "session_created" ||
+                            msg.action === "heartbeat_update"
+                        ) {
+                            createOrUpdateCard(msg);
+                        } else if (msg.action === "session_offline") {
+                            // Mark offline but keep card visible — just update the state
+                            if (sessions.has(msg.session_id)) {
+                                const updated = {
+                                    ...sessions.get(msg.session_id),
+                                    state: "offline",
+                                };
+                                createOrUpdateCard(updated);
+                            }
+                        } else if (msg.action === "session_closed") {
+                            removeCard(msg.session_id);
+                        }
+                    } catch (err) {
+                        console.error("WS message error:", err);
+                    }
+                };
+
+                ws.onclose = (e) => {
+                    console.log(
+                        "[WS] Closed — code:",
+                        e.code,
+                        "reason:",
+                        e.reason,
+                        "clean:",
+                        e.wasClean,
+                    );
+                    setWsPill(false, "Disconnected");
+                    reconnectAttempts++;
+                    if (reconnectAttempts <= 5) {
+                        setTimeout(connectWebSocket, 3000);
+                        setWsPill(
+                            false,
+                            `Reconnecting (${reconnectAttempts}/5)…`,
+                        );
+                    } else {
+                        setWsPill(false, "Connection failed");
+                    }
+                };
+
+                ws.onerror = (e) => {
+                    console.error("[WS] Error:", e);
+                };
+            }
+
+            connectWebSocket();
+            window.killSession = killSession;
+        </script>
+    </body>
+</html>

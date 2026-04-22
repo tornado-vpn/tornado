@@ -1,0 +1,51 @@
+{
+    "socket": {
+        "path": "/run/tornado/log.sock",
+        "permissions": "0o660"
+    },
+    "database": {
+        "path": "/tmp/log-service/logs.db"
+    },
+    "watcher": {
+        "log_dirs": ["/var/log/tornado/"],
+        "watch_extensions": [".log", ".jsonl", ".json", ".txt"],
+        "ignore_suffixes": [
+            ".gz",
+            ".bz2",
+            ".zip",
+            ".zst",
+            ".xz",
+            ".1",
+            ".2",
+            ".3",
+            ".4",
+            ".5",
+            ".6",
+            ".7",
+            ".8",
+            ".9"
+        ]
+    },
+    "retention": {
+        "days": 30
+    },
+    "buffer": {
+        "flush_interval_sec": 2.0,
+        "flush_size": 500,
+        "hard_cap": 100000
+    },
+    "query": {
+        "max_rows": 5000
+    },
+    "connections": {
+        "max": 100
+    },
+    "export": {
+        "tmp_dir": "/var/log/tornado/exp/",
+        "max_rows": 100000
+    },
+    "logging": {
+        "level": "INFO",
+        "service_log_dir": "/var/log/log-service"
+    }
+}

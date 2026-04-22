@@ -1,0 +1,4561 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>LogOps</title>
+
+        <style>
+            /* Instrument Sans */
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-400-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-500-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 600;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-600-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 700;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-700-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: italic;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-400-italic.woff2")
+                    format("woff2");
+            }
+
+            /* Geist Mono */
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 300;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-300-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-400-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-500-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 600;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-600-normal.woff2")
+                    format("woff2");
+            }
+            :root {
+                --bg: #f5f6f8;
+                --bg1: #ffffff;
+                --bg2: #f5f6f8;
+                --bg3: #eef0f5;
+                --bg4: #e2e5ec;
+                --border: #d9dce0;
+                --border2: #c4c8d0;
+                --text: #1a1f36;
+                --text2: #3a3f5c;
+                --text3: #6c757d;
+                --text4: #9ba3af;
+                --accent: #0066cc;
+                --accent2: #0052a3;
+                --accent-glow: rgba(0, 102, 204, 0.12);
+                --red: #dc3545;
+                --red-bg: rgba(220, 53, 69, 0.08);
+                --red-border: rgba(220, 53, 69, 0.25);
+                --green: #28a745;
+                --green-bg: rgba(40, 167, 69, 0.08);
+                --green-border: rgba(40, 167, 69, 0.2);
+                --amber: #d97706;
+                --amber-bg: rgba(217, 119, 6, 0.08);
+                --amber-border: rgba(217, 119, 6, 0.2);
+                --purple: #6d28d9;
+                --purple-bg: rgba(109, 40, 217, 0.08);
+                --font: "Instrument Sans", system-ui, sans-serif;
+                --mono: "Geist Mono", monospace;
+                --radius: 8px;
+                --radius-lg: 12px;
+                --radius-xl: 16px;
+                --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+            html,
+            body {
+                height: 100%;
+                overflow: hidden;
+            }
+            body {
+                font-family: var(--font);
+                background: var(--bg);
+                color: var(--text);
+                -webkit-font-smoothing: antialiased;
+                font-size: 14px;
+            }
+
+            /* ── Scrollbar ── */
+            ::-webkit-scrollbar {
+                width: 5px;
+                height: 5px;
+            }
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: var(--border2);
+                border-radius: 3px;
+            }
+
+            /* ── Layout ── */
+            .app {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            /* ── Topbar ── */
+            .topbar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 20px;
+                height: 52px;
+                background: var(--bg1);
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+                position: relative;
+                z-index: 50;
+                box-shadow: var(--shadow);
+            }
+            .topbar-left {
+                display: flex;
+                align-items: center;
+                gap: 24px;
+            }
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                text-decoration: none;
+                color: inherit;
+            }
+            .brand-icon {
+                width: 28px;
+                height: 28px;
+                border-radius: 7px;
+                background: linear-gradient(
+                    135deg,
+                    var(--accent),
+                    var(--purple)
+                );
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px var(--accent-glow);
+            }
+            .brand-icon svg {
+                width: 14px;
+                height: 14px;
+                color: #fff;
+            }
+            .brand-name {
+                font-size: 15px;
+                font-weight: 700;
+                letter-spacing: -0.3px;
+                color: var(--text);
+            }
+            .brand-sub {
+                font-size: 11px;
+                color: var(--text3);
+                font-family: var(--mono);
+                letter-spacing: 0.5px;
+            }
+
+            /* ── Tab Nav ── */
+            .tab-nav {
+                display: flex;
+                align-items: center;
+                gap: 2px;
+            }
+            .tab {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 5px 12px;
+                border-radius: 6px;
+                font-size: 13px;
+                font-weight: 500;
+                color: var(--text3);
+                cursor: pointer;
+                border: none;
+                background: none;
+                font-family: var(--font);
+                transition: all 0.15s;
+                white-space: nowrap;
+            }
+            .tab svg {
+                width: 13px;
+                height: 13px;
+                flex-shrink: 0;
+            }
+            .tab:hover {
+                color: var(--text2);
+                background: var(--bg3);
+            }
+            .tab.active {
+                color: var(--accent);
+                background: var(--bg3);
+                font-weight: 600;
+            }
+            .tab-dot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: var(--green);
+                animation: pulse-dot 2s ease-in-out infinite;
+                display: none;
+            }
+            .tab.active .tab-dot {
+                display: block;
+            }
+            @keyframes pulse-dot {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.4;
+                }
+            }
+
+            .topbar-right {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .conn-pill {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 10px;
+                border-radius: 100px;
+                font-size: 11px;
+                font-weight: 600;
+                background: var(--green-bg);
+                color: var(--green);
+                border: 1px solid var(--green-border);
+                font-family: var(--mono);
+                letter-spacing: 0.3px;
+            }
+            .conn-pill.off {
+                background: var(--red-bg);
+                color: var(--red);
+                border-color: var(--red-border);
+            }
+            .conn-dot {
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+            .conn-pill:not(.off) .conn-dot {
+                animation: pulse-dot 2s ease-in-out infinite;
+            }
+            .topbar-btn {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                padding: 5px 10px;
+                border-radius: 6px;
+                font-size: 12px;
+                font-weight: 600;
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                color: var(--text2);
+                cursor: pointer;
+                font-family: var(--font);
+                transition: all 0.15s;
+                box-shadow: var(--shadow);
+            }
+            .topbar-btn svg {
+                width: 13px;
+                height: 13px;
+            }
+            .topbar-btn:hover {
+                background: var(--bg3);
+                color: var(--accent);
+                border-color: var(--accent);
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-lg);
+            }
+
+            /* ── Global Search Bar ── */
+            .search-bar-wrap {
+                padding: 10px 20px;
+                background: var(--bg1);
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .search-bar {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 0 12px;
+                height: 36px;
+                max-width: 600px;
+                transition:
+                    border-color 0.15s,
+                    box-shadow 0.15s;
+            }
+            .search-bar:focus-within {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px var(--accent-glow);
+            }
+            .search-bar svg {
+                width: 14px;
+                height: 14px;
+                color: var(--text3);
+                flex-shrink: 0;
+            }
+            .search-bar input {
+                flex: 1;
+                border: none;
+                background: none;
+                outline: none;
+                font-family: var(--font);
+                font-size: 13px;
+                color: var(--text);
+            }
+            .search-bar input::placeholder {
+                color: var(--text3);
+            }
+            .search-kbd {
+                font-family: var(--mono);
+                font-size: 10px;
+                color: var(--text4);
+                background: var(--bg3);
+                border: 1px solid var(--border);
+                border-radius: 4px;
+                padding: 1px 5px;
+            }
+            .search-bar-actions {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+
+            /* ── Main content ── */
+            .main {
+                flex: 1;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+            .view {
+                display: none;
+                flex-direction: column;
+                flex: 1;
+                overflow: hidden;
+                animation: view-in 0.15s ease;
+            }
+            .view.active {
+                display: flex;
+            }
+            @keyframes view-in {
+                from {
+                    opacity: 0;
+                    transform: translateY(4px);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+
+            /* ── Filter panel ── */
+            .filter-panel {
+                padding: 12px 20px;
+                background: var(--bg1);
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                align-items: flex-end;
+            }
+            .f-group {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .f-label {
+                font-size: 10px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text3);
+            }
+            .f-ctrl {
+                height: 30px;
+                padding: 0 10px;
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                font-family: var(--font);
+                font-size: 12px;
+                color: var(--text);
+                outline: none;
+                transition:
+                    border-color 0.15s,
+                    box-shadow 0.15s;
+            }
+            .f-ctrl:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 2px var(--accent-glow);
+            }
+            .f-ctrl option {
+                background: var(--bg1);
+                color: var(--text);
+            }
+            select.f-ctrl {
+                appearance: none;
+                padding-right: 24px;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236c757d' fill='none' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 8px center;
+                background-color: var(--bg1);
+            }
+
+            /* ── Toolbar between filter and table ── */
+            .results-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 20px;
+                background: var(--bg1);
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+                gap: 12px;
+            }
+            .results-info {
+                font-size: 12px;
+                color: var(--text3);
+            }
+            .results-info strong {
+                color: var(--text2);
+                font-weight: 600;
+            }
+            .results-right {
+                display: flex;
+                gap: 6px;
+                align-items: center;
+            }
+            .sort-seg {
+                display: flex;
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                overflow: hidden;
+            }
+            .sort-btn {
+                padding: 4px 10px;
+                font-size: 11px;
+                font-weight: 600;
+                font-family: var(--font);
+                border: none;
+                background: none;
+                color: var(--text3);
+                cursor: pointer;
+                transition: all 0.12s;
+            }
+            .sort-btn.active {
+                background: var(--accent);
+                color: #fff;
+            }
+            .sort-btn:not(:last-child) {
+                border-right: 1px solid var(--border);
+            }
+
+            /* ── Bulk action bar ── */
+            .bulk-bar {
+                display: none;
+                align-items: center;
+                gap: 10px;
+                padding: 8px 20px;
+                background: rgba(0, 102, 204, 0.05);
+                border-bottom: 1px solid var(--accent);
+                flex-shrink: 0;
+            }
+            .bulk-bar.show {
+                display: flex;
+                animation: view-in 0.15s ease;
+            }
+            .bulk-count {
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--accent);
+            }
+            .bulk-count span {
+                color: var(--text2);
+            }
+
+            /* ── Buttons ── */
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 6px 12px;
+                font-family: var(--font);
+                font-size: 12px;
+                font-weight: 600;
+                border-radius: 6px;
+                border: 1px solid transparent;
+                cursor: pointer;
+                transition: all 0.15s;
+                white-space: nowrap;
+            }
+            .btn svg {
+                width: 13px;
+                height: 13px;
+            }
+            .btn-primary {
+                background: var(--accent);
+                color: #fff;
+                border-color: var(--accent);
+                box-shadow: var(--shadow);
+            }
+            .btn-primary:hover {
+                background: var(--accent2);
+                transform: translateY(-1px);
+                box-shadow: var(--shadow-lg);
+            }
+            .btn-ghost {
+                background: var(--bg1);
+                color: var(--text2);
+                border-color: var(--border);
+            }
+            .btn-ghost:hover {
+                background: var(--bg3);
+                color: var(--accent);
+                border-color: var(--accent);
+                transform: translateY(-1px);
+            }
+            .btn-danger {
+                background: var(--red-bg);
+                color: var(--red);
+                border-color: var(--red-border);
+            }
+            .btn-danger:hover {
+                background: rgba(220, 53, 69, 0.15);
+                transform: translateY(-1px);
+            }
+            .btn-danger-solid {
+                background: var(--red);
+                color: #fff;
+                border-color: var(--red);
+                box-shadow: var(--shadow);
+            }
+            .btn-danger-solid:hover {
+                background: #c82333;
+                transform: translateY(-1px);
+            }
+            .btn-success {
+                background: var(--green-bg);
+                color: var(--green);
+                border-color: var(--green-border);
+            }
+            .btn-success:hover {
+                background: rgba(40, 167, 69, 0.15);
+            }
+            .btn-amber {
+                background: var(--amber-bg);
+                color: var(--amber);
+                border-color: var(--amber-border);
+            }
+            .btn-sm {
+                padding: 4px 9px;
+                font-size: 11px;
+            }
+            .btn-xs {
+                padding: 3px 7px;
+                font-size: 10px;
+            }
+            .btn:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+                transform: none !important;
+            }
+
+            /* ── Table ── */
+            .table-wrap {
+                flex: 1;
+                overflow-y: auto;
+                overflow-x: hidden;
+                background: var(--bg);
+            }
+            .data-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+            .data-table thead th {
+                position: sticky;
+                top: 0;
+                z-index: 5;
+                background: var(--bg1);
+                border-bottom: 1px solid var(--border);
+                padding: 8px 12px;
+                text-align: left;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.7px;
+                color: var(--text3);
+                white-space: nowrap;
+            }
+            .data-table thead th:first-child {
+                padding-left: 20px;
+                width: 40px;
+            }
+            .data-table tbody tr {
+                border-bottom: 1px solid var(--border);
+                transition: background 0.1s;
+                cursor: pointer;
+                background: var(--bg1);
+            }
+            .data-table tbody tr:hover {
+                background: var(--bg2);
+            }
+            .data-table tbody tr.selected {
+                background: rgba(0, 102, 204, 0.05);
+            }
+            .data-table tbody tr.expanded {
+                background: var(--bg2);
+            }
+            .data-table td {
+                padding: 8px 12px;
+                vertical-align: middle;
+            }
+            .data-table td:first-child {
+                padding-left: 20px;
+            }
+
+            /* Columns */
+            .col-check {
+                width: 36px;
+            }
+            .col-ts {
+                width: 150px;
+                white-space: nowrap;
+            }
+            .col-svc {
+                width: 120px;
+            }
+            .col-lvl {
+                width: 90px;
+            }
+            .col-event {
+                min-width: 200px;
+            }
+            .col-meta {
+                width: 110px;
+            }
+            .col-act {
+                width: 36px;
+            }
+
+            .ts-val {
+                font-family: var(--mono);
+                font-size: 11px;
+                color: var(--text3);
+            }
+            .svc-tag {
+                display: inline-block;
+                padding: 2px 7px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: 600;
+                font-family: var(--mono);
+                background: var(--bg3);
+                color: var(--text2);
+                border: 1px solid var(--border);
+                max-width: 110px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .lvl-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 2px 7px;
+                border-radius: 4px;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.3px;
+                text-transform: uppercase;
+                border: 1px solid transparent;
+            }
+            .lvl-dot {
+                width: 4px;
+                height: 4px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+            .L-DEBUG {
+                background: var(--bg3);
+                color: var(--text3);
+                border-color: var(--border);
+            }
+            .L-DEBUG .lvl-dot {
+                background: var(--text3);
+            }
+            .L-INFO {
+                background: rgba(23, 162, 184, 0.1);
+                color: #0c7a8c;
+                border-color: rgba(23, 162, 184, 0.3);
+            }
+            .L-INFO .lvl-dot {
+                background: #17a2b8;
+            }
+            .L-WARNING,
+            .L-WARN {
+                background: var(--amber-bg);
+                color: var(--amber);
+                border-color: var(--amber-border);
+            }
+            .L-WARNING .lvl-dot,
+            .L-WARN .lvl-dot {
+                background: var(--amber);
+            }
+            .L-ERROR {
+                background: var(--red-bg);
+                color: var(--red);
+                border-color: var(--red-border);
+            }
+            .L-ERROR .lvl-dot {
+                background: var(--red);
+            }
+            .L-CRITICAL,
+            .L-FATAL {
+                background: var(--purple-bg);
+                color: var(--purple);
+                border-color: rgba(109, 40, 217, 0.25);
+            }
+            .L-CRITICAL .lvl-dot,
+            .L-FATAL .lvl-dot {
+                background: var(--purple);
+            }
+
+            .event-text {
+                color: var(--text2);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                max-width: 0;
+            }
+            .event-text .hl {
+                background: rgba(0, 102, 204, 0.12);
+                color: var(--accent);
+                border-radius: 2px;
+                padding: 0 2px;
+            }
+            .meta-val {
+                font-family: var(--mono);
+                font-size: 10px;
+                color: var(--text3);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .row-del-btn {
+                width: 26px;
+                height: 26px;
+                border-radius: 5px;
+                border: none;
+                background: transparent;
+                cursor: pointer;
+                color: var(--text4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.12s;
+            }
+            .row-del-btn svg {
+                width: 12px;
+                height: 12px;
+            }
+            .row-del-btn:hover {
+                background: var(--red-bg);
+                color: var(--red);
+            }
+
+            /* Custom checkbox */
+            .cb {
+                width: 15px;
+                height: 15px;
+                border-radius: 3px;
+                border: 1.5px solid var(--border2);
+                appearance: none;
+                cursor: pointer;
+                background: var(--bg1);
+                transition: all 0.12s;
+                display: grid;
+                place-items: center;
+                flex-shrink: 0;
+            }
+            .cb:checked {
+                background: var(--accent);
+                border-color: var(--accent);
+            }
+            .cb:checked::after {
+                content: "";
+                display: block;
+                width: 8px;
+                height: 5px;
+                border: 1.5px solid #fff;
+                border-top: none;
+                border-right: none;
+                transform: rotate(-45deg) translate(0, -1px);
+            }
+
+            /* Expanded detail row */
+            .detail-row {
+                display: none;
+            }
+            .detail-row.open {
+                display: table-row;
+            }
+            .detail-cell {
+                padding: 0 !important;
+            }
+            .detail-panel {
+                background: var(--bg2);
+                border-top: 1px solid var(--border);
+                border-bottom: 2px solid var(--accent);
+                padding: 14px 20px;
+                animation: view-in 0.15s ease;
+            }
+            .detail-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+            .detail-field-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text3);
+                margin-bottom: 3px;
+            }
+            .detail-field-value {
+                font-size: 11px;
+                font-family: var(--mono);
+                color: var(--text2);
+                word-break: break-all;
+            }
+            .detail-event {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                padding: 10px 14px;
+                font-family: var(--mono);
+                font-size: 12px;
+                color: var(--text);
+                white-space: pre-wrap;
+                word-break: break-word;
+                line-height: 1.6;
+            }
+            .detail-actions {
+                display: flex;
+                gap: 6px;
+                justify-content: flex-end;
+                margin-top: 10px;
+            }
+
+            /* ── Pagination ── */
+            .pg-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 20px;
+                background: var(--bg1);
+                border-top: 1px solid var(--border);
+                flex-shrink: 0;
+            }
+            .pg-info {
+                font-size: 11px;
+                color: var(--text3);
+                font-family: var(--mono);
+            }
+            .pg-controls {
+                display: flex;
+                gap: 3px;
+            }
+            .pg-btn {
+                min-width: 28px;
+                height: 28px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                padding: 0 5px;
+                font-family: var(--mono);
+                font-size: 11px;
+                font-weight: 500;
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: 5px;
+                cursor: pointer;
+                color: var(--text3);
+                transition: all 0.12s;
+            }
+            .pg-btn:hover:not(:disabled) {
+                border-color: var(--accent);
+                color: var(--accent);
+            }
+            .pg-btn.active {
+                background: var(--accent);
+                border-color: var(--accent);
+                color: #fff;
+            }
+            .pg-btn:disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+            }
+
+            /* ── Empty / Loading states ── */
+            .empty-state {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 60px 20px;
+                gap: 12px;
+                text-align: center;
+            }
+            .empty-state svg {
+                width: 40px;
+                height: 40px;
+                opacity: 0.2;
+                margin-bottom: 4px;
+            }
+            .empty-state h3 {
+                font-size: 15px;
+                font-weight: 600;
+                color: var(--text2);
+            }
+            .empty-state p {
+                font-size: 12px;
+                color: var(--text3);
+                max-width: 280px;
+                line-height: 1.5;
+            }
+            .skeleton {
+                background: linear-gradient(
+                    90deg,
+                    var(--bg2) 25%,
+                    var(--bg3) 50%,
+                    var(--bg2) 75%
+                );
+                background-size: 200% 100%;
+                animation: sk 1.4s infinite;
+                border-radius: 4px;
+                height: 12px;
+            }
+            @keyframes sk {
+                0% {
+                    background-position: 200% 0;
+                }
+                100% {
+                    background-position: -200% 0;
+                }
+            }
+
+            /* ── Overview view ── */
+            .overview-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+            }
+            .kpi-row {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+            .kpi {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 16px;
+                position: relative;
+                overflow: hidden;
+                transition: all 0.2s;
+                box-shadow: var(--shadow);
+            }
+            .kpi::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            }
+            .kpi.blue::after {
+                background: linear-gradient(
+                    90deg,
+                    var(--accent),
+                    var(--purple)
+                );
+            }
+            .kpi.green::after {
+                background: var(--green);
+            }
+            .kpi.amber::after {
+                background: var(--amber);
+            }
+            .kpi.red::after {
+                background: var(--red);
+            }
+            .kpi:hover {
+                border-color: var(--border2);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+            }
+            .kpi-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.7px;
+                color: var(--text3);
+                margin-bottom: 10px;
+            }
+            .kpi-val {
+                font-size: 28px;
+                font-weight: 700;
+                letter-spacing: -1.5px;
+                line-height: 1;
+                font-family: var(--mono);
+                margin-bottom: 6px;
+            }
+            .kpi.blue .kpi-val {
+                color: var(--accent);
+            }
+            .kpi.green .kpi-val {
+                color: var(--green);
+            }
+            .kpi.amber .kpi-val {
+                color: var(--amber);
+            }
+            .kpi.red .kpi-val {
+                color: var(--red);
+            }
+            .kpi-sub {
+                font-size: 11px;
+                color: var(--text3);
+            }
+            .overview-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+            .panel {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                overflow: hidden;
+                box-shadow: var(--shadow);
+            }
+            .panel-head {
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .panel-title {
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -0.1px;
+            }
+            .panel-sub {
+                font-size: 10px;
+                color: var(--text3);
+                margin-top: 1px;
+            }
+            .panel-body {
+                padding: 14px 16px;
+            }
+
+            /* Level bars */
+            .level-bars {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .lbar {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .lbar-name {
+                font-size: 11px;
+                font-weight: 700;
+                width: 64px;
+                flex-shrink: 0;
+                font-family: var(--mono);
+            }
+            .lbar-track {
+                flex: 1;
+                height: 5px;
+                background: var(--bg3);
+                border-radius: 3px;
+                overflow: hidden;
+            }
+            .lbar-fill {
+                height: 100%;
+                border-radius: 3px;
+                transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .lbar-fill-INFO {
+                background: linear-gradient(90deg, #17a2b8, #0c7a8c);
+            }
+            .lbar-fill-WARNING,
+            .lbar-fill-WARN {
+                background: var(--amber);
+            }
+            .lbar-fill-ERROR {
+                background: var(--red);
+            }
+            .lbar-fill-DEBUG {
+                background: var(--border2);
+            }
+            .lbar-fill-CRITICAL,
+            .lbar-fill-FATAL {
+                background: var(--purple);
+            }
+            .lbar-count {
+                font-size: 11px;
+                font-family: var(--mono);
+                font-weight: 600;
+                color: var(--text2);
+                width: 60px;
+                text-align: right;
+            }
+
+            /* Service chips */
+            .svc-chips {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .svc-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 4px 10px;
+                border-radius: 100px;
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                font-size: 11px;
+                font-weight: 500;
+                color: var(--text2);
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            .svc-chip-dot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: var(--green);
+            }
+            .svc-chip:hover {
+                background: var(--bg3);
+                border-color: var(--accent);
+                color: var(--accent);
+                transform: translateY(-1px);
+                box-shadow: var(--shadow);
+            }
+
+            /* Metrics table */
+            .metrics-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+            }
+            .metrics-table td {
+                padding: 5px 0;
+                border-bottom: 1px solid var(--border);
+            }
+            .metrics-table tr:last-child td {
+                border-bottom: none;
+            }
+            .metrics-table td:first-child {
+                color: var(--text3);
+                width: 55%;
+            }
+            .metrics-table td:last-child {
+                font-family: var(--mono);
+                font-weight: 600;
+                color: var(--text);
+                text-align: right;
+            }
+
+            /* ── Analytics view ── */
+            .analytics-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+            }
+            .analytics-controls {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: flex-end;
+                gap: 8px;
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 14px 16px;
+                margin-bottom: 16px;
+                box-shadow: var(--shadow);
+            }
+            .analytics-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 16px;
+            }
+            .analytics-full {
+                margin-bottom: 16px;
+            }
+            .chart-panel {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                overflow: hidden;
+                box-shadow: var(--shadow);
+            }
+            .chart-head {
+                padding: 12px 16px;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .chart-body {
+                padding: 16px;
+                position: relative;
+                min-height: 200px;
+            }
+
+            /* Bar chart */
+            .bar-chart {
+                display: flex;
+                align-items: flex-end;
+                gap: 2px;
+                height: 160px;
+                position: relative;
+            }
+            .bar-chart-inner {
+                display: flex;
+                align-items: flex-end;
+                gap: 3px;
+                flex: 1;
+                height: 100%;
+            }
+            .bc-bar {
+                flex: 1;
+                border-radius: 3px 3px 0 0;
+                cursor: pointer;
+                transition: opacity 0.15s;
+                min-width: 6px;
+                position: relative;
+            }
+            .bc-bar:hover {
+                opacity: 0.8;
+            }
+            .bc-bar:hover::after {
+                content: attr(data-tip);
+                position: absolute;
+                bottom: calc(100% + 4px);
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--text);
+                border: 1px solid var(--border2);
+                color: #fff;
+                font-size: 10px;
+                font-family: var(--mono);
+                padding: 3px 7px;
+                border-radius: 4px;
+                white-space: nowrap;
+                z-index: 10;
+                pointer-events: none;
+            }
+            .chart-y-axis {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                height: 160px;
+                margin-right: 6px;
+                flex-shrink: 0;
+            }
+            .chart-y-label {
+                font-size: 9px;
+                font-family: var(--mono);
+                color: var(--text4);
+            }
+
+            /* Top-N table */
+            .top-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .top-table td {
+                padding: 6px 8px;
+                font-size: 12px;
+                border-bottom: 1px solid var(--border);
+            }
+            .top-table tr:last-child td {
+                border-bottom: none;
+            }
+            .top-bar-cell {
+                padding-right: 12px !important;
+            }
+            .top-bar-wrap {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .top-bar-track {
+                flex: 1;
+                height: 4px;
+                background: var(--bg3);
+                border-radius: 2px;
+                overflow: hidden;
+                max-width: 120px;
+            }
+            .top-bar-fill {
+                height: 100%;
+                border-radius: 2px;
+                background: var(--accent);
+            }
+            .top-val {
+                font-family: var(--mono);
+                font-size: 11px;
+                color: var(--text2);
+                max-width: 220px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .top-count {
+                font-family: var(--mono);
+                font-size: 11px;
+                color: var(--text);
+                text-align: right;
+                white-space: nowrap;
+            }
+            .top-rate {
+                font-size: 10px;
+                font-family: var(--mono);
+                text-align: right;
+            }
+            .rate-ok {
+                color: var(--green);
+            }
+            .rate-warn {
+                color: var(--amber);
+            }
+            .rate-bad {
+                color: var(--red);
+            }
+
+            /* ── Saved Queries view ── */
+            .sq-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+            }
+            .sq-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+            }
+            .sq-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 12px;
+            }
+            .sq-card {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 14px;
+                transition: all 0.2s;
+                cursor: pointer;
+                box-shadow: var(--shadow);
+            }
+            .sq-card:hover {
+                border-color: var(--accent);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+            }
+            .sq-card-head {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                margin-bottom: 8px;
+                gap: 8px;
+            }
+            .sq-name {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -0.2px;
+            }
+            .sq-meta {
+                font-size: 10px;
+                color: var(--text3);
+                font-family: var(--mono);
+                margin-top: 3px;
+            }
+            .sq-filters {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                margin-bottom: 10px;
+            }
+            .sq-filter-tag {
+                font-size: 10px;
+                font-family: var(--mono);
+                padding: 2px 6px;
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: 3px;
+                color: var(--text3);
+            }
+            .sq-card-foot {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .sq-runs {
+                font-size: 10px;
+                color: var(--text3);
+                font-family: var(--mono);
+            }
+            .sq-actions {
+                display: flex;
+                gap: 4px;
+            }
+
+            /* Save query modal form */
+            .save-form {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            /* ── Live Tail ── */
+            .tail-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 8px 20px;
+                background: var(--bg1);
+                border-bottom: 1px solid var(--border);
+                flex-shrink: 0;
+                gap: 12px;
+            }
+            .tail-left {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .tail-status {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 10px;
+                border-radius: 100px;
+                font-size: 11px;
+                font-weight: 600;
+                font-family: var(--mono);
+                background: var(--bg2);
+                color: var(--text3);
+                border: 1px solid var(--border);
+            }
+            .tail-status.live {
+                background: var(--green-bg);
+                color: var(--green);
+                border-color: var(--green-border);
+            }
+            .tail-status-dot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: currentColor;
+            }
+            .tail-status.live .tail-status-dot {
+                animation: pulse-dot 1.2s ease-in-out infinite;
+            }
+            .terminal {
+                flex: 1;
+                background: #1a1f36;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                font-family: var(--mono);
+            }
+            .term-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 7px 16px;
+                background: #141829;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                flex-shrink: 0;
+            }
+            .term-dots {
+                display: flex;
+                gap: 5px;
+            }
+            .term-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+            .term-dot.r {
+                background: #ff5f57;
+            }
+            .term-dot.a {
+                background: #ffbd2e;
+            }
+            .term-dot.g {
+                background: #28ca41;
+            }
+            .term-title {
+                font-size: 11px;
+                color: rgba(255, 255, 255, 0.25);
+                letter-spacing: 0.3px;
+            }
+            .term-cnt {
+                font-size: 10px;
+                color: rgba(255, 255, 255, 0.25);
+            }
+            .term-body {
+                flex: 1;
+                overflow-y: auto;
+                padding: 10px 16px;
+            }
+            .tl {
+                display: flex;
+                gap: 10px;
+                padding: 2px 0;
+                animation: tl-in 0.1s ease;
+            }
+            @keyframes tl-in {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+            .tl:hover {
+                background: rgba(255, 255, 255, 0.03);
+                border-radius: 2px;
+            }
+            .tl-ts {
+                color: #4a5568;
+                flex-shrink: 0;
+                width: 78px;
+                font-size: 11px;
+            }
+            .tl-svc {
+                color: #4a8cc8;
+                flex-shrink: 0;
+                width: 90px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                font-size: 11px;
+            }
+            .tl-lvl {
+                flex-shrink: 0;
+                width: 64px;
+                font-weight: 600;
+                font-size: 11px;
+            }
+            .tl-msg {
+                color: #9eb3cc;
+                flex: 1;
+                word-break: break-word;
+                font-size: 11px;
+                line-height: 1.4;
+            }
+            .tl-DEBUG {
+                color: #4a5568;
+            }
+            .tl-INFO {
+                color: #4a8cc8;
+            }
+            .tl-WARNING,
+            .tl-WARN {
+                color: #c88c30;
+            }
+            .tl-ERROR {
+                color: #c84050;
+            }
+            .tl-CRITICAL,
+            .tl-FATAL {
+                color: #9060d0;
+            }
+            .term-placeholder {
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                color: rgba(255, 255, 255, 0.15);
+                font-size: 12px;
+            }
+
+            /* ── Export view ── */
+            .export-content {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+                max-width: 640px;
+            }
+            .export-card {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                padding: 20px;
+                margin-bottom: 16px;
+                box-shadow: var(--shadow);
+            }
+            .export-card-title {
+                font-size: 14px;
+                font-weight: 700;
+                margin-bottom: 4px;
+                letter-spacing: -0.2px;
+            }
+            .export-card-sub {
+                font-size: 12px;
+                color: var(--text3);
+                margin-bottom: 16px;
+                line-height: 1.5;
+            }
+            .export-format {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+            .fmt-opt {
+                flex: 1;
+                padding: 10px 12px;
+                border-radius: var(--radius);
+                background: var(--bg2);
+                border: 1.5px solid var(--border);
+                cursor: pointer;
+                text-align: center;
+                transition: all 0.15s;
+            }
+            .fmt-opt.selected {
+                border-color: var(--accent);
+                background: var(--accent-glow);
+            }
+            .fmt-opt-name {
+                font-size: 13px;
+                font-weight: 700;
+                color: var(--text);
+                margin-bottom: 2px;
+            }
+            .fmt-opt-sub {
+                font-size: 10px;
+                color: var(--text3);
+                font-family: var(--mono);
+            }
+            .export-result {
+                display: none;
+                padding: 14px;
+                background: var(--green-bg);
+                border: 1px solid var(--green-border);
+                border-radius: var(--radius);
+                animation: view-in 0.2s ease;
+                margin-top: 12px;
+            }
+            .export-result.show {
+                display: block;
+            }
+            .export-result-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }
+            .export-dl-info {
+                font-size: 11px;
+                font-family: var(--mono);
+                color: var(--text3);
+                margin-top: 6px;
+                line-height: 1.6;
+            }
+
+            /* ── Toast ── */
+            .toast-wrap {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .toast {
+                display: flex;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 12px 14px;
+                min-width: 280px;
+                max-width: 360px;
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-lg);
+                box-shadow: var(--shadow-lg);
+                animation: toast-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            @keyframes toast-in {
+                from {
+                    opacity: 0;
+                    transform: translateY(8px) scale(0.96);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+            .toast svg {
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+                margin-top: 1px;
+            }
+            .toast-body {
+                flex: 1;
+            }
+            .toast-title {
+                font-size: 12px;
+                font-weight: 700;
+                margin-bottom: 2px;
+            }
+            .toast-msg {
+                font-size: 11px;
+                color: var(--text3);
+                line-height: 1.4;
+            }
+            .toast.ok {
+                border-left: 3px solid var(--green);
+            }
+            .toast.ok svg {
+                color: var(--green);
+            }
+            .toast.err {
+                border-left: 3px solid var(--red);
+            }
+            .toast.err svg {
+                color: var(--red);
+            }
+            .toast.info {
+                border-left: 3px solid var(--accent);
+            }
+            .toast.info svg {
+                color: var(--accent);
+            }
+
+            /* ── Modal ── */
+            .modal-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(4px);
+                z-index: 9998;
+                display: none;
+                align-items: center;
+                justify-content: center;
+            }
+            .modal-backdrop.open {
+                display: flex;
+                animation: fade-in 0.15s ease;
+            }
+            @keyframes fade-in {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+            .modal {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius-xl);
+                max-width: 460px;
+                width: 92%;
+                box-shadow: var(--shadow-lg);
+                animation: modal-up 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+                overflow: hidden;
+            }
+            .modal-wide {
+                max-width: 560px;
+            }
+            @keyframes modal-up {
+                from {
+                    opacity: 0;
+                    transform: scale(0.95) translateY(10px);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+            .modal-head {
+                padding: 16px 20px;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .modal-head-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+            .modal-head-icon.danger {
+                background: var(--red-bg);
+            }
+            .modal-head-icon.danger svg {
+                width: 16px;
+                height: 16px;
+                color: var(--red);
+            }
+            .modal-head-icon.info {
+                background: var(--accent-glow);
+            }
+            .modal-head-icon.info svg {
+                width: 16px;
+                height: 16px;
+                color: var(--accent);
+            }
+            .modal-head-title {
+                font-size: 14px;
+                font-weight: 700;
+            }
+            .modal-head-sub {
+                font-size: 11px;
+                color: var(--text3);
+                margin-top: 1px;
+            }
+            .modal-body {
+                padding: 16px 20px;
+            }
+            .modal-body p {
+                font-size: 13px;
+                color: var(--text2);
+                line-height: 1.6;
+            }
+            .modal-filters {
+                margin-top: 10px;
+                padding: 10px 12px;
+                background: var(--bg2);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                font-family: var(--mono);
+                font-size: 11px;
+                color: var(--text2);
+                line-height: 1.8;
+            }
+            .modal-foot {
+                padding: 12px 20px;
+                border-top: 1px solid var(--border);
+                display: flex;
+                gap: 8px;
+                justify-content: flex-end;
+                background: var(--bg2);
+            }
+
+            /* Form elements */
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .form-label {
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text3);
+            }
+            .form-ctrl {
+                height: 36px;
+                padding: 0 12px;
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                font-family: var(--font);
+                font-size: 13px;
+                color: var(--text);
+                outline: none;
+                width: 100%;
+            }
+            .form-ctrl:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 2px var(--accent-glow);
+            }
+            select.form-ctrl {
+                appearance: none;
+                padding-right: 28px;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236c757d' fill='none' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 10px center;
+                background-color: var(--bg1);
+            }
+            .form-ctrl option {
+                background: var(--bg1);
+                color: var(--text);
+            }
+
+            /* Divider */
+            .divider {
+                height: 1px;
+                background: var(--border);
+                margin: 12px 0;
+            }
+
+            /* ── Responsive ── */
+            @media (max-width: 1024px) {
+                .kpi-row {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .overview-grid {
+                    grid-template-columns: 1fr;
+                }
+                .analytics-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            @media (max-width: 640px) {
+                .tab .tab-label {
+                    display: none;
+                }
+                .detail-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .kpi-row {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="app">
+            <!-- ════ TOPBAR ════ -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <a class="brand" href="#">
+                        <div class="brand-icon">
+                            <svg viewBox="0 0 14 14" fill="none">
+                                <rect
+                                    x="1"
+                                    y="1"
+                                    width="12"
+                                    height="2.5"
+                                    rx="1.25"
+                                    fill="currentColor"
+                                />
+                                <rect
+                                    x="1"
+                                    y="5.75"
+                                    width="12"
+                                    height="2.5"
+                                    rx="1.25"
+                                    fill="currentColor"
+                                    opacity=".7"
+                                />
+                                <rect
+                                    x="1"
+                                    y="10.5"
+                                    width="7.5"
+                                    height="2.5"
+                                    rx="1.25"
+                                    fill="currentColor"
+                                    opacity=".45"
+                                />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="brand-name">LogOps</div>
+                            <div class="brand-sub">Observability </div>
+                        </div>
+                    </a>
+
+                    <nav class="tab-nav" id="tabNav">
+                        <button
+                            class="tab active"
+                            data-tab="overview"
+                            onclick="switchTab('overview')"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <rect x="3" y="3" width="7" height="7" />
+                                <rect x="14" y="3" width="7" height="7" />
+                                <rect x="14" y="14" width="7" height="7" />
+                                <rect x="3" y="14" width="7" height="7" />
+                            </svg>
+                            <span class="tab-label">Overview</span>
+                        </button>
+                        <button
+                            class="tab"
+                            data-tab="query"
+                            onclick="switchTab('query')"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <span class="tab-label">Query Logs</span>
+                        </button>
+                        <button
+                            class="tab"
+                            data-tab="analytics"
+                            onclick="switchTab('analytics')"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <line x1="18" y1="20" x2="18" y2="10" />
+                                <line x1="12" y1="20" x2="12" y2="4" />
+                                <line x1="6" y1="20" x2="6" y2="14" />
+                            </svg>
+                            <span class="tab-label">Analytics</span>
+                        </button>
+                        <button
+                            class="tab"
+                            data-tab="savedqueries"
+                            onclick="switchTab('savedqueries')"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                                />
+                            </svg>
+                            <span class="tab-label">Saved</span>
+                        </button>
+                        <button
+                            class="tab"
+                            data-tab="tail"
+                            onclick="switchTab('tail')"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <polyline
+                                    points="22 12 18 12 15 21 9 3 6 12 2 12"
+                                />
+                            </svg>
+                            <span class="tab-label">Live Tail</span>
+                            <span class="tab-dot" id="tailTabDot"></span>
+                        </button>
+                        <button
+                            class="tab"
+                            data-tab="export"
+                            onclick="switchTab('export')"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <path
+                                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            <span class="tab-label">Export</span>
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="topbar-right">
+                    <div class="conn-pill" id="connPill">
+                        <span class="conn-dot"></span>
+                        <span id="connText">Connected</span>
+                    </div>
+                    <button class="topbar-btn" onclick="refreshCurrent()">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <polyline points="23 4 23 10 17 10" />
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- ════ MAIN ════ -->
+            <main class="main">
+                <!-- ━━━━━━━━━━ OVERVIEW ━━━━━━━━━━ -->
+                <div class="view active" id="tab-overview">
+                    <div class="overview-content">
+                        <div class="kpi-row">
+                            <div class="kpi blue">
+                                <div class="kpi-label">Total Logs</div>
+                                <div class="kpi-val" id="kpiTotal">—</div>
+                                <div class="kpi-sub" id="kpiRange">
+                                    Loading…
+                                </div>
+                            </div>
+                            <div class="kpi green">
+                                <div class="kpi-label">Active Services</div>
+                                <div class="kpi-val" id="kpiSvcs">—</div>
+                                <div class="kpi-sub" id="kpiSvcNames">…</div>
+                            </div>
+                            <div class="kpi amber">
+                                <div class="kpi-label">Buffer Pending</div>
+                                <div class="kpi-val" id="kpiBuffer">—</div>
+                                <div class="kpi-sub">
+                                    Records awaiting flush
+                                </div>
+                            </div>
+                            <div class="kpi red">
+                                <div class="kpi-label">Dropped</div>
+                                <div class="kpi-val" id="kpiDropped">—</div>
+                                <div class="kpi-sub" id="kpiDb">…</div>
+                            </div>
+                        </div>
+                        <div class="overview-grid">
+                            <div class="panel">
+                                <div class="panel-head">
+                                    <div>
+                                        <div class="panel-title">
+                                            Level Distribution
+                                        </div>
+                                        <div class="panel-sub">
+                                            Log severity breakdown
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="level-bars" id="levelBars">
+                                        <div
+                                            class="skeleton"
+                                            style="
+                                                width: 100%;
+                                                height: 12px;
+                                                margin-bottom: 8px;
+                                            "
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel">
+                                <div class="panel-head">
+                                    <div>
+                                        <div class="panel-title">Services</div>
+                                        <div class="panel-sub">
+                                            Click to query
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="svc-chips" id="svcChips">
+                                        <div
+                                            class="skeleton"
+                                            style="
+                                                width: 80px;
+                                                height: 24px;
+                                                border-radius: 100px;
+                                            "
+                                        ></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel">
+                            <div class="panel-head">
+                                <div>
+                                    <div class="panel-title">
+                                        Ingest Metrics
+                                    </div>
+                                    <div class="panel-sub">
+                                        From log service internal stats
+                                    </div>
+                                </div>
+                                <button
+                                    class="btn btn-ghost btn-sm"
+                                    onclick="loadMetrics()"
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <polyline points="23 4 23 10 17 10" />
+                                        <path
+                                            d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"
+                                        /></svg
+                                    >Refresh
+                                </button>
+                            </div>
+                            <div class="panel-body">
+                                <table class="metrics-table" id="metricsTable">
+                                    <tr>
+                                        <td colspan="2">
+                                            <span class="kpi-sub"
+                                                >Loading…</span
+                                            >
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ━━━━━━━━━━ QUERY ━━━━━━━━━━ -->
+                <div class="view" id="tab-query" style="overflow: hidden">
+                    <div class="filter-panel">
+                        <div
+                            class="f-group"
+                            style="flex: 1; min-width: 180px; max-width: 320px"
+                        >
+                            <div class="f-label">Full-Text Search</div>
+                            <input
+                                class="f-ctrl"
+                                id="fFts"
+                                placeholder="Search event text…"
+                                autocomplete="off"
+                            />
+                        </div>
+                        <div class="f-group">
+                            <div class="f-label">Service</div>
+                            <select
+                                class="f-ctrl"
+                                id="fSvc"
+                                style="width: 130px"
+                            >
+                                <option value="">All services</option>
+                            </select>
+                        </div>
+                        <div class="f-group">
+                            <div class="f-label">Level</div>
+                            <select
+                                class="f-ctrl"
+                                id="fLvl"
+                                style="width: 100px"
+                            >
+                                <option value="">Any</option>
+                                <option>DEBUG</option>
+                                <option>INFO</option>
+                                <option>WARNING</option>
+                                <option>ERROR</option>
+                                <option>CRITICAL</option>
+                            </select>
+                        </div>
+                        <div class="f-group">
+                            <div class="f-label">Level ≥</div>
+                            <select
+                                class="f-ctrl"
+                                id="fLvlGte"
+                                style="width: 100px"
+                            >
+                                <option value="">—</option>
+                                <option>DEBUG</option>
+                                <option>INFO</option>
+                                <option>WARNING</option>
+                                <option>ERROR</option>
+                                <option>CRITICAL</option>
+                            </select>
+                        </div>
+                        <div class="f-group">
+                            <div class="f-label">From</div>
+                            <input
+                                type="datetime-local"
+                                class="f-ctrl"
+                                id="fFrom"
+                                style="width: 166px"
+                            />
+                        </div>
+                        <div class="f-group">
+                            <div class="f-label">To</div>
+                            <input
+                                type="datetime-local"
+                                class="f-ctrl"
+                                id="fTo"
+                                style="width: 166px"
+                            />
+                        </div>
+                        <div class="f-group">
+                            <div class="f-label">Request ID</div>
+                            <input
+                                class="f-ctrl"
+                                id="fReqId"
+                                placeholder="—"
+                                style="width: 110px"
+                                autocomplete="off"
+                            />
+                        </div>
+                        <div class="f-group">
+                            <div class="f-label">User ID</div>
+                            <input
+                                class="f-ctrl"
+                                id="fUid"
+                                placeholder="—"
+                                style="width: 90px"
+                                autocomplete="off"
+                            />
+                        </div>
+                        <div
+                            style="
+                                display: flex;
+                                gap: 6px;
+                                align-self: flex-end;
+                            "
+                        >
+                            <button
+                                class="btn btn-ghost"
+                                onclick="clearFilters()"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </button>
+                            <button
+                                class="btn btn-primary"
+                                onclick="runQuery()"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <circle cx="11" cy="11" r="8" />
+                                    <line
+                                        x1="21"
+                                        y1="21"
+                                        x2="16.65"
+                                        y2="16.65"
+                                    /></svg
+                                >Search
+                            </button>
+                            <button
+                                class="btn btn-ghost"
+                                onclick="openSaveQueryModal()"
+                                title="Save query"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                                    />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="results-bar">
+                        <div class="results-info" id="resultsInfo">
+                            Run a search to see results
+                        </div>
+                        <div class="results-right">
+                            <select
+                                class="f-ctrl"
+                                id="limitSel"
+                                style="
+                                    height: 28px;
+                                    font-size: 11px;
+                                    width: 100px;
+                                "
+                            >
+                                <option value="50">50 / page</option>
+                                <option value="100" selected>100 / page</option>
+                                <option value="200">200 / page</option>
+                            </select>
+                            <div class="sort-seg">
+                                <button
+                                    class="sort-btn active"
+                                    id="sortDesc"
+                                    onclick="setOrder('desc')"
+                                >
+                                    Newest
+                                </button>
+                                <button
+                                    class="sort-btn"
+                                    id="sortAsc"
+                                    onclick="setOrder('asc')"
+                                >
+                                    Oldest
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk action bar -->
+                    <div class="bulk-bar" id="bulkBar">
+                        <span class="bulk-count"
+                            ><span id="bulkCount">0</span>
+                            <span>selected</span></span
+                        >
+                        <button
+                            class="btn btn-danger btn-sm"
+                            onclick="bulkDelete()"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                            >
+                                <polyline points="3 6 5 6 21 6" />
+                                <path
+                                    d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"
+                                />
+                                <path d="M10 11v6M14 11v6" />
+                            </svg>
+                            Delete Selected
+                        </button>
+                        <button
+                            class="btn btn-ghost btn-sm"
+                            onclick="clearSelection()"
+                        >
+                            Clear selection
+                        </button>
+                    </div>
+
+                    <div class="table-wrap" id="tableWrap">
+                        <div class="empty-state">
+                            <svg
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.5"
+                            >
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <h3>No Query Run</h3>
+                            <p>
+                                Set filters above and click Search to explore
+                                your logs
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pg-bar" id="pgBar" style="display: none">
+                        <div class="pg-info" id="pgInfo"></div>
+                        <div class="pg-controls" id="pgControls"></div>
+                    </div>
+                </div>
+
+                <!-- ━━━━━━━━━━ ANALYTICS ━━━━━━━━━━ -->
+                <div class="view" id="tab-analytics">
+                    <div class="analytics-content">
+                        <div class="analytics-controls">
+                            <div class="f-group">
+                                <div class="f-label">Interval</div>
+                                <select
+                                    class="f-ctrl"
+                                    id="aInterval"
+                                    style="width: 90px"
+                                >
+                                    <option value="1m">1 min</option>
+                                    <option value="5m">5 min</option>
+                                    <option value="15m">15 min</option>
+                                    <option value="1h" selected>1 hour</option>
+                                    <option value="1d">1 day</option>
+                                </select>
+                            </div>
+                            <div class="f-group">
+                                <div class="f-label">Service</div>
+                                <select
+                                    class="f-ctrl"
+                                    id="aSvc"
+                                    style="width: 130px"
+                                >
+                                    <option value="">All services</option>
+                                </select>
+                            </div>
+                            <div class="f-group">
+                                <div class="f-label">Level ≥</div>
+                                <select
+                                    class="f-ctrl"
+                                    id="aLvl"
+                                    style="width: 100px"
+                                >
+                                    <option value="">Any</option>
+                                    <option>DEBUG</option>
+                                    <option>INFO</option>
+                                    <option>WARNING</option>
+                                    <option>ERROR</option>
+                                    <option>CRITICAL</option>
+                                </select>
+                            </div>
+                            <div class="f-group">
+                                <div class="f-label">From</div>
+                                <input
+                                    type="datetime-local"
+                                    class="f-ctrl"
+                                    id="aFrom"
+                                    style="width: 166px"
+                                />
+                            </div>
+                            <div class="f-group">
+                                <div class="f-label">To</div>
+                                <input
+                                    type="datetime-local"
+                                    class="f-ctrl"
+                                    id="aTo"
+                                    style="width: 166px"
+                                />
+                            </div>
+                            <div style="align-self: flex-end">
+                                <button
+                                    class="btn btn-primary"
+                                    onclick="runAnalytics()"
+                                >
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                    >
+                                        <line x1="18" y1="20" x2="18" y2="10" />
+                                        <line x1="12" y1="20" x2="12" y2="4" />
+                                        <line
+                                            x1="6"
+                                            y1="20"
+                                            x2="6"
+                                            y2="14"
+                                        /></svg
+                                    >Run Analytics
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="analytics-full">
+                            <div class="chart-panel">
+                                <div class="chart-head">
+                                    <div>
+                                        <div class="panel-title">
+                                            Volume + Error Rate Over Time
+                                        </div>
+                                        <div class="panel-sub">
+                                            Aggregate: total logs and errors per
+                                            bucket
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chart-body" id="aggChart">
+                                    <div class="empty-state">
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                        >
+                                            <line
+                                                x1="18"
+                                                y1="20"
+                                                x2="18"
+                                                y2="10"
+                                            />
+                                            <line
+                                                x1="12"
+                                                y1="20"
+                                                x2="12"
+                                                y2="4"
+                                            />
+                                            <line
+                                                x1="6"
+                                                y1="20"
+                                                x2="6"
+                                                y2="14"
+                                            />
+                                        </svg>
+                                        <h3>No Data</h3>
+                                        <p>Run analytics to see charts</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="analytics-grid">
+                            <div class="chart-panel">
+                                <div class="chart-head">
+                                    <div>
+                                        <div class="panel-title">
+                                            Level Histogram
+                                        </div>
+                                        <div class="panel-sub">
+                                            Volume breakdown by severity
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="chart-body" id="histChart">
+                                    <div
+                                        class="empty-state"
+                                        style="padding: 30px"
+                                    >
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            style="width: 32px; height: 32px"
+                                        >
+                                            <line
+                                                x1="18"
+                                                y1="20"
+                                                x2="18"
+                                                y2="10"
+                                            />
+                                            <line
+                                                x1="12"
+                                                y1="20"
+                                                x2="12"
+                                                y2="4"
+                                            />
+                                            <line
+                                                x1="6"
+                                                y1="20"
+                                                x2="6"
+                                                y2="14"
+                                            />
+                                        </svg>
+                                        <p>Run analytics first</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chart-panel">
+                                <div class="chart-head">
+                                    <div>
+                                        <div class="panel-title">
+                                            Top Messages
+                                        </div>
+                                        <div class="panel-sub">
+                                            Most frequent log events
+                                        </div>
+                                    </div>
+                                    <div
+                                        style="
+                                            display: flex;
+                                            gap: 6px;
+                                            align-items: center;
+                                        "
+                                    >
+                                        <select
+                                            class="f-ctrl"
+                                            id="topField"
+                                            style="
+                                                height: 26px;
+                                                font-size: 11px;
+                                                width: 100px;
+                                            "
+                                        >
+                                            <option value="event">Event</option>
+                                            <option value="service">
+                                                Service
+                                            </option>
+                                            <option value="user_id">
+                                                User ID
+                                            </option>
+                                            <option value="request_id">
+                                                Request ID
+                                            </option>
+                                            <option value="device_id">
+                                                Device ID
+                                            </option>
+                                        </select>
+                                        <button
+                                            class="btn btn-ghost btn-sm"
+                                            onclick="runTopN()"
+                                        >
+                                            Run
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="chart-body" id="topChart">
+                                    <div
+                                        class="empty-state"
+                                        style="padding: 30px"
+                                    >
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"
+                                            style="width: 32px; height: 32px"
+                                        >
+                                            <path
+                                                d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                                            />
+                                            <circle cx="9" cy="7" r="4" />
+                                        </svg>
+                                        <p>Click "Run" to load top values</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ━━━━━━━━━━ SAVED QUERIES ━━━━━━━━━━ -->
+                <div class="view" id="tab-savedqueries">
+                    <div class="sq-content">
+                        <div class="sq-header">
+                            <div>
+                                <div
+                                    class="panel-title"
+                                    style="font-size: 16px"
+                                >
+                                    Saved Queries
+                                </div>
+                                <div class="panel-sub" style="margin-top: 2px">
+                                    Persist and re-execute named filter presets
+                                </div>
+                            </div>
+                            <button
+                                class="btn btn-primary"
+                                onclick="openSaveQueryModal()"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" /></svg
+                                >New Query
+                            </button>
+                        </div>
+                        <div class="sq-grid" id="sqGrid">
+                            <div class="empty-state" style="grid-column: 1/-1">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                >
+                                    <path
+                                        d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                                    />
+                                </svg>
+                                <h3>No Saved Queries</h3>
+                                <p>
+                                    Save filters from the Query tab using the
+                                    bookmark icon
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ━━━━━━━━━━ LIVE TAIL ━━━━━━━━━━ -->
+                <div class="view" id="tab-tail" style="overflow: hidden">
+                    <div class="tail-bar">
+                        <div class="tail-left">
+                            <div class="tail-status" id="tailStatus">
+                                <span class="tail-status-dot"></span>
+                                <span id="tailStatusTxt">Idle</span>
+                            </div>
+                            <div
+                                class="f-group"
+                                style="
+                                    flex-direction: row;
+                                    align-items: center;
+                                    gap: 6px;
+                                "
+                            >
+                                <div class="f-label" style="margin: 0">
+                                    Service
+                                </div>
+                                <select
+                                    class="f-ctrl"
+                                    id="tailSvc"
+                                    style="
+                                        height: 28px;
+                                        font-size: 12px;
+                                        width: 120px;
+                                    "
+                                >
+                                    <option value="">All</option>
+                                </select>
+                            </div>
+                            <div
+                                class="f-group"
+                                style="
+                                    flex-direction: row;
+                                    align-items: center;
+                                    gap: 6px;
+                                "
+                            >
+                                <div class="f-label" style="margin: 0">
+                                    Level
+                                </div>
+                                <select
+                                    class="f-ctrl"
+                                    id="tailLvl"
+                                    style="
+                                        height: 28px;
+                                        font-size: 12px;
+                                        width: 90px;
+                                    "
+                                >
+                                    <option value="">Any</option>
+                                    <option>DEBUG</option>
+                                    <option>INFO</option>
+                                    <option>WARNING</option>
+                                    <option>ERROR</option>
+                                    <option>CRITICAL</option>
+                                </select>
+                            </div>
+                            <div
+                                class="f-group"
+                                style="
+                                    flex-direction: row;
+                                    align-items: center;
+                                    gap: 6px;
+                                "
+                            >
+                                <div class="f-label" style="margin: 0">
+                                    Timeout
+                                </div>
+                                <select
+                                    class="f-ctrl"
+                                    id="tailTimeout"
+                                    style="
+                                        height: 28px;
+                                        font-size: 12px;
+                                        width: 80px;
+                                    "
+                                >
+                                    <option value="30">30 s</option>
+                                    <option value="60" selected>1 min</option>
+                                    <option value="120">2 min</option>
+                                    <option value="300">5 min</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px">
+                            <button
+                                class="btn btn-ghost btn-sm"
+                                onclick="clearTail()"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <polyline points="3 6 5 6 21 6" />
+                                    <path d="M19 6l-1 14H5L4 6" /></svg
+                                >Clear
+                            </button>
+                            <button
+                                class="btn btn-success"
+                                id="tailStartBtn"
+                                onclick="startTail()"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <polyline
+                                        points="22 12 18 12 15 21 9 3 6 12 2 12"
+                                    /></svg
+                                >Start
+                            </button>
+                            <button
+                                class="btn btn-danger"
+                                id="tailStopBtn"
+                                onclick="stopTail()"
+                                style="display: none"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <rect
+                                        x="3"
+                                        y="3"
+                                        width="18"
+                                        height="18"
+                                        rx="2"
+                                    /></svg
+                                >Stop
+                            </button>
+                        </div>
+                    </div>
+                    <div class="terminal">
+                        <div class="term-head">
+                            <div class="term-dots">
+                                <div class="term-dot r"></div>
+                                <div class="term-dot a"></div>
+                                <div class="term-dot g"></div>
+                            </div>
+                            <div class="term-title">
+                                log-stream · live output
+                            </div>
+                            <div class="term-cnt" id="termCnt">0 lines</div>
+                        </div>
+                        <div class="term-body" id="termBody">
+                            <div class="term-placeholder">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.5"
+                                    style="
+                                        width: 32px;
+                                        height: 32px;
+                                        margin-bottom: 6px;
+                                    "
+                                >
+                                    <polyline
+                                        points="22 12 18 12 15 21 9 3 6 12 2 12"
+                                    />
+                                </svg>
+                                Press
+                                <strong
+                                    style="
+                                        color: rgba(255, 255, 255, 0.4);
+                                        margin: 0 4px;
+                                    "
+                                    >Start</strong
+                                >
+                                to begin streaming
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ━━━━━━━━━━ EXPORT ━━━━━━━━━━ -->
+                <div class="view" id="tab-export">
+                    <div class="export-content">
+                        <div class="export-card">
+                            <div class="export-card-title">Export Logs</div>
+                            <div class="export-card-sub">
+                                Generate a downloadable JSONL or CSV file from
+                                matching logs. Files are written server-side and
+                                a download link is returned.
+                            </div>
+
+                            <div class="f-group" style="margin-bottom: 10px">
+                                <div class="f-label" style="margin-bottom: 6px">
+                                    Format
+                                </div>
+                                <div class="export-format">
+                                    <div
+                                        class="fmt-opt selected"
+                                        id="fmtJsonl"
+                                        onclick="selectFmt('jsonl')"
+                                    >
+                                        <div class="fmt-opt-name">JSONL</div>
+                                        <div class="fmt-opt-sub">
+                                            One JSON object per line
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="fmt-opt"
+                                        id="fmtCsv"
+                                        onclick="selectFmt('csv')"
+                                    >
+                                        <div class="fmt-opt-name">CSV</div>
+                                        <div class="fmt-opt-sub">
+                                            Spreadsheet-compatible
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                style="
+                                    display: grid;
+                                    grid-template-columns: 1fr 1fr;
+                                    gap: 12px;
+                                    margin-bottom: 12px;
+                                "
+                            >
+                                <div class="form-group">
+                                    <div class="form-label">Service</div>
+                                    <select class="form-ctrl" id="expSvc">
+                                        <option value="">All services</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-label">Level</div>
+                                    <select class="form-ctrl" id="expLvl">
+                                        <option value="">Any</option>
+                                        <option>DEBUG</option>
+                                        <option>INFO</option>
+                                        <option>WARNING</option>
+                                        <option>ERROR</option>
+                                        <option>CRITICAL</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-label">From</div>
+                                    <input
+                                        type="datetime-local"
+                                        class="form-ctrl"
+                                        id="expFrom"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-label">To</div>
+                                    <input
+                                        type="datetime-local"
+                                        class="form-ctrl"
+                                        id="expTo"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-label">Max rows</div>
+                                    <select class="form-ctrl" id="expLimit">
+                                        <option value="1000">1 000</option>
+                                        <option value="10000" selected>
+                                            10 000
+                                        </option>
+                                        <option value="50000">50 000</option>
+                                        <option value="100000">100 000</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <div class="form-label">Event contains</div>
+                                    <input
+                                        class="form-ctrl"
+                                        id="expFts"
+                                        placeholder="Optional…"
+                                    />
+                                </div>
+                            </div>
+
+                            <button
+                                class="btn btn-primary"
+                                id="expBtn"
+                                onclick="runExport()"
+                            >
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                >
+                                    <path
+                                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                    />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                                Generate Export
+                            </button>
+
+                            <div class="export-result" id="exportResult">
+                                <div class="export-result-head">
+                                    <div
+                                        style="
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 8px;
+                                            color: var(--green);
+                                            font-weight: 700;
+                                            font-size: 13px;
+                                        "
+                                    >
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            style="width: 16px; height: 16px"
+                                        >
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                        Export Ready
+                                    </div>
+                                    <a
+                                        class="btn btn-success btn-sm"
+                                        id="exportDlBtn"
+                                        href="#"
+                                        download
+                                    >
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                        >
+                                            <path
+                                                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                            />
+                                            <polyline
+                                                points="7 10 12 15 17 10"
+                                            />
+                                            <line
+                                                x1="12"
+                                                y1="15"
+                                                x2="12"
+                                                y2="3"
+                                            />
+                                        </svg>
+                                        Download
+                                    </a>
+                                </div>
+                                <div
+                                    class="export-dl-info"
+                                    id="exportInfo"
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+        <!-- end .app -->
+
+        <!-- ════ TOAST STACK ════ -->
+        <div class="toast-wrap" id="toastWrap"></div>
+
+        <!-- ════ MODAL: Delete Confirm ════ -->
+        <div class="modal-backdrop" id="delModal">
+            <div class="modal">
+                <div class="modal-head">
+                    <div class="modal-head-icon danger">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                            />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="modal-head-title">
+                            Confirm Permanent Deletion
+                        </div>
+                        <div class="modal-head-sub" id="delModalSub">
+                            This cannot be undone
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <p id="delModalDesc"></p>
+                    <div
+                        class="modal-filters"
+                        id="delModalFilters"
+                        style="display: none"
+                    ></div>
+                </div>
+                <div class="modal-foot">
+                    <button
+                        class="btn btn-ghost"
+                        onclick="closeModal('delModal')"
+                    >
+                        Cancel
+                    </button>
+                    <button class="btn btn-danger-solid" id="delModalConfirm">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ MODAL: Save Query ════ -->
+        <div class="modal-backdrop" id="saveQueryModal">
+            <div class="modal modal-wide">
+                <div class="modal-head">
+                    <div class="modal-head-icon info">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                            />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="modal-head-title">Save Query Preset</div>
+                        <div class="modal-head-sub">
+                            Persist current filters for later reuse
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="save-form">
+                        <div class="form-group">
+                            <div class="form-label">Preset Name</div>
+                            <input
+                                class="form-ctrl"
+                                id="sqName"
+                                placeholder="e.g. prod-errors-last-hour"
+                                autocomplete="off"
+                            />
+                        </div>
+                        <div class="form-group">
+                            <div class="form-label">Description (optional)</div>
+                            <input
+                                class="form-ctrl"
+                                id="sqDesc"
+                                placeholder="What does this query find?"
+                            />
+                        </div>
+                        <div
+                            id="sqPreview"
+                            style="
+                                background: var(--bg2);
+                                border: 1px solid var(--border);
+                                border-radius: var(--radius);
+                                padding: 10px 12px;
+                                font-family: var(--mono);
+                                font-size: 11px;
+                                color: var(--text3);
+                                line-height: 1.7;
+                                min-height: 60px;
+                            "
+                        ></div>
+                    </div>
+                </div>
+                <div class="modal-foot">
+                    <button
+                        class="btn btn-ghost"
+                        onclick="closeModal('saveQueryModal')"
+                    >
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" onclick="saveQuery()">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+                            /></svg
+                        >Save Preset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ MODAL: Execute Saved Query Result ════ -->
+        <div class="modal-backdrop" id="sqExecModal">
+            <div class="modal modal-wide">
+                <div class="modal-head">
+                    <div class="modal-head-icon info">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="modal-head-title" id="sqExecTitle">
+                            Execute Saved Query
+                        </div>
+                        <div class="modal-head-sub">
+                            Run this preset in the Query tab
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <p
+                        style="
+                            color: var(--text2);
+                            font-size: 12px;
+                            margin-bottom: 10px;
+                        "
+                    >
+                        This will apply the preset filters and run a search.
+                    </p>
+                    <div class="modal-filters" id="sqExecFilters"></div>
+                </div>
+                <div class="modal-foot">
+                    <button
+                        class="btn btn-ghost"
+                        onclick="closeModal('sqExecModal')"
+                    >
+                        Cancel
+                    </button>
+                    <button class="btn btn-primary" id="sqExecConfirm">
+                        <svg
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" /></svg
+                        >Run Query
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const BASE = "";
+
+            /* ══ API ══ */
+            async function api(method, path, body) {
+                const r = await fetch(BASE + path, {
+                    method,
+                    headers: { "Content-Type": "application/json" },
+                    body: body ? JSON.stringify(body) : undefined,
+                });
+                const d = await r.json().catch(() => ({}));
+                if (!r.ok)
+                    throw new Error(
+                        d?.detail ||
+                            d?.data?.detail ||
+                            d?.message ||
+                            `HTTP ${r.status}`,
+                    );
+                return d;
+            }
+            const GET = (p) => api("GET", p);
+            const POST = (p, b) => api("POST", p, b);
+            const DEL = (p, b) => api("DELETE", p, b);
+
+            /* ══ Navigation ══ */
+            let _currentTab = "overview";
+            function switchTab(name) {
+                document
+                    .querySelectorAll(".tab")
+                    .forEach((t) =>
+                        t.classList.toggle("active", t.dataset.tab === name),
+                    );
+                document
+                    .querySelectorAll(".view")
+                    .forEach((v) => v.classList.remove("active"));
+                document.getElementById("tab-" + name).classList.add("active");
+                _currentTab = name;
+                if (name === "overview") loadOverview();
+                if (name === "query" || name === "tail" || name === "analytics")
+                    loadSvcDropdowns();
+                if (name === "savedqueries") loadSavedQueries();
+                if (name === "analytics") runAnalytics();
+                if (name === "export") populateExportDropdowns();
+            }
+
+            /* ══ Toast ══ */
+            const T_ICONS = {
+                ok: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>`,
+                err: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`,
+                info: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+            };
+            function toast(msg, type = "info", title = "") {
+                const w = document.getElementById("toastWrap");
+                const el = document.createElement("div");
+                el.className = `toast ${type}`;
+                const titles = { ok: "Success", err: "Error", info: "Info" };
+                el.innerHTML = `${T_ICONS[type] || T_ICONS.info}<div class="toast-body"><div class="toast-title">${title || titles[type]}</div><div class="toast-msg">${esc(msg)}</div></div>`;
+                w.appendChild(el);
+                setTimeout(() => {
+                    el.style.transition = "opacity .25s,transform .25s";
+                    el.style.opacity = "0";
+                    el.style.transform = "translateY(6px)";
+                    setTimeout(() => el.remove(), 250);
+                }, 3800);
+            }
+
+            /* ══ Modal helpers ══ */
+            function openModal(id) {
+                document.getElementById(id).classList.add("open");
+            }
+            function closeModal(id) {
+                document.getElementById(id).classList.remove("open");
+            }
+            document.querySelectorAll(".modal-backdrop").forEach((bd) => {
+                bd.addEventListener("click", (e) => {
+                    if (e.target === e.currentTarget)
+                        e.currentTarget.classList.remove("open");
+                });
+            });
+
+            /* ══ Format helpers ══ */
+            function esc(s) {
+                return String(s)
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;");
+            }
+            function fmtN(n) {
+                if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
+                if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e5 ? 0 : 1) + "K";
+                return String(n);
+            }
+            function fmtB(b) {
+                if (!b) return "0 B";
+                if (b < 1024) return b + " B";
+                if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+                if (b < 1073741824) return (b / 1048576).toFixed(1) + " MB";
+                return (b / 1073741824).toFixed(2) + " GB";
+            }
+            function fmtTS(iso) {
+                if (!iso) return "—";
+                const d = new Date(iso);
+                return d.toLocaleString("en-US", {
+                    month: "short",
+                    day: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: false,
+                    timeZone: "UTC",   // ← add this
+                    }) + " UTC";  
+                
+            }
+            function setConn(ok) {
+                const p = document.getElementById("connPill");
+                p.className = ok ? "conn-pill" : "conn-pill off";
+                document.getElementById("connText").textContent = ok
+                    ? "Connected"
+                    : "Offline";
+            }
+
+            /* ══ OVERVIEW ══ */
+            async function loadOverview() {
+                try {
+                    const [sr, mr, svr] = await Promise.all([
+                        GET("/status/log"),
+                        GET("/metrics-summary"),
+                        GET("/logs/services"),
+                    ]);
+                    const s = sr.data || sr,
+                        m = mr.data || mr,
+                        svcs = (svr.data || svr).services || [];
+                    const total = s.total_logs ?? 0;
+                    document.getElementById("kpiTotal").textContent =
+                        fmtN(total);
+                    const e = s.earliest
+                        ? new Date(s.earliest).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              timeZone: "UTC",
+                          })
+                        : null;
+                    const l = s.latest
+                        ? new Date(s.latest).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              timeZone: "UTC",
+                          })
+                        : null;
+                    document.getElementById("kpiRange").textContent =
+                        e && l ? `${e} → ${l}` : "—";
+                    document.getElementById("kpiSvcs").textContent =
+                        s.services ?? 0;
+                    document.getElementById("kpiSvcNames").textContent =
+                        svcs.slice(0, 3).join(", ") +
+                        (svcs.length > 3 ? ` +${svcs.length - 3}` : "");
+                    document.getElementById("kpiBuffer").textContent = fmtN(
+                        s.buffer_pending ?? 0,
+                    );
+                    document.getElementById("kpiDropped").textContent = fmtN(
+                        s.dropped_records ?? 0,
+                    );
+                    document.getElementById("kpiDb").textContent =
+                        `DB: ${fmtB(s.db_size_bytes ?? 0)} · ${s.retention_days ?? 30}d retention`;
+                    renderLevelBars(s.levels || {});
+                    renderSvcChips(svcs);
+                    renderMetricsTable(m);
+                    setConn(true);
+                } catch (e) {
+                    setConn(false);
+                    toast(e.message, "err", "Overview failed");
+                }
+            }
+
+            function loadMetrics() {
+                loadOverview();
+            }
+
+            function renderLevelBars(levels) {
+                const order = [
+                    "CRITICAL",
+                    "FATAL",
+                    "ERROR",
+                    "WARNING",
+                    "WARN",
+                    "INFO",
+                    "DEBUG",
+                ];
+                const entries = [];
+                order
+                    .filter((l) => levels[l])
+                    .forEach((l) => entries.push([l, levels[l]]));
+                Object.keys(levels)
+                    .filter((l) => !order.includes(l))
+                    .forEach((l) => entries.push([l, levels[l]]));
+                if (!entries.length) {
+                    document.getElementById("levelBars").innerHTML =
+                        '<div style="color:var(--text3);font-size:12px">No data</div>';
+                    return;
+                }
+                const mx = Math.max(...entries.map((e) => e[1]), 1);
+                document.getElementById("levelBars").innerHTML = entries
+                    .map(([l, n]) => {
+                        const pct = Math.round((n / mx) * 100);
+                        const cls =
+                            l === "WARN"
+                                ? "WARNING"
+                                : l === "FATAL"
+                                  ? "CRITICAL"
+                                  : l;
+                        return `<div class="lbar"><span class="lbar-name" style="color:${lvlColor(cls)}">${l}</span><div class="lbar-track"><div class="lbar-fill lbar-fill-${cls}" style="width:${pct}%"></div></div><span class="lbar-count">${fmtN(n)}</span></div>`;
+                    })
+                    .join("");
+            }
+
+            function lvlColor(l) {
+                const m = {
+                    DEBUG: "var(--text3)",
+                    INFO: "#0c7a8c",
+                    WARNING: "var(--amber)",
+                    WARN: "var(--amber)",
+                    ERROR: "var(--red)",
+                    CRITICAL: "var(--purple)",
+                    FATAL: "var(--purple)",
+                };
+                return m[l] || "var(--text2)";
+            }
+
+            function renderSvcChips(svcs) {
+                const el = document.getElementById("svcChips");
+                if (!svcs.length) {
+                    el.innerHTML =
+                        '<div style="color:var(--text3);font-size:12px">No services found</div>';
+                    return;
+                }
+                el.innerHTML = svcs
+                    .map(
+                        (s) =>
+                            `<div class="svc-chip" onclick="jumpToService('${esc(s)}')"><span class="svc-chip-dot"></span>${esc(s)}</div>`,
+                    )
+                    .join("");
+            }
+
+            function renderMetricsTable(m) {
+                const rows = [
+                    ["Ingest total", fmtN(m.ingest_total ?? 0)],
+                    ["Ingest rate/sec", m.ingest_rate_per_sec ?? 0],
+                    ["Buffer depth", m.buffer_depth ?? 0],
+                    ["Flush total", m.flush_total ?? 0],
+                    ["Avg flush size", m.avg_flush_size ?? 0],
+                    ["Flush errors", m.flush_errors ?? 0],
+                    ["Connections total", m.connections_total ?? 0],
+                    ["Connections rejected", m.connections_rejected ?? 0],
+                    ["DB size", fmtB(m.db_size_bytes ?? 0)],
+                ];
+                document.getElementById("metricsTable").innerHTML = rows
+                    .map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`)
+                    .join("");
+            }
+
+            function jumpToService(s) {
+                switchTab("query");
+                setTimeout(() => {
+                    document.getElementById("fSvc").value = s;
+                    runQuery();
+                }, 80);
+            }
+
+            /* ══ SERVICE DROPDOWNS ══ */
+            async function loadSvcDropdowns() {
+                try {
+                    const r = await GET("/logs/services");
+                    const svcs = (r.data || r).services || [];
+                    ["fSvc", "tailSvc", "aSvc"].forEach((id) => {
+                        const el = document.getElementById(id);
+                        if (!el) return;
+                        const cur = el.value;
+                        el.innerHTML =
+                            '<option value="">All services</option>' +
+                            svcs
+                                .map(
+                                    (s) =>
+                                        `<option value="${esc(s)}" ${s === cur ? "selected" : ""}>${esc(s)}</option>`,
+                                )
+                                .join("");
+                    });
+                } catch (_) {}
+            }
+
+            /* ══ QUERY ══ */
+            const Q = {
+                offset: 0,
+                limit: 100,
+                order: "desc",
+                total: null,
+                filters: null,
+                hl: "",
+                selected: new Set(),
+            };
+
+            function getFilters() {
+                const f = {};
+                const fts = document.getElementById("fFts").value.trim();
+                const svc = document.getElementById("fSvc").value;
+                const lvl = document.getElementById("fLvl").value;
+                const lgte = document.getElementById("fLvlGte").value;
+                const from = document.getElementById("fFrom").value;
+                const to = document.getElementById("fTo").value;
+                const req = document.getElementById("fReqId").value.trim();
+                const uid = document.getElementById("fUid").value.trim();
+                if (svc) f.service = svc;
+                if (lvl && !lgte) f.level = lvl;
+                if (lgte && !lvl) f.level_gte = lgte;
+                if (from) f.ts_from = new Date(from).toISOString();
+                if (to) f.ts_to = new Date(to).toISOString();
+                if (req) f.request_id = req;
+                if (uid) f.user_id = uid;
+                if (fts.length >= 2) f.event_contains = fts;
+                Q.hl = fts;
+                return f;
+            }
+
+            async function runQuery(reset = true) {
+                if (reset) {
+                    Q.offset = 0;
+                    Q.selected.clear();
+                    updateBulkBar();
+                }
+                Q.limit = parseInt(document.getElementById("limitSel").value);
+                Q.filters = getFilters();
+                document.getElementById("tableWrap").innerHTML = skeletonRows();
+                document.getElementById("pgBar").style.display = "none";
+                try {
+                    const [qr, cr] = await Promise.all([
+                        POST("/logs/query", {
+                            filters: Q.filters,
+                            limit: Q.limit,
+                            offset: Q.offset,
+                            order: Q.order,
+                        }),
+                        POST("/logs/count", { filters: Q.filters }),
+                    ]);
+                    const rows = (qr.data || qr).rows || [];
+                    Q.total = (cr.data || cr).count ?? 0;
+                    document.getElementById("resultsInfo").innerHTML =
+                        `<strong>${Q.total.toLocaleString()}</strong> records — showing ${Q.offset + 1}–${Math.min(Q.offset + rows.length, Q.total)}`;
+                    renderTable(rows);
+                    renderPagination(Q.total);
+                } catch (e) {
+                    document.getElementById("tableWrap").innerHTML =
+                        `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg><h3>Query Failed</h3><p>${esc(e.message)}</p></div>`;
+                    toast(e.message, "err", "Query failed");
+                }
+            }
+
+            function skeletonRows() {
+                const r = Array(6)
+                    .fill(0)
+                    .map(
+                        () =>
+                            `<tr><td><input type="checkbox" class="cb" disabled/></td><td><div class="skeleton" style="width:120px"></div></td><td><div class="skeleton" style="width:70px"></div></td><td><div class="skeleton" style="width:55px"></div></td><td><div class="skeleton" style="width:${(140 + Math.random() * 160) | 0}px"></div></td><td><div class="skeleton" style="width:80px"></div></td><td></td></tr>`,
+                    )
+                    .join("");
+                return `<table class="data-table"><thead><tr><th class="col-check"><input type="checkbox" class="cb" id="checkAll" onchange="toggleSelectAll(this)"/></th><th>Timestamp</th><th>Service</th><th>Level</th><th>Event</th><th>Meta</th><th></th></tr></thead><tbody>${r}</tbody></table>`;
+            }
+
+            function renderTable(rows) {
+                if (!rows.length) {
+                    document.getElementById("tableWrap").innerHTML =
+                        `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg><h3>No Results</h3><p>No logs matched the current filters</p></div>`;
+                    document.getElementById("pgBar").style.display = "none";
+                    return;
+                }
+                const hl = Q.hl;
+                const body = rows
+                    .map((r, i) => {
+                        const rowId = `row-${Q.offset}-${i}`;
+                        const detId = `det-${Q.offset}-${i}`;
+                        const ts = fmtTS(r.ts);
+                        const lvl = (r.level || "INFO").toUpperCase();
+                        const evRaw = esc(r.event || "—");
+                        const ev = hl
+                            ? evRaw.replace(
+                                  new RegExp(
+                                      `(${hl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+                                      "gi",
+                                  ),
+                                  '<span class="hl">$1</span>',
+                              )
+                            : evRaw;
+                        const meta = r.request_id
+                            ? `req:${r.request_id.slice(0, 8)}`
+                            : r.user_id
+                              ? `uid:${esc(r.user_id)}`
+                              : "—";
+                        const sel = Q.selected.has(r.id);
+                        return `<tr id="${rowId}" class="${sel ? "selected" : ""}" onclick="toggleExpand('${detId}','${rowId}',event)">
+  <td class="col-check" onclick="event.stopPropagation()"><input type="checkbox" class="cb row-cb" data-id="${esc(r.id)}" ${sel ? "checked" : ""} onchange="toggleRowSelect(this,'${esc(r.id)}')"/></td>
+  <td class="col-ts"><span class="ts-val">${ts}</span></td>
+  <td class="col-svc"><span class="svc-tag">${esc(r.service || "unknown")}</span></td>
+  <td class="col-lvl"><span class="lvl-badge L-${lvl}"><span class="lvl-dot"></span>${lvl}</span></td>
+  <td class="col-event"><div class="event-text">${ev}</div></td>
+  <td class="col-meta"><div class="meta-val">${meta}</div></td>
+  <td class="col-act" onclick="event.stopPropagation()"><button class="row-del-btn" title="Delete this log" onclick="deleteSingleRow('${esc(r.id)}','${esc(r.event || "").slice(0, 60)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>
+</tr>
+<tr class="detail-row" id="${detId}">
+  <td colspan="7" class="detail-cell">
+    <div class="detail-panel">
+      <div class="detail-grid">
+        <div><div class="detail-field-label">Log ID</div><div class="detail-field-value">${esc(r.id || "—")}</div></div>
+        <div><div class="detail-field-label">Ingested At</div><div class="detail-field-value">${r.ingested_at ? new Date(r.ingested_at).toLocaleString("en-US", { timeZone: "UTC", hour12: false }) + " UTC"
+ : "—"}</div></div>
+        <div><div class="detail-field-label">Request ID</div><div class="detail-field-value">${esc(r.request_id || "—")}</div></div>
+        <div><div class="detail-field-label">User ID</div><div class="detail-field-value">${esc(r.user_id || "—")}</div></div>
+        <div><div class="detail-field-label">Device ID</div><div class="detail-field-value">${esc(r.device_id || "—")}</div></div>
+        <div><div class="detail-field-label">Source</div><div class="detail-field-value">${esc(r.source_file || "—")}</div></div>
+        <div><div class="detail-field-label">Service</div><div class="detail-field-value">${esc(r.service || "—")}</div></div>
+        <div><div class="detail-field-label">Extra</div><div class="detail-field-value">${r.extra ? esc(r.extra) : "—"}</div></div>
+      </div>
+      <div class="detail-field-label" style="margin-bottom:6px">Full Event Message</div>
+      <div class="detail-event">${esc(r.event || "—")}</div>
+      <div class="detail-actions">
+        <button class="btn btn-danger btn-sm" onclick="deleteSingleRow('${esc(r.id)}','${esc((r.event || "").slice(0, 60))}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H5L4 6"/></svg>Delete This Log</button>
+      </div>
+    </div>
+  </td>
+</tr>`;
+                    })
+                    .join("");
+
+                document.getElementById("tableWrap").innerHTML =
+                    `<table class="data-table"><thead><tr><th class="col-check"><input type="checkbox" class="cb" id="checkAll" onchange="toggleSelectAll(this)"/></th><th>Timestamp</th><th>Service</th><th>Level</th><th>Event</th><th>Meta</th><th></th></tr></thead><tbody>${body}</tbody></table>`;
+                document.getElementById("pgBar").style.display = "flex";
+                syncCheckAll();
+            }
+
+            function toggleExpand(detId, rowId, e) {
+                if (e.target.closest("button") || e.target.closest(".cb"))
+                    return;
+                const det = document.getElementById(detId);
+                if (!det) return;
+                const wasOpen = det.classList.contains("open");
+                document
+                    .querySelectorAll(".detail-row.open")
+                    .forEach((d) => d.classList.remove("open"));
+                if (!wasOpen) det.classList.add("open");
+            }
+
+            /* Row selection */
+            function toggleRowSelect(cb, id) {
+                if (cb.checked) Q.selected.add(id);
+                else Q.selected.delete(id);
+                const row = cb.closest("tr");
+                if (row) row.classList.toggle("selected", cb.checked);
+                updateBulkBar();
+                syncCheckAll();
+            }
+            function toggleSelectAll(masterCb) {
+                document.querySelectorAll(".row-cb").forEach((cb) => {
+                    cb.checked = masterCb.checked;
+                    const id = cb.dataset.id;
+                    if (masterCb.checked) Q.selected.add(id);
+                    else Q.selected.delete(id);
+                    const row = cb.closest("tr");
+                    if (row) row.classList.toggle("selected", masterCb.checked);
+                });
+                updateBulkBar();
+            }
+            function clearSelection() {
+                Q.selected.clear();
+                document
+                    .querySelectorAll(".row-cb")
+                    .forEach((c) => (c.checked = false));
+                document
+                    .querySelectorAll("tr.selected")
+                    .forEach((r) => r.classList.remove("selected"));
+                updateBulkBar();
+                syncCheckAll();
+            }
+            function syncCheckAll() {
+                const all = document.querySelectorAll(".row-cb"),
+                    ca = document.getElementById("checkAll");
+                if (!ca) return;
+                const checked = [...all].filter((c) => c.checked);
+                ca.checked = checked.length === all.length && all.length > 0;
+                ca.indeterminate =
+                    checked.length > 0 && checked.length < all.length;
+            }
+            function updateBulkBar() {
+                const bb = document.getElementById("bulkBar"),
+                    cnt = Q.selected.size;
+                bb.classList.toggle("show", cnt > 0);
+                document.getElementById("bulkCount").textContent = cnt;
+            }
+
+                    // ─────────────────────────────────────────────────────────────────────────────
+            // PATCH 5 — logservice.html: fix deleteSingleRow and bulkDelete
+            // Replace the two existing JS functions with these versions.
+            // ─────────────────────────────────────────────────────────────────────────────
+
+            // BUG WAS: passed Q.filters (current search filters) so the delete API wiped
+            // every log that matched the search — not just the one row clicked.
+            // FIX: pass { log_id: id } so the backend deletes exactly one record.
+
+            function deleteSingleRow(id, preview) {
+                const shortId = id.slice(0, 8) + "…";
+                document.getElementById("delModalDesc").textContent =
+                    "You are about to permanently delete 1 log record.";
+                document.getElementById("delModalFilters").style.display = "block";
+                document.getElementById("delModalFilters").textContent =
+                    `ID: ${id}\nEvent: ${preview || "—"}`;
+                document.getElementById("delModalSub").textContent =
+                    "1 record — this cannot be undone";
+
+                document.getElementById("delModalConfirm").onclick = async () => {
+                    closeModal("delModal");
+                    try {
+                        await DEL("/admin/logs", {
+                            filters: { log_id: id },   // ← FIX: target exactly this record
+                        });
+                        toast("Log record deleted", "ok", "Deleted");
+                        runQuery(false);
+                    } catch (e) {
+                        toast(e.message, "err", "Delete failed");
+                    }
+                };
+                openModal("delModal");
+            }
+
+            // BUG WAS: passed Q.filters so the API deleted everything matching the search.
+            // FIX: collect the UUIDs that are actually checked and pass them as log_ids.
+
+            function bulkDelete() {
+                const n = Q.selected.size;
+                if (!n) return;
+
+                const ids = [...Q.selected];   // ← collect the actual selected IDs
+
+                document.getElementById("delModalDesc").textContent =
+                    `You are about to permanently delete ${n} selected log record${n > 1 ? "s" : ""}.`;
+                document.getElementById("delModalFilters").style.display = "block";
+                document.getElementById("delModalFilters").textContent =
+                    `IDs (${n}):\n${ids.slice(0, 5).map(i => i.slice(0, 8) + "…").join("\n")}${ids.length > 5 ? `\n… and ${ids.length - 5} more` : ""}`;
+                document.getElementById("delModalSub").textContent =
+                    `${n} record${n > 1 ? "s" : ""} — this cannot be undone`;
+
+                document.getElementById("delModalConfirm").onclick = async () => {
+                    closeModal("delModal");
+                    try {
+                        await DEL("/admin/logs", {
+                            filters: { log_ids: ids },  // ← FIX: only the checked IDs
+                        });
+                        toast(`Deleted ${n} record${n > 1 ? "s" : ""}`, "ok", "Bulk deleted");
+                        Q.selected.clear();
+                        updateBulkBar();
+                        runQuery(false);
+                    } catch (e) {
+                        toast(e.message, "err", "Bulk delete failed");
+                    }
+                };
+                openModal("delModal");
+            }
+
+            function clearFilters() {
+                ["fFts", "fReqId", "fUid", "fFrom", "fTo"].forEach((id) => {
+                    const e = document.getElementById(id);
+                    if (e) e.value = "";
+                });
+                ["fSvc", "fLvl", "fLvlGte"].forEach((id) => {
+                    const e = document.getElementById(id);
+                    if (e) e.value = "";
+                });
+                Q.filters = null;
+                Q.selected.clear();
+                updateBulkBar();
+                document.getElementById("resultsInfo").textContent =
+                    "Filters cleared — run a new search";
+                document.getElementById("tableWrap").innerHTML =
+                    `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><h3>No Query Run</h3><p>Set filters and click Search</p></div>`;
+                document.getElementById("pgBar").style.display = "none";
+            }
+
+            function setOrder(ord) {
+                Q.order = ord;
+                document
+                    .getElementById("sortDesc")
+                    .classList.toggle("active", ord === "desc");
+                document
+                    .getElementById("sortAsc")
+                    .classList.toggle("active", ord === "asc");
+                if (Q.filters !== null) runQuery(true);
+            }
+
+            function renderPagination(total) {
+                const pages = Math.ceil(total / Q.limit);
+                const cur = Math.floor(Q.offset / Q.limit);
+                document.getElementById("pgInfo").textContent =
+                    `Page ${cur + 1} / ${pages || 1} · ${total.toLocaleString()} total`;
+                const range = buildPageRange(cur, pages);
+                document.getElementById("pgControls").innerHTML =
+                    `<button class="pg-btn" onclick="goPage(${cur - 1})" ${cur === 0 ? "disabled" : ""}>‹</button>` +
+                    range
+                        .map((p) =>
+                            p === "…"
+                                ? `<button class="pg-btn" style="pointer-events:none;opacity:.3">…</button>`
+                                : `<button class="pg-btn ${p === cur ? "active" : ""}" onclick="goPage(${p})">${p + 1}</button>`,
+                        )
+                        .join("") +
+                    `<button class="pg-btn" onclick="goPage(${cur + 1})" ${cur >= pages - 1 ? "disabled" : ""}>›</button>`;
+            }
+            function buildPageRange(cur, total) {
+                if (total <= 7)
+                    return Array.from({ length: total }, (_, i) => i);
+                const r = [0];
+                if (cur > 2) r.push("…");
+                for (
+                    let i = Math.max(1, cur - 1);
+                    i <= Math.min(total - 2, cur + 1);
+                    i++
+                )
+                    r.push(i);
+                if (cur < total - 3) r.push("…");
+                if (total > 1) r.push(total - 1);
+                return r;
+            }
+            function goPage(p) {
+                const pages = Math.ceil(Q.total / Q.limit);
+                if (p < 0 || p >= pages) return;
+                Q.offset = p * Q.limit;
+                Q.selected.clear();
+                updateBulkBar();
+                runQuery(false);
+                document.getElementById("tableWrap").scrollTop = 0;
+            }
+
+            document.getElementById("fFts").addEventListener("keydown", (e) => {
+                if (e.key === "Enter") runQuery();
+            });
+
+            /* ══ SAVE QUERY MODAL ══ */
+            let _sqCurrentFilters = null;
+            function openSaveQueryModal() {
+                _sqCurrentFilters = getFilters();
+                const preview = Object.entries(_sqCurrentFilters).length
+                    ? Object.entries(_sqCurrentFilters)
+                          .map(
+                              ([k, v]) =>
+                                  `${k}: ${Array.isArray(v) ? v.join(", ") : v}`,
+                          )
+                          .join("\n")
+                    : "(no filters — will match all logs)";
+                document.getElementById("sqPreview").textContent = preview;
+                document.getElementById("sqName").value = "";
+                document.getElementById("sqDesc").value = "";
+                openModal("saveQueryModal");
+            }
+            async function saveQuery() {
+                const name = document.getElementById("sqName").value.trim();
+                if (!name) {
+                    toast("Name is required", "err", "Validation");
+                    return;
+                }
+                const q = {
+                    filters: _sqCurrentFilters,
+                    limit: parseInt(document.getElementById("limitSel").value),
+                    order: Q.order,
+                };
+                try {
+                    await POST("/logs/saved-queries", {
+                        name,
+                        query: q,
+                        description: document.getElementById("sqDesc").value,
+                    });
+                    closeModal("saveQueryModal");
+                    toast(`"${name}" saved`, "ok", "Query saved");
+                } catch (e) {
+                    toast(e.message, "err", "Save failed");
+                }
+            }
+
+            /* ══ SAVED QUERIES LIST ══ */
+            async function loadSavedQueries() {
+                const el = document.getElementById("sqGrid");
+                el.innerHTML =
+                    '<div style="color:var(--text3);font-size:12px;padding:20px">Loading…</div>';
+                try {
+                    const r = await GET("/logs/saved-queries");
+                    const items = (r.data || r).queries || [];
+                    if (!items.length) {
+                        el.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><h3>No Saved Queries</h3><p>Save filters from the Query tab using the bookmark icon</p></div>`;
+                        return;
+                    }
+                    el.innerHTML = items
+                        .map((q) => {
+                            const updated = q.updated_at
+                                ? new Date(q.updated_at).toLocaleDateString(
+                                      "en-US",
+                                      {
+                                          month: "short",
+                                          day: "numeric",
+                                          year: "numeric",
+                                          timeZone: "UTC",
+                                      },
+                                  )
+                                : "—";
+                            return `<div class="sq-card">
+  <div class="sq-card-head">
+    <div><div class="sq-name">${esc(q.name)}</div><div class="sq-meta">Updated ${updated}</div></div>
+    <div class="sq-actions">
+      <button class="btn btn-primary btn-xs" onclick="execSavedQuery('${esc(q.name)}')">Run</button>
+      <button class="btn btn-danger btn-xs" onclick="deleteSavedQuery('${esc(q.name)}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H5L4 6"/></svg></button>
+    </div>
+  </div>
+  <div class="sq-card-foot"><span class="sq-runs">Runs: ${q.run_count || 0} · Last: ${q.last_run_at ? new Date(q.last_run_at).toLocaleDateString("en-US", { month: "short", day: "numeric",timeZone: "UTC" }) : "Never"}</span></div>
+</div>`;
+                        })
+                        .join("");
+                } catch (e) {
+                    toast(e.message, "err", "Load failed");
+                }
+            }
+
+            async function execSavedQuery(name) {
+                try {
+                    const r = await GET(
+                        `/logs/saved-queries/${name}?execute=false`,
+                    );
+                    const def = (r.data || r).query || {};
+                    const filters = def.filters || {};
+                    const lines = Object.keys(filters).length
+                        ? Object.entries(filters)
+                              .map(
+                                  ([k, v]) =>
+                                      `${k}: ${Array.isArray(v) ? v.join(", ") : v}`,
+                              )
+                              .join("\n")
+                        : "(no filters)";
+                    document.getElementById("sqExecTitle").textContent = name;
+                    document.getElementById("sqExecFilters").textContent =
+                        lines;
+                    document.getElementById("sqExecConfirm").onclick = () => {
+                        closeModal("sqExecModal");
+                        applyAndRunSavedQuery(def);
+                    };
+                    openModal("sqExecModal");
+                } catch (e) {
+                    toast(e.message, "err");
+                }
+            }
+
+            function applyAndRunSavedQuery(def) {
+                const f = def.filters || {};
+                document.getElementById("fFts").value = f.event_contains || "";
+                document.getElementById("fSvc").value = Array.isArray(f.service)
+                    ? f.service[0]
+                    : f.service || "";
+                document.getElementById("fLvl").value = Array.isArray(f.level)
+                    ? f.level[0]
+                    : f.level || "";
+                document.getElementById("fLvlGte").value = f.level_gte || "";
+                document.getElementById("fReqId").value = f.request_id || "";
+                document.getElementById("fUid").value = f.user_id || "";
+                if (f.ts_from) {
+                    const d = new Date(f.ts_from);
+                    document.getElementById("fFrom").value = d
+                        .toISOString()
+                        .slice(0, 16);
+                }
+                if (f.ts_to) {
+                    const d = new Date(f.ts_to);
+                    document.getElementById("fTo").value = d
+                        .toISOString()
+                        .slice(0, 16);
+                }
+                if (def.limit)
+                    document.getElementById("limitSel").value = def.limit;
+                if (def.order) setOrder(def.order);
+                switchTab("query");
+                setTimeout(() => runQuery(), 80);
+            }
+
+            async function deleteSavedQuery(name) {
+                if (!confirm(`Delete saved query "${name}"?`)) return;
+                try {
+                    await DEL(`/logs/saved-queries/${name}`);
+                    toast(`"${name}" deleted`, "ok", "Deleted");
+                    loadSavedQueries();
+                } catch (e) {
+                    toast(e.message, "err");
+                }
+            }
+
+            /* ══ ANALYTICS ══ */
+            function getAnalyticsFilters() {
+                const f = {};
+                const svc = document.getElementById("aSvc").value;
+                const lvl = document.getElementById("aLvl").value;
+                const from = document.getElementById("aFrom").value;
+                const to = document.getElementById("aTo").value;
+                if (svc) f.service = svc;
+                if (lvl) f.level_gte = lvl;
+                return {
+                    filters: f,
+                    interval: document.getElementById("aInterval").value,
+                    ts_from: from ? new Date(from).toISOString() : undefined,
+                    ts_to: to ? new Date(to).toISOString() : undefined,
+                };
+            }
+
+            async function runAnalytics() {
+                const p = getAnalyticsFilters();
+                document.getElementById("aggChart").innerHTML =
+                    '<div class="empty-state" style="padding:30px"><div class="skeleton" style="width:100%;height:140px"></div></div>';
+                document.getElementById("histChart").innerHTML =
+                    '<div class="empty-state" style="padding:30px"><div class="skeleton" style="width:100%;height:140px"></div></div>';
+                try {
+                    const [aggR, histR] = await Promise.all([
+                        POST("/logs/aggregate", p),
+                        POST("/logs/histogram", p),
+                    ]);
+                    renderAggChart((aggR.data || aggR).data || []);
+                    renderHistChart((histR.data || histR).data || []);
+                } catch (e) {
+                    toast(e.message, "err", "Analytics failed");
+                }
+                runTopN();
+            }
+
+            function renderAggChart(data) {
+                if (!data.length) {
+                    document.getElementById("aggChart").innerHTML =
+                        '<div class="empty-state" style="padding:30px"><p>No data for selected range</p></div>';
+                    return;
+                }
+                const maxTotal = Math.max(...data.map((d) => d.total), 1);
+                const bars = data
+                    .map((d) => {
+                        const h = Math.max(
+                            Math.round((d.total / maxTotal) * 140),
+                            2,
+                        );
+                        const eh = Math.max(
+                            Math.round((d.errors / maxTotal) * 140),
+                            d.errors > 0 ? 2 : 0,
+                        );
+                        const tip = `${d.bucket}\n${d.total} total · ${d.errors} errors · ${(d.error_rate * 100).toFixed(1)}% err`;
+                        return `<div class="bc-bar" style="height:${h}px;background:var(--accent);opacity:.7" data-tip="${esc(tip)}">
+      <div style="position:absolute;bottom:0;left:0;right:0;height:${eh}px;background:var(--red);border-radius:3px 3px 0 0"></div>
+    </div>`;
+                    })
+                    .join("");
+                const yMax = fmtN(maxTotal),
+                    yMid = fmtN(Math.round(maxTotal / 2));
+                document.getElementById("aggChart").innerHTML = `
+<div style="display:flex;gap:6px;height:160px">
+  <div class="chart-y-axis"><span class="chart-y-label">${yMax}</span><span class="chart-y-label">${yMid}</span><span class="chart-y-label">0</span></div>
+  <div class="bar-chart-inner">${bars}</div>
+</div>
+<div style="display:flex;gap:16px;margin-top:10px;font-size:10px;font-family:var(--mono)">
+  <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--accent);border-radius:2px;display:inline-block;opacity:.7"></span>Total</span>
+  <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;background:var(--red);border-radius:2px;display:inline-block"></span>Errors</span>
+  <span style="color:var(--text3)">${data.length} buckets · ${document.getElementById("aInterval").value} interval</span>
+</div>`;
+            }
+
+            function renderHistChart(data) {
+                if (!data.length) {
+                    document.getElementById("histChart").innerHTML =
+                        '<div class="empty-state" style="padding:30px"><p>No histogram data</p></div>';
+                    return;
+                }
+                const levels = [
+                    "CRITICAL",
+                    "ERROR",
+                    "WARNING",
+                    "INFO",
+                    "DEBUG",
+                ];
+                const lvlColors = {
+                    CRITICAL: "var(--purple)",
+                    ERROR: "var(--red)",
+                    WARNING: "var(--amber)",
+                    INFO: "#17a2b8",
+                    DEBUG: "var(--border2)",
+                };
+                const maxTotal = Math.max(...data.map((d) => d.total), 1);
+                const bars = data
+                    .map((d) => {
+                        const totalH = Math.max(
+                            Math.round((d.total / maxTotal) * 130),
+                            1,
+                        );
+                        const segs = levels
+                            .filter((l) => d.by_level[l])
+                            .map((l) => {
+                                const h = Math.max(
+                                    Math.round(
+                                        (d.by_level[l] / d.total) * totalH,
+                                    ),
+                                    1,
+                                );
+                                return `<div style="height:${h}px;background:${lvlColors[l]};width:100%;opacity:.8"></div>`;
+                            })
+                            .join("");
+                        return `<div class="bc-bar" style="height:${totalH}px;background:transparent;display:flex;flex-direction:column-reverse;" data-tip="${esc(d.bucket + "\n" + d.total + " total")}">${segs}</div>`;
+                    })
+                    .join("");
+                const legend = levels
+                    .filter((l) => data.some((d) => d.by_level[l]))
+                    .map(
+                        (l) =>
+                            `<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:${lvlColors[l]};border-radius:2px;display:inline-block;opacity:.8"></span>${l}</span>`,
+                    )
+                    .join("");
+                document.getElementById("histChart").innerHTML =
+                    `<div style="display:flex;gap:6px;height:130px"><div class="bar-chart-inner">${bars}</div></div><div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:10px;font-family:var(--mono);color:var(--text3)">${legend}</div>`;
+            }
+
+            async function runTopN() {
+                const field = document.getElementById("topField").value;
+                const p = getAnalyticsFilters();
+                document.getElementById("topChart").innerHTML =
+                    '<div style="padding:12px"><div class="skeleton" style="height:12px;margin-bottom:8px"></div><div class="skeleton" style="height:12px;margin-bottom:8px;width:85%"></div><div class="skeleton" style="height:12px;width:70%"></div></div>';
+                try {
+                    const r = await POST("/logs/top", {
+                        field,
+                        filters: p.filters,
+                        limit: 10,
+                    });
+                    const data = (r.data || r).data || [];
+                    if (!data.length) {
+                        document.getElementById("topChart").innerHTML =
+                            '<div class="empty-state" style="padding:20px"><p>No data for this field</p></div>';
+                        return;
+                    }
+                    const maxCount = Math.max(...data.map((d) => d.total), 1);
+                    const rows = data
+                        .map((d, i) => {
+                            const pct = Math.round((d.total / maxCount) * 100);
+                            const rateClass =
+                                d.error_rate > 0.1
+                                    ? "rate-bad"
+                                    : d.error_rate > 0.01
+                                      ? "rate-warn"
+                                      : "rate-ok";
+                            return `<tr>
+  <td style="font-family:var(--mono);font-size:11px;color:var(--text3);width:20px;text-align:center">${i + 1}</td>
+  <td class="top-bar-cell"><div class="top-bar-wrap"><div class="top-val">${esc(d.value || "(empty)")}</div></div></td>
+  <td style="min-width:80px"><div class="top-bar-track"><div class="top-bar-fill" style="width:${pct}%"></div></div></td>
+  <td class="top-count">${fmtN(d.total)}</td>
+  <td class="top-rate ${rateClass}">${(d.error_rate * 100).toFixed(1)}%</td>
+</tr>`;
+                        })
+                        .join("");
+                    document.getElementById("topChart").innerHTML =
+                        `<div style="overflow-y:auto;max-height:240px"><table class="top-table">${rows}</table></div>`;
+                } catch (e) {
+                    document.getElementById("topChart").innerHTML =
+                        `<div class="empty-state" style="padding:20px"><p>${esc(e.message)}</p></div>`;
+                }
+            }
+
+            /* ══ LIVE TAIL ══ */
+            let _es = null,
+                _tlCount = 0;
+
+            function startTail() {
+                stopTail();
+                _tlCount = 0;
+                const svc = document.getElementById("tailSvc").value;
+                const lvl = document.getElementById("tailLvl").value;
+                const t = document.getElementById("tailTimeout").value;
+                const p = new URLSearchParams({ timeout: t });
+                if (svc) p.set("service", svc);
+                if (lvl) p.set("level", lvl);
+                _es = new EventSource(`${BASE}/logs/tail?${p}`);
+                document.getElementById("termBody").innerHTML = "";
+                document.getElementById("tailStartBtn").style.display = "none";
+                document.getElementById("tailStopBtn").style.display = "";
+                document.getElementById("tailStatus").className =
+                    "tail-status live";
+                document.getElementById("tailStatusTxt").textContent =
+                    "Streaming";
+                document.getElementById("tailTabDot").style.display = "block";
+                _es.addEventListener("log", (e) => {
+                    try {
+                        appendTailLine(JSON.parse(e.data));
+                    } catch (_) {}
+                });
+                _es.addEventListener("error", () => stopTail());
+                _es.addEventListener("close", () => stopTail());
+            }
+
+            function stopTail() {
+                if (_es) {
+                    _es.close();
+                    _es = null;
+                }
+                document.getElementById("tailStartBtn").style.display = "";
+                document.getElementById("tailStopBtn").style.display = "none";
+                document.getElementById("tailStatus").className = "tail-status";
+                document.getElementById("tailStatusTxt").textContent =
+                    "Stopped";
+                document.getElementById("tailTabDot").style.display = "none";
+            }
+
+            function appendTailLine(rec) {
+                _tlCount++;
+                const cnt = _tlCount.toLocaleString() + " lines";
+                document.getElementById("termCnt").textContent = cnt;
+                const body = document.getElementById("termBody");
+                const lvl = (rec.level || "INFO").toUpperCase();
+                const ts = rec.ts
+                    ? new Date(rec.ts).toLocaleTimeString("en-US", {
+                          hour12: false,
+                          timeZone: "UTC",
+                      })
+                    : "—";
+                const el = document.createElement("div");
+                el.className = "tl";
+                el.innerHTML = `<span class="tl-ts">${ts}</span><span class="tl-svc">${esc(rec.service || "?")}</span><span class="tl-lvl tl-${lvl}">${lvl}</span><span class="tl-msg">${esc(rec.event || "—")}</span>`;
+                body.appendChild(el);
+                while (body.childElementCount > 500)
+                    body.removeChild(body.firstChild);
+                body.scrollTop = body.scrollHeight;
+            }
+
+            function clearTail() {
+                document.getElementById("termBody").innerHTML =
+                    `<div class="term-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px;margin-bottom:6px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Press <strong style="color:rgba(255,255,255,.4);margin:0 4px">Start</strong> to begin streaming</div>`;
+                _tlCount = 0;
+                document.getElementById("termCnt").textContent = "0 lines";
+            }
+
+            /* ══ EXPORT ══ */
+            let _selectedFmt = "jsonl";
+            function selectFmt(fmt) {
+                _selectedFmt = fmt;
+                document.getElementById("fmtJsonl").className =
+                    "fmt-opt" + (fmt === "jsonl" ? " selected" : "");
+                document.getElementById("fmtCsv").className =
+                    "fmt-opt" + (fmt === "csv" ? " selected" : "");
+            }
+
+            async function populateExportDropdowns() {
+                try {
+                    const r = await GET("/logs/services");
+                    const svcs = (r.data || r).services || [];
+                    const el = document.getElementById("expSvc");
+                    el.innerHTML =
+                        '<option value="">All services</option>' +
+                        svcs
+                            .map(
+                                (s) =>
+                                    `<option value="${esc(s)}">${esc(s)}</option>`,
+                            )
+                            .join("");
+                } catch (_) {}
+            }
+
+            async function runExport() {
+                const btn = document.getElementById("expBtn");
+                btn.disabled = true;
+                btn.textContent = "Generating…";
+                const filters = {};
+                const svc = document.getElementById("expSvc").value;
+                const lvl = document.getElementById("expLvl").value;
+                const from = document.getElementById("expFrom").value;
+                const to = document.getElementById("expTo").value;
+                const fts = document.getElementById("expFts").value.trim();
+                if (svc) filters.service = svc;
+                if (lvl) filters.level = lvl;
+                if (from) filters.ts_from = new Date(from).toISOString();
+                if (to) filters.ts_to = new Date(to).toISOString();
+                if (fts.length >= 2) filters.event_contains = fts;
+                try {
+                    const r = await POST("/logs/export", {
+                        filters,
+                        format: _selectedFmt,
+                        limit: parseInt(
+                            document.getElementById("expLimit").value,
+                        ),
+                    });
+                    const d = r.data || r;
+                    document.getElementById("exportResult").className =
+                        "export-result show";
+                    document.getElementById("exportDlBtn").href =
+                        d.download_url || "#";
+                    document.getElementById("exportDlBtn").download =
+                        d.filename || "export";
+                    document.getElementById("exportInfo").innerHTML =
+                        `Filename: <strong>${esc(d.filename || "—")}</strong>\nSize: ${fmtB(d.size_bytes || 0)} · ${(d.rows || 0).toLocaleString()} rows\nFormat: ${(d.format || "jsonl").toUpperCase()}`;
+                    toast(
+                        `Export ready: ${fmtB(d.size_bytes || 0)}`,
+                        "ok",
+                        "Export complete",
+                    );
+                } catch (e) {
+                    toast(e.message, "err", "Export failed");
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Generate Export`;
+                }
+            }
+
+            /* ══ KEYBOARD ══ */
+            document.addEventListener("keydown", (e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+                    e.preventDefault();
+                    document.getElementById("fFts").focus();
+                }
+                if (e.key === "Escape") {
+                    document
+                        .querySelectorAll(".modal-backdrop.open")
+                        .forEach((m) => m.classList.remove("open"));
+                }
+            });
+
+            /* ══ REFRESH ══ */
+            function refreshCurrent() {
+                if (_currentTab === "overview") loadOverview();
+                else if (_currentTab === "query" && Q.filters !== null)
+                    runQuery(false);
+                else if (_currentTab === "analytics") runAnalytics();
+                else if (_currentTab === "savedqueries") loadSavedQueries();
+                toast("Refreshed", "info");
+            }
+
+            /* ══ INIT ══ */
+            window.addEventListener("DOMContentLoaded", () => {
+                loadOverview();
+                loadSvcDropdowns();
+            });
+        </script>
+    </body>
+</html>

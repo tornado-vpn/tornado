@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tornado VPN | Enterprise Secure Access Platform</title>
+  <meta name="description" content="Tornado VPN is an enterprise-grade self-hosted secure access platform with dual-lane WireGuard and Tor-aware routing, live operations telemetry, and managed key lifecycle." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg: #060d1a;
+      --bg-soft: #0c1830;
+      --text: #edf3ff;
+      --muted: #c0d0ef;
+      --line: rgba(255, 255, 255, 0.24);
+      --glass: rgba(13, 27, 53, 0.42);
+      --shadow: 0 22px 60px rgba(1, 6, 15, 0.55);
+      --primary: #73bbff;
+      --secondary: #8f8bff;
+      --ok: #6fd8a6;
+      --warn: #ffd27d;
+      --radius: 20px;
+      --max-w: 1220px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      font-family: "Manrope", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 8% 8%, #142648 0%, #081123 30%, #050b16 65%, #040811 100%);
+      scroll-behavior: smooth;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -1;
+      pointer-events: none;
+      display: block;
+    }
+
+    .page {
+      width: 100%;
+      overflow-x: hidden;
+      position: relative;
+      z-index: 2;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      display: flex;
+      justify-content: center;
+      padding: 0.8rem 0.8rem;
+    }
+
+    .topbar-inner {
+      width: min(var(--max-w), calc(100% - 1rem));
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(11, 21, 43, 0.42));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 0.72rem 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 30px rgba(0, 4, 12, 0.35);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 0 18px rgba(115, 187, 255, 0.9);
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      justify-content: flex-end;
+    }
+
+    .nav-links a {
+      color: #dcebff;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 999px;
+      padding: 0.42rem 0.8rem;
+      transition: 0.22s ease;
+    }
+
+    .nav-links a:hover {
+      border-color: rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .section {
+      min-height: 100vh;
+      display: grid;
+      align-items: center;
+      padding: clamp(5.6rem, 8vw, 8rem) 1rem clamp(3rem, 5vw, 5rem);
+    }
+
+    .container {
+      width: min(var(--max-w), 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: 1rem;
+    }
+
+    .glass {
+      border: 1px solid var(--line);
+      background: linear-gradient(158deg, rgba(255, 255, 255, 0.19) 0%, var(--glass) 55%, rgba(255, 255, 255, 0.1) 100%);
+      border-radius: var(--radius);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      padding: clamp(1rem, 2.8vw, 2rem);
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .hero-layout {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 1rem;
+      align-items: stretch;
+    }
+
+    .eyebrow {
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.8rem;
+      color: #cbe1ff;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      margin-bottom: 0.7rem;
+      font-weight: 600;
+    }
+
+    h1,
+    h2,
+    h3 {
+      text-wrap: balance;
+      line-height: 1.06;
+      letter-spacing: -0.015em;
+    }
+
+    h1 {
+      font-size: clamp(2.05rem, 5.8vw, 4.25rem);
+      margin-bottom: 0.9rem;
+      font-weight: 800;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 4.3vw, 2.6rem);
+      margin-bottom: 0.85rem;
+      font-weight: 800;
+    }
+
+    h3 {
+      font-size: clamp(1rem, 1.7vw, 1.2rem);
+      margin-bottom: 0.34rem;
+      font-weight: 700;
+    }
+
+    p,
+    li {
+      color: var(--muted);
+      font-size: clamp(0.97rem, 1.5vw, 1.06rem);
+      line-height: 1.72;
+    }
+
+    .headline-accent {
+      background: linear-gradient(95deg, #edf6ff 0%, #9fd1ff 40%, #b6adff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .cta-row {
+      margin-top: 1.2rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.7rem;
+    }
+
+    .btn {
+      text-decoration: none;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 0.7rem 1.05rem;
+      font-size: 0.92rem;
+      font-weight: 700;
+      transition: 0.24s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+    }
+
+    .btn-main {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      color: #061022;
+    }
+
+    .btn-main:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.06);
+    }
+
+    .btn-alt {
+      color: #deecff;
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .btn-alt:hover {
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .stat-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .stat {
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.86rem;
+    }
+
+    .stat strong {
+      display: block;
+      color: #eef5ff;
+      font-size: 1.02rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .cards-2,
+    .cards-3,
+    .cards-4 {
+      display: grid;
+      gap: 0.9rem;
+      margin-top: 0.9rem;
+    }
+
+    .cards-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cards-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .cards-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .mini-card {
+      border: 1px solid rgba(255, 255, 255, 0.17);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 0.88rem;
+    }
+
+    .mini-card ul {
+      margin-top: 0.35rem;
+      padding-left: 1.1rem;
+      display: grid;
+      gap: 0.24rem;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      padding: 0.26rem 0.62rem;
+      font-size: 0.75rem;
+      color: #d8e8ff;
+      font-family: "JetBrains Mono", monospace;
+      margin-bottom: 0.38rem;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .ops-list {
+      margin-top: 0.9rem;
+      padding-left: 1.08rem;
+      display: grid;
+      gap: 0.4rem;
+    }
+
+    .cmd {
+      margin-top: 0.65rem;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      background: rgba(2, 8, 19, 0.62);
+      padding: 0.7rem;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.84rem;
+      color: #cce2ff;
+      overflow-x: auto;
+    }
+
+    .footer {
+      padding: 2rem 1rem 2.6rem;
+      text-align: center;
+      color: #b2c8e9;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 1080px) {
+      .hero-layout { grid-template-columns: 1fr; }
+      .cards-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards-3 { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .cards-2,
+      .cards-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar-inner {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.62rem;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span>Tornado VPN</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#overview">Overview</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#security">Security</a>
+        <a href="#operations">Operations</a>
+        <a href="#api">API</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="section" id="overview">
+      <div class="container hero-layout">
+        <article class="glass reveal">
+          <div class="eyebrow">Enterprise Secure Access Platform</div>
+          <h1>Operational Control in the <span class="headline-accent">Eye of the Storm</span></h1>
+          <p>
+            Tornado VPN is a self-hosted secure access platform combining WireGuard performance, Tor-aware routing,
+            and real-time operations visibility. It is designed for organizations that need strict control of security,
+            uptime, and observability without outsourcing network trust.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-main" href="#architecture">Explore Architecture</a>
+            <a class="btn btn-alt" href="#operations">Open Runbook</a>
+          </div>
+
+          <div class="cards-2">
+            <div class="mini-card">
+              <span class="mini-pill">Core Network</span>
+              <h3>Dual-Lane WireGuard</h3>
+              <p>Standard VPN traffic on <code>wg0</code> and Tor-routed policy lane on <code>wg1</code>.</p>
+            </div>
+            <div class="mini-card">
+              <span class="mini-pill">Control Plane</span>
+              <h3>UDS Microservice Mesh</h3>
+              <p>Supervisor-managed services communicate over Unix sockets for reduced exposure surface.</p>
+            </div>
+          </div>
+        </article>
+
+        <aside class="glass reveal">
+          <div class="stat-grid">
+            <div class="stat">
+              <strong>Live Session Orchestration</strong>
+              <p>Heartbeat-driven online/offline/recovery lifecycle with Redis pub/sub event streaming.</p>
+            </div>
+            <div class="stat">
+              <strong>Security Lifecycle</strong>
+              <p>Encrypted credential exchange, Argon2 password verification, rotating JWT asymmetric keys.</p>
+            </div>
+            <div class="stat">
+              <strong>Operator Experience</strong>
+              <p>Admin APIs for service control, logs, metrics, user management, tor relay and key rotation.</p>
+            </div>
+            <div class="stat">
+              <strong>Durable + Ephemeral State</strong>
+              <p>PostgreSQL for persistent records and Redis for hot runtime state and event fanout.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="architecture">
+      <div class="container">
+        <article class="glass reveal">
+          <div class="eyebrow">Architecture</div>
+          <h2>Designed as a Supervised Control Plane with Separated Data Paths</h2>
+          <p>
+            The platform is centered around a master supervisor that starts and monitors service processes defined in runtime config.
+            External access enters through two FastAPI surfaces: client-connect API and admin dashboard API. Internal contracts are
+            standardized over UDS sockets under <code>/run/tornado</code>.
+          </p>
+
+          <div class="cards-4">
+            <div class="mini-card">
+              <h3>Supervisor Layer</h3>
+              <ul>
+                <li>`MASTER_service.py` process lifecycle</li>
+                <li>Config-driven service sync/reload</li>
+                <li>Health ping and restart automation</li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <h3>Control Services</h3>
+              <ul>
+                <li>Auth, session, user, IPAM, key rotator</li>
+                <li>OS/API service managers</li>
+                <li>Log management microservice</li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <h3>Data Plane</h3>
+              <ul>
+                <li>WireGuard `wg0` and `wg1`</li>
+                <li>Tor manager and relay state control</li>
+                <li>Routing and maintenance-path handling</li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <h3>Persistence</h3>
+              <ul>
+                <li>Redis: sessions, pools, events, revocation</li>
+                <li>PostgreSQL: users and history</li>
+                <li>SQLite (log service) for query/analytics</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="security">
+      <div class="container">
+        <article class="glass reveal">
+          <div class="eyebrow">Security Model</div>
+          <h2>Multi-Layer Authentication and Key Integrity Controls</h2>
+          <p>
+            Login payloads are protected via X25519 ECDH + HKDF + AES-GCM before credential validation. Token issuance uses
+            asymmetric JWT keypairs with overlap-aware verification during rotations, backed by Redis JTI revocation checks.
+          </p>
+
+          <div class="cards-3">
+            <div class="mini-card">
+              <h3>Credential Exchange</h3>
+              <ul>
+                <li>Client requests auth public key</li>
+                <li>Credentials encrypted client-side</li>
+                <li>Server decrypts and forwards to auth service</li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <h3>Token Lifecycle</h3>
+              <ul>
+                <li>RS256 access and refresh tokens</li>
+                <li>Claim and token-type validation</li>
+                <li>Reuse detection for revoked refresh tokens</li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <h3>Key Management</h3>
+              <ul>
+                <li>Bootstrap key validator/generator</li>
+                <li>Public-first then private cutover rotation</li>
+                <li>Signal-driven service key reload</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="operations">
+      <div class="container">
+        <article class="glass reveal">
+          <div class="eyebrow">Operations Runbook</div>
+          <h2>Production Operations with Deterministic Recovery Paths</h2>
+          <p>
+            Operations are structured around dependency-first checks, targeted service remediation, and post-incident validation.
+            The admin API and logs service provide direct control and forensic visibility for runtime diagnostics.
+          </p>
+
+          <ul class="ops-list">
+            <li>Recovery order: PostgreSQL and Redis first, then `tornado.service`, then NGINX.</li>
+            <li>Session instability triage: heartbeat TTL, keyspace events, and session cleanup telemetry.</li>
+            <li>Rotation incidents: validate overlap key presence and reload signal targets.</li>
+            <li>Tunnel incidents: verify `wg0/wg1`, IP pools, and peer-programming logs.</li>
+          </ul>
+
+          <div class="cmd">sudo systemctl status tornado --no-pager<br/>curl -sSf http://127.0.0.1:8000/health<br/>curl -sSf http://127.0.0.1:4605/health<br/>sudo wg show</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="api">
+      <div class="container">
+        <article class="glass reveal">
+          <div class="eyebrow">API Surface</div>
+          <h2>Client and Admin Interfaces for Provisioning, Control, and Telemetry</h2>
+          <p>
+            The client API handles encrypted login, token refresh, tunnel initiation, and heartbeat updates. The admin API exposes
+            service management, user lifecycle operations, logs query/export, metrics streams, tor relay controls, and key-rotator actions.
+          </p>
+
+          <div class="cards-2">
+            <div class="mini-card">
+              <span class="mini-pill">Client API :4605</span>
+              <ul>
+                <li><code>GET /auth/pubkey</code></li>
+                <li><code>POST /auth/login</code></li>
+                <li><code>POST /auth/reauth</code></li>
+                <li><code>POST /vpn/initiate</code></li>
+                <li><code>POST /session/heartbeat</code></li>
+              </ul>
+            </div>
+            <div class="mini-card">
+              <span class="mini-pill">Admin API :8000</span>
+              <ul>
+                <li><code>/services/*</code> and <code>/apps/*</code> controls</li>
+                <li><code>/users</code> lifecycle and user session ops</li>
+                <li><code>/logs/*</code> query/tail/export analytics</li>
+                <li><code>/status /up /down /circuits</code> relay ops</li>
+                <li><code>/api/key-rotator/*</code> rotation controls</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="container">
+        <article class="glass reveal">
+          <div class="eyebrow">Contact and Next Step</div>
+          <h2>Plan Your Deployment or Architecture Review</h2>
+          <p>
+            This landing page can be connected to your real support channels, deployment playbooks, and internal documentation portal.
+            For implementation planning, security reviews, or integration support, use your project-defined contact routes below.
+          </p>
+          <div class="cards-3">
+            <div class="mini-card">
+              <h3>Architecture Review</h3>
+              <p>Validate sizing, failover strategy, and security hardening baseline.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Deployment Support</h3>
+              <p>Get help with setup, validation, and operator handoff readiness.</p>
+            </div>
+            <div class="mini-card">
+              <h3>Operations Enablement</h3>
+              <p>Adopt runbook-driven diagnostics, incident routines, and change controls.</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Tornado VPN platform overview. Built with Three.js, modern glassmorphism UI, and documentation-backed technical content.
+    </footer>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <script>
+    const canvas = document.getElementById("bg-canvas");
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x040914, 0.012);
+
+    const camera = new THREE.PerspectiveCamera(48, window.innerWidth / window.innerHeight, 0.1, 2000);
+    camera.position.set(2.6, 1.2, 34);
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    const ambient = new THREE.AmbientLight(0x7eb8ff, 0.48);
+    scene.add(ambient);
+
+    const key = new THREE.DirectionalLight(0xbad8ff, 1.05);
+    key.position.set(24, 28, 20);
+    scene.add(key);
+
+    const fill = new THREE.DirectionalLight(0x8a79ff, 0.72);
+    fill.position.set(-18, 8, -8);
+    scene.add(fill);
+
+    // Tornado geometry based on provided reference logic
+    class TornadoCurve extends THREE.Curve {
+      getPoint(t, optionalTarget = new THREE.Vector3()) {
+        const turns = 4.8;
+        const height = 24;
+        const angle = t * Math.PI * 2 * turns;
+        const radius = 0.4 + t * 6.8;
+        const x = Math.cos(angle) * radius;
+        const y = t * height - height / 2;
+        const z = Math.sin(angle) * radius;
+        return optionalTarget.set(x, y, z);
+      }
+    }
+
+    const path = new TornadoCurve();
+    const tubeThickness = 0.28;
+
+    const coreGeometry = new THREE.TubeGeometry(path, 260, tubeThickness, 20, false);
+    const shellGeometry = new THREE.TubeGeometry(path, 260, tubeThickness * 2.35, 24, false);
+
+    const coreMaterial = new THREE.MeshPhongMaterial({
+      color: 0xc9e2ff,
+      emissive: 0x2c5c9f,
+      emissiveIntensity: 0.62,
+      transparent: true,
+      opacity: 0.96,
+      shininess: 95
+    });
+
+    const shellMaterial = new THREE.MeshPhongMaterial({
+      color: 0x75b5ff,
+      emissive: 0x1d3a66,
+      emissiveIntensity: 0.62,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.52
+    });
+
+    const coreTube = new THREE.Mesh(coreGeometry, coreMaterial);
+    const shellTube = new THREE.Mesh(shellGeometry, shellMaterial);
+
+    const tornadoGroup = new THREE.Group();
+    tornadoGroup.add(shellTube);
+    tornadoGroup.add(coreTube);
+
+    const sphereGeometry = new THREE.SphereGeometry(tubeThickness * 1.05, 16, 16);
+    const bottomCap = new THREE.Mesh(sphereGeometry, coreMaterial);
+    bottomCap.position.copy(path.getPoint(0));
+    tornadoGroup.add(bottomCap);
+
+    const topCap = new THREE.Mesh(sphereGeometry, coreMaterial);
+    topCap.position.copy(path.getPoint(1));
+    tornadoGroup.add(topCap);
+
+    // Keep tornado clearly visible on the right side behind content
+    tornadoGroup.position.set(8.5, 0, -5);
+    tornadoGroup.rotation.set(0.2, 0.36, 0.07);
+    tornadoGroup.scale.setScalar(1.58);
+    scene.add(tornadoGroup);
+
+    // Secondary swirl to increase visibility and depth
+    const haloGeometry = new THREE.TorusGeometry(8.2, 0.18, 16, 180);
+    const haloMaterial = new THREE.MeshBasicMaterial({
+      color: 0x8bbdff,
+      transparent: true,
+      opacity: 0.26
+    });
+    const halo = new THREE.Mesh(haloGeometry, haloMaterial);
+    halo.rotation.set(Math.PI * 0.42, 0, Math.PI * 0.14);
+    halo.position.set(8.5, 0, -7);
+    scene.add(halo);
+
+    // Particle field for storm atmosphere
+    const particleCount = 2000;
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount; i++) {
+      const i3 = i * 3;
+      pPos[i3 + 0] = (Math.random() - 0.5) * 220;
+      pPos[i3 + 1] = (Math.random() - 0.5) * 130;
+      pPos[i3 + 2] = (Math.random() - 0.5) * 220;
+    }
+
+    pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+
+    const pMat = new THREE.PointsMaterial({
+      size: 0.25,
+      color: 0xb7d7ff,
+      transparent: true,
+      opacity: 0.2,
+      depthWrite: false
+    });
+
+    const stars = new THREE.Points(pGeo, pMat);
+    scene.add(stars);
+
+    /*
+      Scroll control model:
+      - We convert scrollY into normalized progress (0..1).
+      - That progress drives target transform values.
+      - In animation loop we lerp toward targets for smooth, premium motion.
+    */
+    const scrollState = {
+      progress: 0,
+      targetY: tornadoGroup.position.y,
+      targetRotY: tornadoGroup.rotation.y,
+      targetRotZ: tornadoGroup.rotation.z,
+      targetScale: tornadoGroup.scale.x,
+      targetX: tornadoGroup.position.x
+    };
+
+    function computeScrollTargets() {
+      const doc = document.documentElement;
+      const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
+      const p = THREE.MathUtils.clamp(window.scrollY / maxScroll, 0, 1);
+      scrollState.progress = p;
+
+      // More scroll -> faster spin + slightly larger + lower descent effect.
+      scrollState.targetRotY = 0.36 + p * Math.PI * 4.2;
+      scrollState.targetRotZ = 0.07 + p * 0.44;
+      scrollState.targetScale = 1.58 + p * 0.55;
+      scrollState.targetY = -p * 5.2;
+
+      // Keep tornado on right side desktop, center more on narrow screens.
+      const mobile = window.innerWidth < 900;
+      scrollState.targetX = mobile ? 2.4 + p * 0.2 : 8.5 + p * 0.5;
+    }
+
+    window.addEventListener("scroll", computeScrollTargets, { passive: true });
+
+    function onResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      if (window.innerWidth < 900) {
+        camera.position.set(0.9, 1.2, 30);
+      } else {
+        camera.position.set(2.6, 1.2, 34);
+      }
+
+      computeScrollTargets();
+    }
+
+    window.addEventListener("resize", onResize);
+    onResize();
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      const t = clock.getElapsedTime();
+      const dt = clock.getDelta();
+
+      stars.rotation.y += dt * 0.011;
+      stars.rotation.x = Math.sin(t * 0.13) * 0.025;
+
+      tornadoGroup.rotation.y = THREE.MathUtils.lerp(tornadoGroup.rotation.y, scrollState.targetRotY, 0.06);
+      tornadoGroup.rotation.z = THREE.MathUtils.lerp(tornadoGroup.rotation.z, scrollState.targetRotZ, 0.06);
+      tornadoGroup.position.y = THREE.MathUtils.lerp(tornadoGroup.position.y, scrollState.targetY, 0.06);
+      tornadoGroup.position.x = THREE.MathUtils.lerp(tornadoGroup.position.x, scrollState.targetX, 0.06);
+
+      const scale = THREE.MathUtils.lerp(tornadoGroup.scale.x, scrollState.targetScale, 0.06);
+      tornadoGroup.scale.setScalar(scale);
+
+      // Idle breathing motion so tornado remains active even without scrolling.
+      tornadoGroup.rotation.x = 0.2 + Math.sin(t * 0.45) * 0.038;
+      halo.rotation.y += dt * 0.24;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+
+    computeScrollTargets();
+    animate();
+
+    // Scroll reveal animation for all glass cards
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.utils.toArray(".reveal").forEach((el, i) => {
+      gsap.to(el, {
+        opacity: 1,
+        y: 0,
+        duration: 0.95,
+        ease: "power3.out",
+        delay: i * 0.02,
+        scrollTrigger: {
+          trigger: el,
+          start: "top 84%",
+          once: true
+        }
+      });
+    });
+  </script>
+</body>
+</html>

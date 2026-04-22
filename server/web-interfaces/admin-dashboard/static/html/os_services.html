@@ -1,0 +1,1346 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SysMon — Service Control</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        
+        <style>
+             /* Instrument Sans */
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-400-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-500-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 600;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-600-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: normal;
+                font-weight: 700;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-700-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Instrument Sans";
+                font-style: italic;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/instrument-sans-400-italic.woff2")
+                    format("woff2");
+            }
+
+            /* Geist Mono */
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 300;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-300-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-400-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 500;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-500-normal.woff2")
+                    format("woff2");
+            }
+            @font-face {
+                font-family: "Geist Mono";
+                font-style: normal;
+                font-weight: 600;
+                font-display: swap;
+                src: url("/static/fonts/geist-mono-600-normal.woff2")
+                    format("woff2");
+            }
+            :root {
+                --bg: #f5f6f8;
+                --bg1: #ffffff;
+                --bg2: #f5f6f8;
+                --bg3: #eef0f5;
+                --border: #d9dce0;
+                --border2: #c4c8d0;
+                --text: #1a1f36;
+                --text2: #3a3f5c;
+                --text3: #6c757d;
+                --text4: #9ba3af;
+
+                --green: #28a745;
+                --green-bg: rgba(40, 167, 69, 0.08);
+                --green-bd: rgba(40, 167, 69, 0.22);
+                --red: #dc3545;
+                --red-bg: rgba(220, 53, 69, 0.08);
+                --red-bd: rgba(220, 53, 69, 0.25);
+                --amber: #d97706;
+                --amber-bg: rgba(217, 119, 6, 0.08);
+                --amber-bd: rgba(217, 119, 6, 0.22);
+                --blue: #0066cc;
+                --blue-bg: rgba(0, 102, 204, 0.08);
+                --blue-bd: rgba(0, 102, 204, 0.22);
+                --accent2: #0052a3;
+                --purple: #6d28d9;
+
+
+                --font: "Instrument Sans", system-ui, -apple-system, Arial, sans-serif;
+                --mono: "Geist Mono", monospace;
+                --radius: 12px;
+                --radius-sm: 8px;
+                --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+            }
+
+            *,
+            *::before,
+            *::after {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            html,
+            body {
+                min-height: 100vh;
+                background: var(--bg);
+                font-family: var(--font);
+                color: var(--text);
+                -webkit-font-smoothing: antialiased;
+                font-size: 14px;
+                overflow-x: hidden;
+            }
+
+            /* ── scrollbar ── */
+            ::-webkit-scrollbar {
+                width: 4px;
+            }
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            ::-webkit-scrollbar-thumb {
+                background: var(--border2);
+                border-radius: 2px;
+            }
+
+            /* ══════════════════════════════════════════
+   TOPBAR
+══════════════════════════════════════════ */
+            .topbar {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 28px;
+                height: 56px;
+                background: rgba(255, 255, 255, 0.92);
+                backdrop-filter: blur(16px);
+                border-bottom: 1px solid var(--border);
+            }
+
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-decoration: none;
+            }
+            .brand-logo {
+                width: 32px;
+                height: 32px;
+                border-radius: 9px;
+                background: linear-gradient(
+                    135deg,
+                    var(--blue) 0%,
+                    var(--purple) 100%
+                );
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 16px rgba(59, 130, 246, 0.35);
+            }
+            .brand-logo svg {
+                width: 18px;
+                height: 18px;
+                color: #fff;
+            }
+            .brand-text {
+                line-height: 1;
+            }
+            .brand-name {
+                font-size: 15px;
+                font-weight: 700;
+                letter-spacing: -0.4px;
+                color: var(--text);
+            }
+            .brand-tag {
+                font-size: 10px;
+                font-weight: 500;
+                color: var(--text3);
+                font-family: var(--mono);
+                letter-spacing: 0.8px;
+                text-transform: uppercase;
+            }
+
+            .topbar-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .tb-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 14px;
+                border-radius: var(--radius-sm);
+                font-size: 12px;
+                font-weight: 600;
+                font-family: var(--font);
+                cursor: pointer;
+                transition: all 0.15s;
+                border: 1px solid var(--border);
+                background: var(--bg2);
+                color: var(--text2);
+                white-space: nowrap;
+            }
+            .tb-btn:hover {
+                background: var(--bg3);
+                border-color: var(--border2);
+                color: var(--text);
+            }
+            .tb-btn img {
+                width: 14px;
+                height: 14px;
+                flex-shrink: 0;
+            }
+            .tb-btn.primary {
+                background: var(--blue);
+                color: #fff;
+                border-color: var(--blue);
+                box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+            }
+            .tb-btn.primary:hover {
+                background: #2563eb;
+                border-color: #2563eb;
+            }
+
+            /* ══════════════════════════════════════════
+   PAGE
+══════════════════════════════════════════ */
+            .page {
+                position: relative;
+                z-index: 1;
+                padding: 28px;
+                max-width: 1440px;
+                margin: 0 auto;
+            }
+
+            /* ── KPI row ── */
+            .kpi-row {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 12px;
+                margin-bottom: 32px;
+            }
+            .kpi-card {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 18px 20px;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                box-shadow: var(--shadow);
+                transition:
+                    transform 0.2s,
+                    border-color 0.2s,
+                    box-shadow 0.2s;
+            }
+            .kpi-card:hover {
+                transform: translateY(-2px);
+                border-color: var(--border2);
+            }
+            .kpi-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .kpi-icon svg {
+                width: 20px;
+                height: 20px;
+            }
+            .kpi-icon img {
+                width: 20px;
+                height: 20px;
+            }
+            .kpi-icon.blue {
+                background: var(--blue-bg);
+                color: var(--blue);
+            }
+            .kpi-icon.green {
+                background: var(--green-bg);
+                color: var(--green);
+            }
+            .kpi-icon.amber {
+                background: var(--amber-bg);
+                color: var(--amber);
+            }
+            .kpi-icon.red {
+                background: var(--red-bg);
+                color: var(--red);
+            }
+            .kpi-info {
+                flex: 1;
+            }
+            .kpi-val {
+                font-size: 28px;
+                font-weight: 700;
+                font-family: var(--mono);
+                letter-spacing: -1px;
+                line-height: 1;
+            }
+            .kpi-val.blue {
+                color: var(--blue);
+            }
+            .kpi-val.green {
+                color: var(--green);
+            }
+            .kpi-val.amber {
+                color: var(--amber);
+            }
+            .kpi-val.red {
+                color: var(--red);
+            }
+            .kpi-lbl {
+                font-size: 11px;
+                font-weight: 500;
+                color: var(--text3);
+                margin-top: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+            }
+
+            /* ── Section header ── */
+            .section-hdr {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+            }
+            .section-title {
+                font-size: 11px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                color: var(--text3);
+            }
+            .section-meta {
+                font-size: 11px;
+                color: var(--text4);
+                font-family: var(--mono);
+            }
+
+            /* ══════════════════════════════════════════
+   SERVICE CARDS GRID
+══════════════════════════════════════════ */
+            .services-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 14px;
+            }
+
+            /* ── Card ── */
+            .svc-card {
+                background: var(--bg1);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                overflow: visible;
+                box-shadow: var(--shadow);
+                transition: all 0.2s;
+                position: relative;
+            }
+            .svc-card:hover {
+                border-color: var(--border2);
+                transform: translateY(-2px);
+                box-shadow: var(--shadow-lg);
+            }
+
+            /* loading state */
+            .svc-card.loading {
+                pointer-events: none;
+            }
+            .svc-spinner {
+                display: none;
+                position: absolute;
+                inset: 0;
+                z-index: 10;
+                border-radius: var(--radius);
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.75);
+                backdrop-filter: blur(2px);
+            }
+            .svc-card.loading .svc-spinner {
+                display: flex;
+            }
+            .spinner-ring {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                border: 2.5px solid var(--border2);
+                border-top-color: var(--blue);
+                animation: spin 0.7s linear infinite;
+            }
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            /* ── Card Header ── */
+            .svc-head {
+                padding: 20px 18px 16px;
+                display: flex;
+                align-items: flex-start;
+                gap: 16px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            /* big logo on the left */
+            .svc-logo {
+                width: 64px;
+                height: 64px;
+                border-radius: 14px;
+                flex-shrink: 0;
+                background: var(--bg3);
+                border: 1px solid var(--border);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+            .svc-logo img {
+                width: 44px;
+                height: 44px;
+                object-fit: contain;
+            }
+            .svc-logo .svc-logo-fallback {
+                font-size: 24px;
+                font-weight: 800;
+                font-family: var(--mono);
+                color: var(--text3);
+                text-transform: uppercase;
+            }
+
+            /* name + meta on the right */
+            .svc-head-right {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                padding-top: 2px;
+            }
+            .svc-head-top {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 8px;
+            }
+
+            .svc-name {
+                font-size: 15px;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -0.3px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .svc-unit {
+                font-size: 11px;
+                color: var(--text4);
+                font-family: var(--mono);
+            }
+
+            /* ── Three-dot menu ── */
+            .svc-menu-wrap {
+                position: relative;
+                flex-shrink: 0;
+            }
+            .svc-menu-btn {
+                width: 30px;
+                height: 30px;
+                border-radius: 7px;
+                border: 1px solid transparent;
+                background: transparent;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.15s;
+                color: var(--text3);
+            }
+            .svc-menu-btn:hover {
+                background: var(--bg3);
+                border-color: var(--border);
+                color: var(--text2);
+            }
+            .svc-menu-btn svg {
+                width: 16px;
+                height: 16px;
+                pointer-events: none;
+            }
+
+            .svc-dropdown {
+                position: absolute;
+                top: calc(100% + 6px);
+                right: 0;
+                background: var(--bg1);
+                border: 1px solid var(--border2);
+                border-radius: 10px;
+                padding: 5px;
+                min-width: 168px;
+                z-index: 50;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
+                opacity: 0;
+                pointer-events: none;
+                transform: translateY(-6px) scale(0.97);
+                transition: all 0.15s;
+            }
+            .svc-dropdown.open {
+                opacity: 1;
+                pointer-events: auto;
+                transform: none;
+            }
+
+            .dd-item {
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                padding: 8px 10px;
+                border-radius: 7px;
+                font-size: 12px;
+                font-weight: 600;
+                color: var(--text2);
+                cursor: pointer;
+                transition: all 0.12s;
+                border: none;
+                background: none;
+                width: 100%;
+                text-align: left;
+                font-family: var(--font);
+            }
+            .dd-item svg {
+                width: 13px;
+                height: 13px;
+                flex-shrink: 0;
+            }
+            .dd-item:hover {
+                background: var(--bg3);
+                color: var(--text);
+            }
+            .dd-item.start:hover {
+                background: var(--green-bg);
+                color: var(--green);
+            }
+            .dd-item.stop:hover {
+                background: var(--red-bg);
+                color: var(--red);
+            }
+            .dd-item.restart:hover {
+                background: var(--amber-bg);
+                color: var(--amber);
+            }
+            .dd-item.info-item {
+                color: var(--text3);
+                cursor: default;
+            }
+            .dd-item.info-item:hover {
+                background: var(--bg2);
+                color: var(--text3);
+            }
+            .dd-item:disabled {
+                opacity: 0.3;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+            .dd-divider {
+                height: 1px;
+                background: var(--border);
+                margin: 4px 0;
+            }
+            .dd-label {
+                padding: 4px 10px 2px;
+                font-size: 9px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.7px;
+                color: var(--text4);
+            }
+
+            /* ── Status pill ── */
+            .status-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                padding: 3px 9px 3px 7px;
+                border-radius: 20px;
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+                text-transform: uppercase;
+                font-family: var(--mono);
+                border: 1px solid;
+            }
+            .status-pill.running {
+                background: var(--green-bg);
+                color: var(--green);
+                border-color: var(--green-bd);
+            }
+            .status-pill.stopped {
+                background: var(--bg3);
+                color: var(--text3);
+                border-color: var(--border);
+            }
+            .status-pill.crashed {
+                background: var(--red-bg);
+                color: var(--red);
+                border-color: var(--red-bd);
+            }
+            .status-dot {
+                width: 5px;
+                height: 5px;
+                border-radius: 50%;
+                background: currentColor;
+                flex-shrink: 0;
+            }
+            .status-pill.running .status-dot {
+                animation: pulse-dot 1.6s ease-in-out infinite;
+            }
+            @keyframes pulse-dot {
+                0%,
+                100% {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                50% {
+                    opacity: 0.4;
+                    transform: scale(0.7);
+                }
+            }
+
+            /* ── Card footer ── */
+            .svc-footer {
+                padding: 12px 18px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                background: var(--bg2);
+                border-top: 1px solid var(--border);
+                border-radius: 0 0 var(--radius) var(--radius);
+            }
+            .svc-footer-meta {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+            .svc-footer-item {
+                display: flex;
+                flex-direction: column;
+                gap: 1px;
+            }
+            .svc-footer-lbl {
+                font-size: 9px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.6px;
+                color: var(--text4);
+            }
+            .svc-footer-val {
+                font-size: 11px;
+                font-weight: 600;
+                font-family: var(--mono);
+                color: var(--text2);
+            }
+            .svc-footer-val.green {
+                color: var(--green);
+            }
+            .svc-footer-val.red {
+                color: var(--red);
+            }
+
+            /* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+            .toast-wrap {
+                position: fixed;
+                top: 68px;
+                right: 20px;
+                z-index: 9999;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                max-width: 300px;
+            }
+            .toast {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 11px 14px;
+                border-radius: 10px;
+                font-size: 12px;
+                font-weight: 600;
+                border: 1px solid;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+                animation: toast-in 0.2s ease-out;
+            }
+            @keyframes toast-in {
+                from {
+                    opacity: 0;
+                    transform: translateX(16px);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+            .toast svg {
+                width: 14px;
+                height: 14px;
+                flex-shrink: 0;
+            }
+            .toast.success {
+                background: var(--green-bg);
+                color: var(--green);
+                border-color: var(--green-bd);
+            }
+            .toast.error {
+                background: var(--red-bg);
+                color: var(--red);
+                border-color: var(--red-bd);
+            }
+            .toast.info {
+                background: var(--blue-bg);
+                color: var(--blue);
+                border-color: var(--blue-bd);
+            }
+
+            /* ══════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════ */
+            .modal-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(26, 31, 54, 0.45);
+                backdrop-filter: blur(6px);
+                z-index: 9998;
+                display: none;
+                align-items: center;
+                justify-content: center;
+            }
+            .modal-overlay.open {
+                display: flex;
+                animation: fade-in 0.15s ease;
+            }
+            @keyframes fade-in {
+                from {
+                    opacity: 0;
+                }
+                to {
+                    opacity: 1;
+                }
+            }
+
+            .modal {
+                background: var(--bg1);
+                border: 1px solid var(--border2);
+                border-radius: 14px;
+                padding: 26px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: var(--shadow-lg);
+                animation: modal-up 0.2s ease-out;
+            }
+            @keyframes modal-up {
+                from {
+                    opacity: 0;
+                    transform: translateY(14px);
+                }
+                to {
+                    opacity: 1;
+                    transform: none;
+                }
+            }
+
+            .modal-icon-wrap {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+                margin-bottom: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .modal-icon-wrap.amber {
+                background: var(--amber-bg);
+                color: var(--amber);
+            }
+            .modal-icon-wrap.red {
+                background: var(--red-bg);
+                color: var(--red);
+            }
+            .modal-icon-wrap svg {
+                width: 20px;
+                height: 20px;
+            }
+
+            .modal-title {
+                font-size: 15px;
+                font-weight: 700;
+                color: var(--text);
+                margin-bottom: 8px;
+                letter-spacing: -0.3px;
+            }
+            .modal-body {
+                font-size: 13px;
+                color: var(--text3);
+                line-height: 1.6;
+                margin-bottom: 22px;
+            }
+            .modal-body strong {
+                color: var(--text2);
+                font-weight: 600;
+            }
+
+            .modal-footer {
+                display: flex;
+                gap: 8px;
+                justify-content: flex-end;
+            }
+            .modal-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 8px 18px;
+                border-radius: var(--radius-sm);
+                font-size: 12px;
+                font-weight: 600;
+                font-family: var(--font);
+                cursor: pointer;
+                transition: all 0.15s;
+                border: 1px solid var(--border);
+                background: var(--bg2);
+                color: var(--text2);
+            }
+            .modal-btn:hover {
+                background: var(--bg3);
+                border-color: var(--border2);
+                color: var(--text);
+            }
+            .modal-btn.confirm {
+                background: var(--blue);
+                color: #fff;
+                border-color: var(--blue);
+            }
+            .modal-btn.confirm:hover {
+                background: #2563eb;
+            }
+            .modal-btn.danger {
+                background: var(--red);
+                color: #fff;
+                border-color: var(--red);
+            }
+            .modal-btn.danger:hover {
+                background: #e11d48;
+            }
+
+            /* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+            @media (max-width: 900px) {
+                .kpi-row {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            @media (max-width: 600px) {
+                .page {
+                    padding: 16px;
+                }
+                .kpi-row {
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 8px;
+                }
+                .topbar {
+                    padding: 0 16px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- ── Topbar ── -->
+        <header class="topbar">
+            <a class="brand" href="#">
+                <div class="brand-logo">
+                    <svg
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M8 21h8M12 17v4" />
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <div class="brand-name">SysMon</div>
+                    <div class="brand-tag">Service Control</div>
+                </div>
+            </a>
+            <div class="topbar-actions">
+                <button class="tb-btn" onclick="refreshAll()">
+                    <img src="static/icons/refresh_circle.svg" alt="refresh" />
+                    Refresh
+                </button>
+                <button class="tb-btn primary" onclick="reloadConfig()">
+                    <img src="static/icons/reload.svg" alt="reload" />
+                    Reload Config
+                </button>
+            </div>
+        </header>
+
+        <!-- ── Toast ── -->
+        <div class="toast-wrap" id="toastWrap"></div>
+
+        <!-- ── Modal ── -->
+        <div class="modal-overlay" id="modalOverlay">
+            <div class="modal">
+                <div class="modal-icon-wrap amber" id="modalIcon">
+                    <svg
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                        />
+                    </svg>
+                </div>
+                <div class="modal-title" id="modalTitle">Confirm Action</div>
+                <div class="modal-body" id="modalBody">Are you sure?</div>
+                <div class="modal-footer">
+                    <button class="modal-btn" onclick="closeModal()">
+                        Cancel
+                    </button>
+                    <button class="modal-btn confirm" id="modalConfirmBtn">
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Page ── -->
+        <div class="page">
+            <!-- KPIs -->
+            <div class="kpi-row">
+                <div class="kpi-card">
+                    <div class="kpi-icon blue">
+                        <svg
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <rect x="2" y="3" width="20" height="14" rx="2" />
+                            <path d="M8 21h8M12 17v4" />
+                        </svg>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-val blue" id="kpiTotal">—</div>
+                        <div class="kpi-lbl">Total</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon green">
+                        <svg
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M9 12l2 2 4-4" />
+                        </svg>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-val green" id="kpiRunning">—</div>
+                        <div class="kpi-lbl">Running</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon amber">
+                        <svg
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M9 9h6M9 15h6" />
+                        </svg>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-val amber" id="kpiStopped">—</div>
+                        <div class="kpi-lbl">Stopped</div>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon red">
+                        <svg
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M15 9l-6 6M9 9l6 6" />
+                        </svg>
+                    </div>
+                    <div class="kpi-info">
+                        <div class="kpi-val red" id="kpiCrashed">—</div>
+                        <div class="kpi-lbl">Crashed</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services -->
+            <div class="section-hdr">
+                <span class="section-title">Services</span>
+                <span class="section-meta" id="svcMeta">—</span>
+            </div>
+
+            <div class="services-grid" id="servicesGrid"></div>
+        </div>
+        <!-- end .page -->
+
+        <script>
+            /* ─── State ───────────────────────────────────────────────── */
+            let services = [];
+            let pendingAct = null;
+            let openMenu = null; // currently open dropdown card el
+
+            /* ─── API ─────────────────────────────────────────────────── */
+            async function fetchStatus() {
+                try {
+                    const r = await fetch("/services/status");
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                    const data = await r.json();
+                    services = Object.values(data.data || {});
+                    render();
+                    updateKpis();
+                    document.getElementById("svcMeta").textContent =
+                        `Updated ${new Date().toLocaleTimeString("en-US", { hour12: false })}`;
+                } catch (e) {
+                    toast("Failed to fetch status: " + e.message, "error");
+                }
+            }
+
+            async function controlService(name, action) {
+                const card = document.querySelector(`[data-svc="${name}"]`);
+                if (card) card.classList.add("loading");
+                try {
+                    const r = await fetch(`/services/${name}/${action}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                    });
+                    const d = await r.json();
+                    if (!r.ok || d.status === "error")
+                        throw new Error(d.message || `Failed to ${action}`);
+                    toast(`${cap(action)}ed ${name}`, "success");
+                    setTimeout(fetchStatus, 900);
+                } catch (e) {
+                    toast(e.message || `Failed to ${action} ${name}`, "error");
+                } finally {
+                    if (card) card.classList.remove("loading");
+                }
+            }
+
+            async function reloadConfig() {
+                try {
+                    const r = await fetch("/config/reload", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                    });
+                    const d = await r.json();
+                    if (!r.ok || d.status === "error")
+                        throw new Error(d.message || "Reload failed");
+                    toast(d.message || "Config reloaded", "success");
+                    setTimeout(fetchStatus, 900);
+                } catch (e) {
+                    toast(e.message, "error");
+                }
+            }
+
+            /* ─── Render ──────────────────────────────────────────────── */
+            function render() {
+                const grid = document.getElementById("servicesGrid");
+                if (!services.length) {
+                    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:64px 24px;color:var(--text4);font-size:13px;">No services configured</div>`;
+                    return;
+                }
+                grid.innerHTML = services.map((svc) => cardHTML(svc)).join("");
+            }
+
+            function cardHTML(svc) {
+                const state = (svc.state || "stopped").toLowerCase();
+                const isRunning = state === "running";
+                const isStopped = state === "stopped";
+
+                const logoHTML = svc.logo_path
+                    ? `<img src="${svc.logo_path}" alt="${svc.name}"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+       <span class="svc-logo-fallback" style="display:none">${svc.name.charAt(0)}</span>`
+                    : `<span class="svc-logo-fallback">${svc.name.charAt(0)}</span>`;
+
+                const modeBadge =
+                    svc.mode === "systemd"
+                        ? `<span style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-bd);border-radius:4px;font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 6px;text-transform:uppercase;letter-spacing:0.5px;">systemd</span>`
+                        : `<span style="background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd);border-radius:4px;font-size:9px;font-weight:700;font-family:var(--mono);padding:1px 6px;text-transform:uppercase;letter-spacing:0.5px;">process</span>`;
+
+                return `
+  <div class="svc-card" data-svc="${svc.name}">
+    <div class="svc-spinner"><div class="spinner-ring"></div></div>
+
+    <!-- Head: big logo left, info right -->
+    <div class="svc-head">
+      <div class="svc-logo">${logoHTML}</div>
+
+      <div class="svc-head-right">
+        <div class="svc-head-top">
+          <div>
+            <div class="svc-name" title="${svc.name}">${svc.name}</div>
+            <div class="svc-unit">${svc.systemd_unit || svc.name}</div>
+          </div>
+          <!-- Three-dot menu -->
+          <div class="svc-menu-wrap">
+            <button class="svc-menu-btn" onclick="toggleMenu(event,'${svc.name}')" title="Actions">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="5"  r="1.5"/>
+                <circle cx="12" cy="12" r="1.5"/>
+                <circle cx="12" cy="19" r="1.5"/>
+              </svg>
+            </button>
+            <div class="svc-dropdown" id="menu-${svc.name}">
+              <!-- Actions -->
+              <div class="dd-label">Actions</div>
+              <button class="dd-item start"   onclick="handleMenuAction('${svc.name}','start')"   ${isRunning ? "disabled" : ""}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><polygon points="5,3 19,12 5,21"/></svg>
+                Start
+              </button>
+              <button class="dd-item stop"    onclick="handleMenuAction('${svc.name}','stop')"    ${isStopped ? "disabled" : ""}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                Stop
+              </button>
+              <button class="dd-item restart" onclick="handleMenuAction('${svc.name}','restart')" ${isStopped ? "disabled" : ""}>
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path d="M4 4v5h5M20 20v-5h-5"/><path d="M4.07 14A9 9 0 1 0 6 6.07"/></svg>
+                Restart
+              </button>
+              <!-- Info -->
+              <div class="dd-divider"></div>
+              <div class="dd-label">Info</div>
+              <div class="dd-item info-item">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>
+                Restarts: <strong style="margin-left:auto;color:var(--text2)">${svc.restart_count ?? 0}</strong>
+              </div>
+              <div class="dd-item info-item">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+                Should Run: <strong style="margin-left:auto;color:${svc.should_be_running ? "var(--green)" : "var(--red)"}">${svc.should_be_running ? "Yes" : "No"}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- status pill + mode badge inline -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="status-pill ${state}">
+            <span class="status-dot"></span>
+            ${state.toUpperCase()}
+          </div>
+          ${modeBadge}
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="svc-footer">
+      <div class="svc-footer-meta">
+        <div class="svc-footer-item">
+          <span class="svc-footer-lbl">Mode</span>
+          <span class="svc-footer-val">${svc.mode || "—"}</span>
+        </div>
+        <div style="width:1px;height:28px;background:var(--border);"></div>
+        <div class="svc-footer-item">
+          <span class="svc-footer-lbl">Unit</span>
+          <span class="svc-footer-val">${svc.systemd_unit || svc.name}</span>
+        </div>
+      </div>
+      <div class="svc-footer-item" style="text-align:right">
+        <span class="svc-footer-lbl">Description</span>
+        <span class="svc-footer-val" style="color:var(--text3);font-family:var(--font);font-size:11px;">${svc.description || "—"}</span>
+      </div>
+    </div>
+
+  </div>`;
+            }
+
+            function updateKpis() {
+                const total = services.length;
+                const running = services.filter(
+                    (s) => (s.state || "").toLowerCase() === "running",
+                ).length;
+                const stopped = services.filter(
+                    (s) => (s.state || "").toLowerCase() === "stopped",
+                ).length;
+                const crashed = services.filter(
+                    (s) => (s.state || "").toLowerCase() === "crashed",
+                ).length;
+                document.getElementById("kpiTotal").textContent = total;
+                document.getElementById("kpiRunning").textContent = running;
+                document.getElementById("kpiStopped").textContent = stopped;
+                document.getElementById("kpiCrashed").textContent = crashed;
+            }
+
+            /* ─── Dropdown Menu ───────────────────────────────────────── */
+            function toggleMenu(e, name) {
+                e.stopPropagation();
+                const menu = document.getElementById("menu-" + name);
+                const isOpen = menu.classList.contains("open");
+                closeAllMenus();
+                if (!isOpen) {
+                    menu.classList.add("open");
+                    openMenu = menu;
+                }
+            }
+
+            function closeAllMenus() {
+                document
+                    .querySelectorAll(".svc-dropdown.open")
+                    .forEach((m) => m.classList.remove("open"));
+                openMenu = null;
+            }
+
+            document.addEventListener("click", closeAllMenus);
+
+            function handleMenuAction(name, action) {
+                closeAllMenus();
+                if (action === "stop") {
+                    showModal(name, action, "danger");
+                } else {
+                    showModal(name, action, "confirm");
+                }
+            }
+
+            /* ─── Modal ───────────────────────────────────────────────── */
+            function showModal(name, action, style = "confirm") {
+                pendingAct = { name, action };
+                const icon = document.getElementById("modalIcon");
+                icon.className = `modal-icon-wrap ${action === "stop" ? "red" : "amber"}`;
+                document.getElementById("modalTitle").textContent =
+                    `${cap(action)} Service`;
+                document.getElementById("modalBody").innerHTML =
+                    `Are you sure you want to <strong>${action}</strong> the service <strong>${name}</strong>?`;
+                const btn = document.getElementById("modalConfirmBtn");
+                btn.className = `modal-btn ${style}`;
+                btn.textContent = cap(action);
+                document.getElementById("modalOverlay").classList.add("open");
+            }
+
+            function closeModal() {
+                document
+                    .getElementById("modalOverlay")
+                    .classList.remove("open");
+                pendingAct = null;
+            }
+
+            document
+                .getElementById("modalConfirmBtn")
+                .addEventListener("click", () => {
+                    if (pendingAct) {
+                        controlService(pendingAct.name, pendingAct.action);
+                        closeModal();
+                    }
+                });
+            document
+                .getElementById("modalOverlay")
+                .addEventListener("click", (e) => {
+                    if (e.target.id === "modalOverlay") closeModal();
+                });
+
+            /* ─── Toast ───────────────────────────────────────────────── */
+            const ICONS = {
+  success: `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M7.5 12.5l3 3 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  error:   `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M15 9l-6 6M9 9l6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  info:    `<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"/><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/><path d="M12 11v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1" fill="currentColor"/></svg>`,
+};
+            function toast(msg, type = "info") {
+                const wrap = document.getElementById("toastWrap");
+                const el = document.createElement("div");
+                el.className = `toast ${type}`;
+                el.innerHTML = `${ICONS[type] || ""}<span>${msg}</span>`;
+                wrap.appendChild(el);
+                setTimeout(() => {
+                    el.style.opacity = "0";
+                    el.style.transform = "translateX(12px)";
+                    el.style.transition = "all 0.2s";
+                    setTimeout(() => el.remove(), 200);
+                }, 4000);
+            }
+
+            /* ─── Helpers ─────────────────────────────────────────────── */
+            function cap(s) {
+                return s.charAt(0).toUpperCase() + s.slice(1);
+            }
+            function refreshAll() {
+                toast("Refreshing…", "info");
+                fetchStatus();
+            }
+
+            /* ─── Init ────────────────────────────────────────────────── */
+            document.addEventListener("DOMContentLoaded", fetchStatus);
+        </script>
+    </body>
+</html>

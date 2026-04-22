@@ -1,0 +1,11 @@
+{
+    "socket": {
+        "dir": "/run/tornado",
+        "path": "/run/tornado/user_service.sock",
+        "group": "tornado-services",
+        "permissions": "0o660"
+    },
+    "redis": {
+        "url": "redis://localhost:6379/0"
+    }
+}

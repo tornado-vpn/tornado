@@ -1,0 +1,40 @@
+name: Deploy Tornado VPN Site and Docs
+
+on:
+  push:
+    branches:
+      - main # Or 'master', depending on your default branch name
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Install MkDocs dependencies
+        run: |
+          pip install mkdocs-material
+          # Add any other mkdocs plugins here if needed
+
+      - name: Build MkDocs Documentation
+        # This will output to site/docs/ because of your mkdocs.yml update
+        run: mkdocs build
+
+      - name: Prepare Root Website
+        # This copies your landing page into the root of the site folder
+        run: cp -R main-website/* site/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site

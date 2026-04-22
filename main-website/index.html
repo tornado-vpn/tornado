@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tornado VPN — Open Source Enterprise Secure Access</title>
+  <meta name="description" content="Self-hosted enterprise VPN platform with dual-lane WireGuard, Tor-aware routing, and live operations telemetry. Open source." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:       #04080f;
+      --surface:  #080f1e;
+      --line:     rgba(110,160,255,0.18);
+      --line2:    rgba(255,255,255,0.07);
+      --text:     #ddeeff;
+      --muted:    #7ea4c8;
+      --dim:      #3a5a7a;
+      --accent:   #5aacff;
+      --accent2:  #7c6fff;
+      --ok:       #4fd6a0;
+      --warn:     #f0c060;
+      --r:        18px;
+      --nav-h:    64px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── CANVAS ── */
+    #scene {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── TOPBAR ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      background: linear-gradient(to bottom, rgba(4,8,15,0.92) 0%, transparent 100%);
+      backdrop-filter: blur(4px);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: "Syne", sans-serif;
+      font-weight: 800; font-size: 1.08rem;
+      letter-spacing: 0.02em; color: var(--text);
+      text-decoration: none;
+    }
+    .logo-icon img{
+      width: 35px; height: 35px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: grid; place-items: center;
+      font-size: 14px;
+    }
+    .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+    .nav-link {
+      font-size: 0.84rem; font-weight: 500;
+      color: var(--muted); text-decoration: none;
+      padding: 0.38rem 0.7rem;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+    .gh-btn {
+      display: inline-flex; align-items: center; gap: 0.42rem;
+      font-size: 0.84rem; font-weight: 600;
+      color: var(--bg); background: var(--accent);
+      padding: 0.44rem 0.9rem;
+      border-radius: 999px; text-decoration: none;
+      transition: filter 0.2s, transform 0.2s;
+    }
+    .gh-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .gh-btn svg { width: 15px; height: 15px; fill: var(--bg); }
+
+    /* ── SCROLL CONTAINER ── */
+    #scroll-root {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* ── HERO ── FIX: push content below fixed navbar ── */
+    #hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      /* FIX: offset for fixed navbar so badge is never hidden */
+      padding: calc(var(--nav-h) + 1rem) min(8vw, 100px) 0;
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem; color: var(--accent);
+      border: 1px solid rgba(90,172,255,0.3);
+      background: rgba(90,172,255,0.07);
+      border-radius: 999px; padding: 0.28rem 0.72rem;
+      margin-bottom: 1.3rem; letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: auto;
+    }
+    .badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 8px var(--ok);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+    h1 {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.8rem, 7vw, 6rem);
+      line-height: 1.0;
+      letter-spacing: -0.03em;
+      max-width: 10ch;
+      margin-bottom: 1.2rem;
+      pointer-events: auto;
+    }
+    .grad {
+      background: linear-gradient(100deg, #e8f5ff 0%, var(--accent) 50%, var(--accent2) 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub {
+      max-width: 44ch;
+      font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+      line-height: 1.72;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      pointer-events: auto;
+    }
+    .hero-actions {
+      display: flex; flex-wrap: wrap; gap: 0.7rem;
+      pointer-events: auto;
+    }
+    .btn-prim {
+      font-family: "Syne", sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      color: #040c1a; padding: 0.7rem 1.2rem;
+      border-radius: 999px; text-decoration: none;
+      transition: filter 0.2s, transform 0.2s;
+    }
+    .btn-prim:hover { filter: brightness(1.08); transform: translateY(-2px); }
+    .btn-ghost {
+      font-family: "Syne", sans-serif;
+      font-weight: 700; font-size: 0.9rem;
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(255,255,255,0.06); color: var(--text);
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 0.7rem 1.2rem;
+      border-radius: 999px; text-decoration: none;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.38); transform: translateY(-2px); }
+    .hero-chips {
+      margin-top: 2rem;
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+      pointer-events: auto;
+    }
+    .chip {
+      font-family: "DM Mono", monospace; font-size: 0.73rem;
+      color: var(--muted); border: 1px solid var(--line2);
+      background: rgba(255,255,255,0.03);
+      border-radius: 6px; padding: 0.24rem 0.6rem;
+    }
+
+    /* ── SCROLL SECTIONS ── */
+    .info-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8rem 0;
+      position: relative;
+    }
+    .info-section:nth-child(odd) .info-inner { margin-left: auto; margin-right: min(6vw, 80px); }
+    .info-section:nth-child(even) .info-inner { margin-left: min(6vw, 80px); }
+
+    .info-inner {
+      width: min(560px, 90vw);
+      background: linear-gradient(145deg, rgba(255,255,255,0.07) 0%, rgba(8,15,30,0.72) 100%);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: clamp(1.6rem, 3.5vw, 2.6rem);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 30px 80px rgba(0,2,10,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s cubic-bezier(.22,1,.36,1), transform 0.8s cubic-bezier(.22,1,.36,1);
+    }
+    .info-inner.visible { opacity: 1; transform: translateY(0); }
+
+    .section-label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.72rem; color: var(--accent);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      margin-bottom: 0.9rem;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .section-label::before {
+      content: ''; display: block;
+      width: 22px; height: 1px; background: var(--accent);
+    }
+    .info-inner h2 {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.4rem, 2.8vw, 2rem);
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.9rem;
+    }
+    .info-inner p {
+      font-size: 0.95rem; line-height: 1.78;
+      color: var(--muted); margin-bottom: 1.2rem;
+    }
+
+    /* FIX: Correct feat-list arrow rule — was a broken orphaned string */
+    .feat-list {
+      display: grid; gap: 0.55rem;
+      list-style: none;
+    }
+    .feat-list li {
+      font-size: 0.88rem; color: var(--muted);
+      display: flex; align-items: flex-start; gap: 0.6rem;
+      line-height: 1.6;
+    }
+    .feat-list li::before {
+      content: '→';
+      color: var(--accent);
+      font-family: "DM Mono", monospace;
+      font-size: 0.8rem;
+      margin-top: 0.12em;
+      flex-shrink: 0;
+    }
+
+    /* Cards inside panels */
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem; margin-top: 1.1rem;
+    }
+    .mini-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line2);
+      border-radius: 12px;
+      padding: 0.85rem;
+    }
+    .mini-card .mc-label {
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 0.06em;
+      margin-bottom: 0.3rem;
+    }
+    .mini-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; margin: 0; }
+
+    /* FIX: Code block — proper syntax highlighting and spacing */
+    .code-block {
+      margin-top: 1.1rem;
+      background: rgba(2,6,14,0.92);
+      border: 1px solid rgba(90,172,255,0.18);
+      border-radius: 12px;
+      padding: 1.1rem 1.2rem;
+      font-family: "DM Mono", monospace;
+      font-size: 0.78rem;
+      color: #9fc8ef;
+      overflow-x: auto;
+      line-height: 2;
+      white-space: pre;
+    }
+    .code-block .cm  { color: #3a6a8a; }       /* comment  — dim blue-grey */
+    .code-block .ck  { color: var(--accent2); } /* keyword  — purple */
+    .code-block .cv  { color: var(--ok); }      /* value    — green */
+    .code-block .cp  { color: var(--accent); }  /* path/arg — accent blue */
+    .code-block .cs  { color: var(--warn); }    /* string   — amber */
+
+    /* API pills */
+    .api-row {
+      display: flex; flex-direction: column; gap: 0.4rem;
+      margin-top: 0.8rem;
+    }
+    .api-item {
+      display: flex; align-items: center; gap: 0.55rem;
+      font-family: "DM Mono", monospace; font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .method {
+      font-size: 0.68rem; font-weight: 500;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px; flex-shrink: 0;
+    }
+    .get  { background: rgba(79,214,160,0.15); color: var(--ok); }
+    .post { background: rgba(90,172,255,0.15); color: var(--accent); }
+    .del  { background: rgba(240,96,80,0.15);  color: #f06050; }
+
+    /* Stats strip */
+    .stat-strip {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 0.65rem; margin-top: 1.1rem;
+    }
+    .stat-item { text-align: center; padding: 0.8rem 0.5rem; }
+    .stat-item .sv {
+      font-family: "Syne", sans-serif;
+      font-size: 1.6rem; font-weight: 800;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      display: block;
+    }
+    .stat-item .sk { font-size: 0.76rem; color: var(--dim); margin-top: 0.15rem; }
+
+    /* Deployment and client visuals */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+    .stack-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line2);
+      border-radius: 12px;
+      padding: 0.8rem;
+    }
+    .stack-card h3 {
+      font-family: "DM Mono", monospace;
+      font-size: 0.76rem;
+      color: var(--accent);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stack-card p {
+      margin: 0;
+      font-size: 0.82rem;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    /* FIX: Client image gallery — clickable lightbox */
+    .client-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    .client-shot {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--line2);
+      border-radius: 12px;
+      padding: 0.45rem;
+      cursor: zoom-in;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .client-shot:hover {
+      border-color: rgba(90,172,255,0.4);
+      transform: scale(1.02);
+    }
+    .client-shot img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      pointer-events: none;
+    }
+    .client-shot p {
+      font-size: 0.78rem;
+      color: var(--dim);
+      margin: 0.5rem 0 0.1rem;
+      line-height: 1.4;
+      pointer-events: none;
+    }
+
+    /* Lightbox */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(2,5,12,0.92);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      padding: 2rem;
+    }
+    #lightbox.active { display: flex; }
+    #lightbox img {
+      max-width: min(90vw, 1000px);
+      max-height: 85vh;
+      border-radius: 16px;
+      border: 1px solid rgba(90,172,255,0.22);
+      box-shadow: 0 40px 120px rgba(0,0,0,0.7);
+      object-fit: contain;
+    }
+    #lightbox-close {
+      position: absolute;
+      top: 1.2rem; right: 1.4rem;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text);
+      font-size: 1.2rem;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    #lightbox-close:hover { background: rgba(255,255,255,0.2); }
+    #lightbox-caption {
+      position: absolute;
+      bottom: 1.6rem; left: 50%; transform: translateX(-50%);
+      font-family: "DM Mono", monospace;
+      font-size: 0.76rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    /* Documentation section link cards */
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      margin-top: 1rem;
+    }
+    .doc-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--line2);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    }
+    .doc-card:hover {
+      border-color: rgba(90,172,255,0.38);
+      background: rgba(90,172,255,0.06);
+      transform: translateY(-2px);
+    }
+    .doc-card .dc-icon {
+      font-size: 1.1rem;
+      margin-bottom: 0.15rem;
+    }
+    .doc-card .dc-title {
+      font-family: "Syne", sans-serif;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+    .doc-card .dc-desc {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0;
+    }
+    .doc-card .dc-link {
+      font-family: "DM Mono", monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      margin-top: auto;
+      padding-top: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    #github-cta {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 6rem 2rem;
+    }
+    .cta-box {
+      text-align: center;
+      max-width: 700px;
+      width: 100%;
+    }
+    .cta-box h2 {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      letter-spacing: -0.03em;
+      line-height: 1.06;
+      margin-bottom: 1rem;
+    }
+    .cta-box p { font-size: 1rem; color: var(--muted); line-height: 1.72; margin-bottom: 2rem; }
+    .gh-big {
+      display: inline-flex; align-items: center; gap: 0.7rem;
+      font-family: "Syne", sans-serif; font-weight: 700;
+      font-size: 1.05rem; color: #040c1a;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      padding: 0.9rem 1.8rem; border-radius: 999px;
+      text-decoration: none;
+      transition: filter 0.2s, transform 0.2s;
+      box-shadow: 0 10px 30px rgba(90,172,255,0.3);
+    }
+    .gh-big:hover { filter: brightness(1.08); transform: translateY(-3px); box-shadow: 0 18px 40px rgba(90,172,255,0.38); }
+    .gh-big svg { width: 20px; height: 20px; fill: #040c1a; }
+    .also-links { margin-top: 1.4rem; display: flex; justify-content: center; gap: 1.2rem; }
+    .also-links a { font-size: 0.84rem; color: var(--muted); text-decoration: none; transition: color 0.2s; }
+    .also-links a:hover { color: var(--text); }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 10;
+      padding: 1.8rem 2rem;
+      text-align: center;
+      border-top: 1px solid var(--line2);
+      font-size: 0.8rem; color: var(--dim);
+    }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ── SCROLL INDICATOR ── */
+    .scroll-hint {
+      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+      z-index: 20;
+      display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+      font-family: "DM Mono", monospace; font-size: 0.68rem; color: var(--dim);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      opacity: 1; transition: opacity 0.5s;
+      pointer-events: none;
+    }
+    .scroll-hint.hidden { opacity: 0; }
+    .scroll-arrow {
+      width: 1px; height: 30px;
+      background: linear-gradient(to bottom, transparent, var(--accent));
+      animation: scrollDrop 1.5s ease-in-out infinite;
+    }
+    @keyframes scrollDrop {
+      0% { transform: scaleY(0); transform-origin: top; opacity: 0; }
+      50% { transform: scaleY(1); transform-origin: top; opacity: 1; }
+      100% { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
+    }
+
+    @media (max-width: 760px) {
+      nav { padding: 0 1.2rem; }
+      .nav-link { display: none; }
+      #hero { padding: calc(var(--nav-h) + 0.5rem) 1.4rem 0; }
+      .info-section:nth-child(odd) .info-inner,
+      .info-section:nth-child(even) .info-inner {
+        margin: 0 auto; width: 90vw;
+      }
+      .mini-grid { grid-template-columns: 1fr; }
+      .stat-strip { grid-template-columns: repeat(3,1fr); }
+      .stack-grid,
+      .client-gallery,
+      .doc-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Image preview">
+  <button id="lightbox-close" aria-label="Close">✕</button>
+  <img id="lightbox-img" src="" alt="" />
+  <div id="lightbox-caption"></div>
+</div>
+
+<canvas id="scene" aria-hidden="true"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" href="#">
+    <span class="logo-icon"><img src="assets/images/tornadoVPN.svg" alt="Tornado VPN"></span>
+    <span>Tornado VPN</span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-link" href="#architecture">Architecture</a>
+    <a class="nav-link" href="#security">Security</a>
+    <a class="nav-link" href="#api">API</a>
+    <a class="nav-link" href="#deployment">Deployment</a>
+    <a class="nav-link" href="docs/">Docs</a>
+    <a class="nav-link" href="#client">Client</a>
+    <a class="gh-btn" href="https://github.com/tornado-vpn/tornado" target="_blank" rel="noopener">
+      <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- SCROLL HINT -->
+<div class="scroll-hint" id="scrollHint">
+  scroll
+  <div class="scroll-arrow"></div>
+</div>
+
+<div id="scroll-root">
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="badge"><span class="badge-dot"></span> Open Source · Self-Hosted · Enterprise Grade</div>
+    <h1>The <span class="grad">Tornado</span> VPN Platform</h1>
+    <p class="hero-sub">
+      A self-hosted secure access platform combining WireGuard performance,
+      Tor-aware routing, and real-time operations visibility. Full control.
+      No network trust outsourced.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-prim" href="https://github.com/tornado-vpn/tornado" target="_blank" rel="noopener">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Star on GitHub
+      </a>
+      <a class="btn-ghost" href="#architecture">Explore Docs ↓</a>
+    </div>
+    <div class="hero-chips">
+      <span class="chip">WireGuard</span>
+      <span class="chip">Tor-aware</span>
+      <span class="chip">RS256 JWT</span>
+      <span class="chip">Redis pub/sub</span>
+      <span class="chip">PostgreSQL</span>
+      <span class="chip">FastAPI</span>
+      <span class="chip">IPAM</span>
+      <span class="chip">X25519 ECDH</span>
+    </div>
+  </section>
+
+  <!-- SECTION: ARCHITECTURE -->
+  <section class="info-section" id="architecture">
+    <div class="info-inner reveal-panel">
+      <div class="section-label">01 / Architecture</div>
+      <h2>Supervised Control Plane with Separated Data Paths</h2>
+      <p>
+        A master supervisor starts and monitors service processes defined in runtime config.
+        External access enters through two FastAPI surfaces. Internal contracts are
+        standardized over UDS sockets under <code>/run/tornado</code>.
+      </p>
+      <div class="mini-grid">
+        <div class="mini-card">
+          <div class="mc-label">Supervisor</div>
+          <p>Config-driven service sync, health ping, and restart automation via MASTER_service.py</p>
+        </div>
+        <div class="mini-card">
+          <div class="mc-label">Data Plane</div>
+          <p>WireGuard wg0 + wg1, Tor manager, routing and maintenance-path handling</p>
+        </div>
+        <div class="mini-card">
+          <div class="mc-label">Control Services</div>
+          <p>Auth, session, user, IPAM, key rotator, OS/API service managers, log microservice</p>
+        </div>
+        <div class="mini-card">
+          <div class="mc-label">Persistence</div>
+          <p>Redis for sessions &amp; events, PostgreSQL for users, SQLite for log analytics</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: DUAL LANE -->
+  <section class="info-section" id="dual-lane">
+    <div class="info-inner reveal-panel">
+      <div class="section-label">02 / Network Design</div>
+      <h2>Dual-Lane WireGuard with Tor-Aware Routing</h2>
+      <p>
+        Standard VPN traffic runs on <code>wg0</code> for maximum throughput. Policy-selected
+        traffic is routed through <code>wg1</code> which exits via Tor, giving you
+        two distinct trust tiers on the same platform.
+      </p>
+      <ul class="feat-list">
+        <li>wg0 — high-performance standard lane, peer-programmed via IPAM service</li>
+        <li>wg1 — Tor-exit policy lane with circuit management and relay state controls</li>
+        <li>Maintenance path handling for operator access during tunnel incidents</li>
+        <li>UDS microservice mesh with reduced lateral exposure surface</li>
+      </ul>
+      <div class="stat-strip">
+        <div class="stat-item"><span class="sv">wg0</span><div class="sk">Standard Lane</div></div>
+        <div class="stat-item"><span class="sv">wg1</span><div class="sk">Tor Lane</div></div>
+        <div class="stat-item"><span class="sv">UDS</span><div class="sk">IPC Transport</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: SECURITY -->
+  <section class="info-section" id="security">
+    <div class="info-inner reveal-panel">
+      <div class="section-label">03 / Security Model</div>
+      <h2>Multi-Layer Authentication &amp; Key Integrity Controls</h2>
+      <p>
+        Login payloads are protected via X25519 ECDH + HKDF + AES-GCM before credential
+        validation. Token issuance uses asymmetric JWT keypairs with overlap-aware
+        verification during rotations, backed by Redis JTI revocation checks.
+      </p>
+      <ul class="feat-list">
+        <li>Client-side encryption before credentials leave the device</li>
+        <li>RS256 access and refresh tokens with claim and type validation</li>
+        <li>Reuse detection for revoked refresh tokens via JTI tracking</li>
+        <li>Bootstrap key validator — public-first then private cutover rotation</li>
+        <li>Signal-driven in-process service key reload, zero downtime</li>
+        <li>Argon2 password verification with configurable cost parameters</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION: SESSIONS -->
+  <section class="info-section" id="sessions">
+    <div class="info-inner reveal-panel">
+      <div class="section-label">04 / Live Telemetry</div>
+      <h2>Heartbeat-Driven Session Orchestration</h2>
+      <p>
+        Sessions are created with Redis keys (<code>vpn:session:*</code>) and heartbeat sentinels
+        (<code>vpn:session:*:hb</code>). Expired heartbeat keys move sessions to offline, resumed
+        heartbeats recover them, and <code>hard_ttl</code> finalizes cleanup.
+      </p>
+      <div class="code-block"><span class="cm"># Quick health check sequence</span>
+<span class="ck">sudo</span> systemctl <span class="cv">status</span> <span class="cp">tornado</span> --no-pager
+<span class="ck">curl</span> -sSf <span class="cs">http://127.0.0.1:8000/health</span>
+<span class="ck">curl</span> -sSf <span class="cs">http://127.0.0.1:4605/health</span>
+<span class="ck">sudo</span> wg <span class="cv">show</span>
+
+<span class="cm"># Tail live session events</span>
+<span class="ck">redis-cli</span> subscribe <span class="cp">vpn:live_events</span>
+
+<span class="cm"># Required: expiry-driven heartbeat transitions</span>
+<span class="ck">redis-cli</span> config get <span class="cp">notify-keyspace-events</span></div>
+    </div>
+  </section>
+
+  <!-- SECTION: OPERATIONS -->
+  <section class="info-section" id="operations">
+    <div class="info-inner reveal-panel">
+      <div class="section-label">05 / Operations Runbook</div>
+      <h2>Deterministic Recovery Paths for Every Incident Class</h2>
+      <p>
+        Operations are structured around dependency-first checks, targeted service
+        remediation, and post-incident validation — backed by direct admin API control.
+      </p>
+      <ul class="feat-list">
+        <li><strong>Recovery order:</strong> PostgreSQL + Redis → tornado.service → NGINX</li>
+        <li><strong>Session instability:</strong> heartbeat TTL, keyspace events, cleanup telemetry</li>
+        <li><strong>Rotation incidents:</strong> validate overlap key presence and reload signal targets</li>
+        <li><strong>Tunnel incidents:</strong> verify wg0/wg1, IP pools, and peer-programming logs</li>
+        <li><strong>Tor relay:</strong> /status, /up, /down, /circuits controls via admin API</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION: API -->
+  <section class="info-section" id="api">
+    <div class="info-inner reveal-panel">
+      <div class="section-label">06 / API Surface</div>
+      <h2>Client &amp; Admin Interfaces for Full Lifecycle Control</h2>
+      <p>
+        The client API handles encrypted login, token refresh, tunnel initiation, and heartbeat.
+        The admin API exposes service management, user lifecycle, log analytics, Tor relay controls,
+        and key-rotator actions.
+      </p>
+      <div class="mini-grid" style="margin-top:0.8rem;">
+        <div>
+          <div class="mc-label" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem;">Client API :4605</div>
+          <div class="api-row">
+            <div class="api-item"><span class="method get">GET</span>/auth/pubkey</div>
+            <div class="api-item"><span class="method post">POST</span>/auth/login</div>
+            <div class="api-item"><span class="method post">POST</span>/auth/reauth</div>
+            <div class="api-item"><span class="method post">POST</span>/vpn/initiate</div>
+            <div class="api-item"><span class="method post">POST</span>/session/heartbeat</div>
+          </div>
+        </div>
+        <div>
+          <div class="mc-label" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--accent2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.5rem;">Admin API :8000</div>
+          <div class="api-row">
+            <div class="api-item"><span class="method get">*</span>/services/* &amp; /apps/*</div>
+            <div class="api-item"><span class="method get">*</span>/users lifecycle</div>
+            <div class="api-item"><span class="method get">*</span>/logs/* query/export</div>
+            <div class="api-item"><span class="method get">*</span>/circuits relay ops</div>
+            <div class="api-item"><span class="method get">*</span>/key-rotator/*</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION: DEPLOYMENT — FIX: added git clone command -->
+  <section class="info-section" id="deployment">
+    <div class="info-inner reveal-panel">
+      <div class="section-label">07 / Deployment</div>
+      <h2>Server Installation and Production Bootstrap</h2>
+      <p>
+        Tornado VPN ships with a Linux installer at <code>server/setup.sh</code> for
+        single-host systemd deployments. It provisions PostgreSQL, Redis, Tor, WireGuard,
+        NGINX routing, and the <code>tornado.service</code> supervisor stack.
+      </p>
+      <div class="code-block"><span class="cm"># 1. Clone the repository</span>
+<span class="ck">git</span> clone <span class="cs">https://github.com/tornado-vpn/tornado.git</span>
+<span class="ck">cd</span> <span class="cp">tornado-vpn</span>
+
+<span class="cm"># 2. Run the server installer</span>
+<span class="ck">cd</span> <span class="cp">server</span>
+<span class="ck">chmod</span> +x <span class="cp">setup.sh</span>
+<span class="ck">sudo</span> ./setup.sh
+
+<span class="cm"># 3. Post-install verification</span>
+<span class="ck">sudo</span> systemctl <span class="cv">status</span> <span class="cp">tornado</span> --no-pager
+<span class="ck">curl</span> -sSf <span class="cs">http://127.0.0.1:8000/health</span>
+<span class="ck">curl</span> -sSf <span class="cs">http://127.0.0.1:4605/health</span></div>
+      <div class="stack-grid">
+        <div class="stack-card">
+          <h3>Host Model</h3>
+          <p>Single Linux host, services under <code>/opt/tornado</code>, systemd-managed runtime.</p>
+        </div>
+        <div class="stack-card">
+          <h3>Installer Inputs</h3>
+          <p>Prompts for DB password, admin credentials, and VPN endpoint host values.</p>
+        </div>
+        <div class="stack-card">
+          <h3>Critical Config</h3>
+          <p>Writes <code>.env</code>, configures IP forwarding/NAT, and enables Redis keyspace expiry handling.</p>
+        </div>
+        <div class="stack-card">
+          <h3>Docs</h3>
+          <p>See <code>docs/setup.md</code> and <code>docs/operations.md</code> for runbook-grade details.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <
+
+  <!-- SECTION: CLIENT — FIX: images open in lightbox on click -->
+  <section class="info-section" id="client">
+    <div class="info-inner reveal-panel">
+      <div class="section-label">08 / Tornado VPN Client</div>
+      <h2>Desktop Client for Linux and Windows</h2>
+      <p>
+        The client apps in <code>client/linux</code> and <code>client/windows</code> provide encrypted
+        login, token refresh, session heartbeat, WireGuard tunnel lifecycle, and Tor-over-VPN mode.
+        Packaging flows are documented in <code>docs/build_linux.md</code> and <code>docs/build_windows.md</code>.
+      </p>
+      <ul class="feat-list">
+        <li>API flow: <code>/auth/login</code> → <code>/vpn/initiate</code> → <code>/session/heartbeat</code></li>
+        <li>Session continuity with automatic reauth and heartbeat scheduling</li>
+        <li>Linux packaging: Debian package output (<code>tornadovpn-client_*.deb</code>)</li>
+        <li>Windows packaging: PyInstaller + Inno Setup installer output</li>
+      </ul>
+      <div class="client-gallery">
+        <figure class="client-shot" role="button" tabindex="0"
+          data-src="assets/images/client-screenshot-1.png"
+          data-caption="Client login and server endpoint entry">
+          <img src="assets/images/client-screenshot-1.png" alt="Tornado VPN client login screen">
+          <p>Client login and server endpoint entry.</p>
+        </figure>
+        <figure class="client-shot" role="button" tabindex="0"
+          data-src="assets/images/client-screenshot-2.png"
+          data-caption="Main dashboard with connection controls">
+          <img src="assets/images/client-screenshot-2.png" alt="Tornado VPN client dashboard">
+          <p>Main dashboard with connection controls.</p>
+        </figure>
+        <figure class="client-shot" role="button" tabindex="0"
+          data-src="assets/images/client-screenshot-3.png"
+          data-caption="Tor-over-VPN toggle and route visualization">
+          <img src="assets/images/client-screenshot-3.png" alt="Tornado VPN client Tor mode">
+          <p>Tor-over-VPN toggle and route visualization.</p>
+        </figure>
+        <figure class="client-shot" role="button" tabindex="0"
+          data-src="assets/images/client-screenshot-4.png"
+          data-caption="Live session statistics and connection status">
+          <img src="assets/images/client-screenshot-4.png" alt="Tornado VPN client session metrics">
+          <p>Live session statistics and connection status.</p>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- GITHUB CTA -->
+  <section id="github-cta">
+    <div class="cta-box">
+      <div class="badge" style="margin:0 auto 1.2rem; width:fit-content;"><span class="badge-dot"></span> Free &amp; Open Source · MIT License</div>
+      <h2>Ready to deploy your own <span class="grad">secure access</span> platform?</h2>
+      <p>
+        Tornado VPN is open source and self-hostable. Get full control over your network trust,
+        no subscriptions, no vendor lock-in. Star us on GitHub and join the community.
+      </p>
+      <a class="gh-big" href="https://github.com/tornado-vpn/tornado" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View on GitHub
+      </a>
+      <div class="also-links">
+        <a href="docs/">Documentation</a>
+        <a href="https://github.com/tornado-vpn/tornado/issues" target="_blank" rel="noopener">Report a Bug</a>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /scroll-root -->
+
+<footer>
+<p>© 2026 Tornado VPN Contributors · <a href="https://github.com/tornado-vpn/tornado" target="_blank" rel="noopener">github.com/tornado-vpn/tornado</a> · GNU GPLv3</p></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+  'use strict';
+
+  /* ── LIGHTBOX ── */
+  const lightbox     = document.getElementById('lightbox');
+  const lightboxImg  = document.getElementById('lightbox-img');
+  const lightboxCap  = document.getElementById('lightbox-caption');
+  const lightboxClose = document.getElementById('lightbox-close');
+
+  function openLightbox(src, caption) {
+    lightboxImg.src = src;
+    lightboxImg.alt = caption;
+    lightboxCap.textContent = caption;
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('active');
+    document.body.style.overflow = '';
+    // Reset src after transition to avoid ghost flicker
+    setTimeout(() => { lightboxImg.src = ''; }, 200);
+  }
+
+  document.querySelectorAll('.client-shot').forEach(el => {
+    el.addEventListener('click', () => {
+      openLightbox(el.dataset.src, el.dataset.caption);
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openLightbox(el.dataset.src, el.dataset.caption);
+      }
+    });
+  });
+
+  lightboxClose.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', e => {
+    if (e.target === lightbox) closeLightbox();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  /* ── THREE.JS TORNADO ── */
+  const canvas = document.getElementById('scene');
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x04080f, 0.008);
+
+  const W = window.innerWidth, H = window.innerHeight;
+  const camera = new THREE.PerspectiveCamera(50, W/H, 0.1, 2000);
+  camera.position.set(0, 0, 36);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  // Lights
+  scene.add(new THREE.AmbientLight(0x6090cc, 0.6));
+  const key = new THREE.DirectionalLight(0xadd4ff, 1.1);
+  key.position.set(20, 30, 20); scene.add(key);
+  const fill = new THREE.DirectionalLight(0x7060ff, 0.7);
+  fill.position.set(-20, -8, 5); scene.add(fill);
+
+  // Tornado curve
+  class TornadoCurve extends THREE.Curve {
+    getPoint(t, optTarget = new THREE.Vector3()) {
+      const turns = 4.5, height = 22;
+      const angle = t * Math.PI * 2 * turns;
+      const radius = 0.35 + t * 7.2;
+      return optTarget.set(
+        Math.cos(angle) * radius,
+        t * height - height / 2,
+        Math.sin(angle) * radius
+      );
+    }
+  }
+
+  const path = new TornadoCurve();
+  const TK = 0.22;
+
+  const coreGeo   = new THREE.TubeGeometry(path, 280, TK,       20, false);
+  const shellGeo  = new THREE.TubeGeometry(path, 280, TK * 2.4, 24, false);
+  const glowGeo   = new THREE.TubeGeometry(path, 280, TK * 4.2, 16, false);
+
+  const coreMat = new THREE.MeshPhongMaterial({
+    color: 0xd0e8ff, emissive: 0x2060a0, emissiveIntensity: 0.7,
+    transparent: true, opacity: 0.97, shininess: 110
+  });
+  const shellMat = new THREE.MeshPhongMaterial({
+    color: 0x60aaff, emissive: 0x152c60, emissiveIntensity: 0.5,
+    wireframe: true, transparent: true, opacity: 0.45
+  });
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0x3070cc, transparent: true, opacity: 0.07, side: THREE.BackSide
+  });
+
+  const capGeo = new THREE.SphereGeometry(TK * 1.05, 16, 16);
+
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(glowGeo, glowMat));
+  g.add(new THREE.Mesh(shellGeo, shellMat));
+  g.add(new THREE.Mesh(coreGeo, coreMat));
+
+  const bottomCap = new THREE.Mesh(capGeo, coreMat);
+  bottomCap.position.copy(path.getPoint(0)); g.add(bottomCap);
+  const topCap = new THREE.Mesh(capGeo, coreMat);
+  topCap.position.copy(path.getPoint(1)); g.add(topCap);
+
+  // Scanner rings (Base radius 1, added to the tornado group 'g')
+  const addHalo = (thick, op) => {
+    const h = new THREE.Mesh(
+      new THREE.TorusGeometry(1, thick, 12, 160),
+      new THREE.MeshBasicMaterial({ color: 0x6aaeff, transparent: true, opacity: op })
+    );
+    h.rotation.x = Math.PI / 2; // Lay flat horizontally
+    g.add(h); // Add to tornado group so it inherits tilt and placement
+    return h;
+  };
+  
+  // Create two rings. We will scale them dynamically in the animate loop.
+  const halo1 = addHalo(0.04, 0.4);
+  const halo2 = addHalo(0.04, 0.4);
+
+  // Particle field
+  const PC = 2400;
+  const pPos = new Float32Array(PC * 3);
+  for (let i = 0; i < PC; i++) {
+    const i3 = i * 3;
+    pPos[i3]   = (Math.random()-0.5)*280;
+    pPos[i3+1] = (Math.random()-0.5)*160;
+    pPos[i3+2] = (Math.random()-0.5)*280;
+  }
+  const pGeo = new THREE.BufferGeometry();
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  const particles = new THREE.Points(pGeo, new THREE.PointsMaterial({
+    size: 0.22, color: 0x90c8ff, transparent: true, opacity: 0.18, depthWrite: false
+  }));
+  scene.add(particles);
+
+  g.position.set(0, 0, -3);
+  g.rotation.x = 0.15;
+  scene.add(g);
+
+  
+  /* ── SCROLL & DRAG STATE ── */
+  const state = {
+    rotY: 0, rotZ: 0, scl: 1, posX: 0, posY: 0, scrollP: 0,
+    tRotY: 0, tRotZ: 0, tScl: 1, tPosX: 0, tPosY: 0, tScrollP: 0,
+    dragRotY: 0, tDragRotY: 0 // New variables for mouse dragging
+  };
+
+  function onScroll() {
+    const doc = document.documentElement;
+    const maxScroll = Math.max(1, doc.scrollHeight - window.innerHeight);
+    const p = Math.min(window.scrollY / maxScroll, 1);
+
+    state.tRotY  = p * Math.PI * 6;
+    state.tRotZ  = p * 0.5;
+    state.tScl   = 1.0 + p * 0.4;
+    state.tPosY  = -p * 6;
+    const mobile = window.innerWidth < 760;
+    state.tPosX  = mobile ? 0 : p * 2;
+    state.tScrollP = p; // Track the exact scroll percentage
+
+    document.getElementById('scrollHint').classList.toggle('hidden', window.scrollY > 60);
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  /* ── INTERSECTION OBSERVER ── */
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.18 });
+  document.querySelectorAll('.reveal-panel').forEach(p => io.observe(p));
+
+  /* ── RESIZE ── */
+  window.addEventListener('resize', () => {
+    const W = window.innerWidth, H = window.innerHeight;
+    camera.aspect = W/H; camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    onScroll();
+  });
+
+  /* ── INTERACTIVE DRAG ROTATION ── */
+  let isDragging = false;
+  let previousX = 0;
+
+  // Mouse Events
+  window.addEventListener('mousedown', (e) => {
+    // Only drag if they aren't clicking a link or button
+    if (e.target.tagName === 'A' || e.target.closest('button')) return; 
+    isDragging = true;
+    previousX = e.clientX;
+    document.body.style.cursor = 'grabbing';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - previousX;
+    state.tDragRotY += deltaX * 0.008; // The 0.008 controls drag sensitivity
+    previousX = e.clientX;
+  });
+
+  window.addEventListener('mouseup', () => {
+    isDragging = false;
+    document.body.style.cursor = '';
+  });
+
+  // Mobile Touch Events
+  window.addEventListener('touchstart', (e) => {
+    if (e.target.tagName === 'A' || e.target.closest('button')) return;
+    isDragging = true;
+    previousX = e.touches[0].clientX;
+  }, {passive: true});
+
+  window.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    const deltaX = e.touches[0].clientX - previousX;
+    state.tDragRotY += deltaX * 0.008;
+    previousX = e.touches[0].clientX;
+  }, {passive: true});
+
+  window.addEventListener('touchend', () => {
+    isDragging = false;
+  });
+
+  /* ── ANIMATE ── */
+  const clock = new THREE.Clock();
+  const LRP = 0.05;
+  const lerp = (a, b, t) => a + (b-a)*t;
+
+  function animate() {
+    requestAnimationFrame(animate);
+    const time = clock.getElapsedTime(); // renamed from t to avoid confusion
+    clock.getDelta(); 
+
+    state.rotY = lerp(state.rotY, state.tRotY, LRP);
+    state.rotZ = lerp(state.rotZ, state.tRotZ, LRP);
+    state.scl  = lerp(state.scl,  state.tScl,  LRP);
+    state.posX = lerp(state.posX, state.tPosX, LRP);
+    state.posY = lerp(state.posY, state.tPosY, LRP);
+    state.scrollP = lerp(state.scrollP, state.tScrollP, LRP); // Smooth scroll progress
+
+    // Add this to your lerp list
+    state.dragRotY = lerp(state.dragRotY, state.tDragRotY, LRP);
+
+    // Combine scroll rotation (state.rotY) with manual drag (state.dragRotY)
+    g.rotation.y = state.rotY + state.dragRotY;
+
+    
+    g.rotation.z = state.rotZ;
+    g.rotation.x = 0.15 + Math.sin(time * 0.4) * 0.03;
+    g.scale.setScalar(state.scl);
+    g.position.x = state.posX;
+    g.position.y = state.posY;
+
+    // --- NEW HALO SCANNER LOGIC ---
+    const height = 22; 
+    
+    // Halo 1: Moves Top -> Bottom as you scroll (t1 goes from 1 to 0)
+    const t1 = 1 - state.scrollP;
+    halo1.position.y = t1 * height - height / 2;
+    halo1.scale.setScalar(0.35 + t1 * 7.2 + 0.9); // Match tornado width + margin
+
+    // Halo 2: Moves Bottom -> Top as you scroll (t2 goes from 0 to 1)
+    const t2 = state.scrollP;
+    halo2.position.y = t2 * height - height / 2;
+    halo2.scale.setScalar(0.35 + t2 * 7.2 + 0.9);
+
+    // Gently rotate the rings themselves
+    halo1.rotation.z -= 0.005;
+    halo2.rotation.z += 0.005;
+
+    particles.rotation.y += 0.0001;
+
+    renderer.render(scene, camera);
+  }
+
+  onScroll();
+  animate();
+})();
+</script>
+</body>
+</html>

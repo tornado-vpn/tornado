@@ -1,0 +1,78 @@
+name: "🐛 Bug Report"
+description: "Create a report to help us improve Tornado VPN"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+assignees:
+  - ""
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill out the form below to help us investigate and resolve the issue.
+  - type: input
+    id: version
+    attributes:
+      label: Tornado VPN Version
+      description: What version of Tornado VPN are you using? (e.g. 1.2.0, commit hash, or 'latest from main')
+      placeholder: e.g. v1.2.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you running the server or client on?
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Docker
+        - Other (please specify below in Context)
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what went wrong...
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Start the server with configuration '...'
+        2. Connect a client using '....'
+        3. Observe the following error...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server / Client Logs
+      description: Please provide relevant log outputs outlining the problem. Make sure to redact any sensitive information (like real IP addresses or private keys).
+      render: shell
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here (e.g., network setup, router configuration).
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Submitting this issue
+      options:
+        - label: I have searched the existing issues and found no similar bug.
+          required: true
+        - label: I am using the latest version of Tornado VPN.
+          required: false

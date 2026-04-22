@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "💬 Ask a Question"
+    url: https://github.com/tornado-vpn/tornado-vpn/discussions/new?category=q-a
+    about: Ask a question about how to set up or use Tornado VPN.
+  - name: "📚 Documentation"
+    url: https://tornado-vpn.github.io/
+    about: Read the official documentation before opening an issue.

@@ -1,0 +1,21 @@
+{
+  "socket": {
+    "dir": "/run/tornado",
+    "path": "/run/tornado/ipam.sock",
+    "group": "tornado-services",
+    "permissions": "0o660"
+  },
+  "network": {
+    "vpn_cidr": "10.8.0.0/24",
+    "tor_cidr": "10.9.0.0/24"
+  },
+  "redis": {
+    "host": "localhost",
+    "port": 6379,
+    "keys": {
+      "vpn_pool": "vpn:ipam:pool:vpn",
+      "tor_pool": "vpn:ipam:pool:tor",
+      "mapping": "vpn:ipam:map"
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{   "bootstrap_key": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "bootstrap_keys.py"],
+        "socket_path": "/run/tornado/bootstrap_keys.sock",
+        "user": "tornado-runner",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "log_manage": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "log_manage.py"],
+        "socket_path": "/run/tornado/log.sock",
+        "user": "tornado-runner",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "os_services": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "os_service.py"],
+        "socket_path": "/run/tornado/os_services.sock",
+        "user": "root",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "ipam": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "ipam_service.py"],
+        "socket_path": "/run/tornado/ipam.sock",
+        "user": "tornado-runner",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "auth": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "auth_service.py"],
+        "socket_path": "/run/tornado/auth_service.sock",
+        "user": "tornado-runner",
+        "env": {
+            "PYTHONPATH": "/opt/tornado",
+            "PGSSLMODE": "disable"
+        },
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "session": {
+        "cmd": [
+            "/opt/tornado/venv/bin/python3",
+            "session_service.py"
+        ],
+        "socket_path": "/run/tornado/session.sock",
+        "user": "root",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "wg_manager": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "wg_manager.py"],
+        "socket_path": "/run/tornado/wg_mgr.sock",
+        "user": "root",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "tor_manager": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "tor_manager.py"],
+        "socket_path": "/run/tornado/tor_mgr.sock",
+        "user": "root",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "users": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "user_service.py"],
+        "socket_path": "/run/tornado/user_service.sock",
+        "user": "tornado-runner",
+        "env": {
+            "PYTHONPATH": ".",
+            "PGSSLMODE": "disable"
+        },
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "api_manager": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "api_service.py"],
+        "socket_path": "/run/tornado/api_mgr.sock",
+        "user": "tornado-runner",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    },
+    "key_rotator": {
+        "cmd": ["/opt/tornado/venv/bin/python3", "key_rotator.py"],
+         "socket_path": "/run/tornado/key_rotator.sock",
+        "user": "tornado-runner",
+        "cwd": "/opt/tornado/microservices",
+        "enabled": true
+    }
+}

@@ -1,0 +1,29 @@
+{
+    "socket": {
+        "path": "/run/tornado/tor_mgr.sock",
+        "permissions": "0o660"
+    },
+    "tor": {
+        "data_dir": "/tmp/tor-transparent",
+        "binary": null,
+        "trans_port": 9040,
+        "socks_port": 9050,
+        "control_port": 9051,
+        "dns_port": 9053,
+        "maint_port": 9041,
+        "timeout_sec": 300,
+        "bootstrap_pct": 25,
+        "trans_bind": "10.9.0.1",
+        "dns_bind": "10.9.0.1",
+        "tor_user": null
+    },
+    "network": {
+        "wg_subnet": "10.9.0.0/24",
+        "wg_iface": "wg1"
+    },
+    "health": {
+        "interval_sec": 60,
+        "timeout_sec": 20,
+        "bootstrap_retry_sec": 300
+    }
+}

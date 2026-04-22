@@ -1,0 +1,13 @@
+Package: tornadovpn-client
+Version: 1.0.0
+Section: net
+Priority: optional
+Architecture: amd64
+Depends: wireguard, wireguard-tools, resolvconf
+Maintainer: SRI DHARANIVEL A M <sridharthehacker@gmail.com>
+Description: Official desktop client for the Tornado VPN ecosystem.
+ The Tornado VPN Client provides a highly secure, PyQt5 graphical interface 
+ built exclusively for connecting to Tornado VPN infrastructure. It features 
+ automated WireGuard key exchange, JWT session persistence, and integrated 
+ Tor-over-VPN routing capabilities. Developed by Sri Dharanivel A M.
+ 

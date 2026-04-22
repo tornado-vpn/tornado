@@ -1,0 +1,80 @@
+{
+    
+    "postgresql": {
+        "enabled": true,
+        "description": "PostgreSQL database server",
+        "mode": "systemd",
+        "logo_path": "/static/logos/postgresql.svg",
+        "systemd_unit": "postgresql",
+        "restart_on_failure": true,
+        "restart_delay": 5,
+        "health": {
+            "type": "command",
+            "cmd": ["pg_isready", "-h", "127.0.0.1", "-p", "5432"],
+            "interval": 20,
+            "retries": 3,
+            "timeout": 5.0
+        }
+    },
+
+    "redis": {
+        "enabled": true,
+        "description": "Redis in-memory cache and message broker",
+        "mode": "systemd",
+        "logo_path": "/static/logos/redis.svg",
+        "systemd_unit": "redis-server",
+        "restart_on_failure": true,
+        "restart_delay": 3,
+        "health": {
+            "type": "command",
+            "cmd": ["redis-cli", "ping"],
+            "interval": 15,
+            "retries": 3,
+            "timeout": 3.0
+        }
+    },
+   "wg0": {
+    "enabled": true,
+    "description": "WireGuard interface wg0",
+    "mode": "process",
+    "logo_path": "/static/logos/wireguard.svg",
+    "restart_on_failure": false,
+    "health": {
+        "type": "command",
+        "cmd": ["ip", "link", "show", "wg0"],
+        "interval": 20,
+        "retries": 3,
+        "timeout": 5.0
+    }
+},
+"wg1": {
+    "enabled": true,
+    "description": "WireGuard interface wg1",
+    "mode": "process",
+    "logo_path": "/static/logos/wireguard.svg",
+    "restart_on_failure": false,
+    "health": {
+        "type": "command",
+        "cmd": ["ip", "link", "show", "wg1"],
+        "interval": 20,
+        "retries": 3,
+        "timeout": 5.0
+    }
+},
+"tor": {
+    "enabled": true,
+    "description": "Tor transparent proxy",
+    "mode": "process",
+    "logo_path": "/static/logos/tor.svg",
+    "restart_on_failure": false,
+    "health": {
+        "type": "tcp",
+        "host": "127.0.0.1",
+        "port": 9050,
+        "interval": 60,
+        "retries": 3,
+        "timeout": 5.0
+    }
+}
+
+}

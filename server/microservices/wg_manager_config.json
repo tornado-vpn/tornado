@@ -1,0 +1,25 @@
+{
+  "socket": {
+    "dir": "/run/tornado",
+    "path": "/run/tornado/wg_mgr.sock",
+    "group": "tornado-services",
+    "dir_mode": "0o750",
+    "permissions": "0o660"
+  },
+  "wireguard": {
+    "bin":           "/usr/bin/wg",
+    "wg_quick_bin":  "/usr/bin/wg-quick",
+    "conf_dir":      "/etc/wireguard",
+    "keys_dir":      "/var/lib/tornado/keys",
+    "outbound_iface": "eth0",
+    "haproxy_port":  15000,
+    "interfaces": {
+      "vpn":   "wg0",
+      "proxy": "wg1"
+    }
+  },
+  "upstream": {
+    "ipam_socket":    "/run/tornado/ipam.sock",
+    "session_socket": "/run/tornado/session.sock"
+  }
+}

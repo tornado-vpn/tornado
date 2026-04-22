@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+
+# PyInstaller & Build Outputs
+build/
+dist/
+*.spec
+Output/
+*.exe
+*.deb
+
+# Keyrings / Secrets (CRITICAL)
+session.json
+*.env
+
+
+site/

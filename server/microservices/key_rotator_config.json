@@ -1,0 +1,34 @@
+{
+  "socket": {
+    "dir":         "/run/tornado",
+    "path":        "/run/tornado/key_rotator.sock",
+    "group":       "tornado-services",
+    "permissions": "0o660"
+  },
+  "keys": {
+    "dir": "/opt/tornado/keys/jwt",
+    "access_private":  "access_private.pem",
+    "access_public":   "access_public.pem",
+    "refresh_private": "refresh_private.pem",
+    "refresh_public":  "refresh_public.pem",
+    "overlap_dir":     "overlap"
+  },
+  "rotation": {
+    "interval_hours": 24,
+    "overlap_minutes": 10,
+    "sighup_grace_seconds": 15
+},
+  "services": {
+    "reload_signals": [
+      "/run/tornado/auth_service.pid",
+      "/run/tornado/admin_panel.pid" 
+    ]
+  },
+  "logging": {
+    "level": "INFO"
+  },
+  "env": {
+  "path": "/opt/tornado/.env",
+  "secret_key": "ADMIN_SECRET"
+}
+}

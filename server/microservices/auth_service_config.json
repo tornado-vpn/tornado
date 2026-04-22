@@ -1,0 +1,15 @@
+{
+    "socket": {
+        "path": "/run/tornado/auth_service.sock",
+        "group": "tornado-services",
+        "permissions": "0o660"
+    },
+    "redis": {
+        "url": "redis://localhost:6379/0",
+        "device_ttl_sec": 86400
+    },
+    "upstream": {
+        "session_socket": "/run/tornado/session.sock"
+    },
+    "pid_file": "/run/tornado/auth_service.pid"
+}

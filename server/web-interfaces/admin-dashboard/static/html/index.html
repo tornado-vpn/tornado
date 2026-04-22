@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>VPN Admin Console</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <style>
+            @font-face { font-family:"Instrument Sans"; font-style:normal; font-weight:400; font-display:swap; src:url("/static/fonts/instrument-sans-400-normal.woff2") format("woff2"); }
+            @font-face { font-family:"Instrument Sans"; font-style:normal; font-weight:500; font-display:swap; src:url("/static/fonts/instrument-sans-500-normal.woff2") format("woff2"); }
+            @font-face { font-family:"Instrument Sans"; font-style:normal; font-weight:600; font-display:swap; src:url("/static/fonts/instrument-sans-600-normal.woff2") format("woff2"); }
+            @font-face { font-family:"Instrument Sans"; font-style:normal; font-weight:700; font-display:swap; src:url("/static/fonts/instrument-sans-700-normal.woff2") format("woff2"); }
+            @font-face { font-family:"Geist Mono"; font-style:normal; font-weight:400; font-display:swap; src:url("/static/fonts/geist-mono-400-normal.woff2") format("woff2"); }
+            @font-face { font-family:"Geist Mono"; font-style:normal; font-weight:600; font-display:swap; src:url("/static/fonts/geist-mono-600-normal.woff2") format("woff2"); }
+
+            :root {
+                --white: #ffffff;
+                --bg: #f5f6f8;
+                --border: #d9dce0;
+                --text: #1a1f36;
+                --text-2: #3d4663;
+                --text-3: #6c757d;
+                --text-4: #9aa0b4;
+                --accent: #ff9900;
+                --accent-dark: #ec7211;
+                --danger: #dc3545;
+                --success: #28a745;
+                --shell: #1a2332;
+                --shell-2: #141d2b;
+                --shell-border: rgba(255,255,255,0.12);
+                --shell-text: #ffffff;
+                --shell-text-3: #8fa3b8;
+                --sb-bg: #1a2332;
+                --sb-bg-2: #141d2b;
+                --sb-border: rgba(255,255,255,0.1);
+                --sb-text: #ffffff;
+                --sb-text-2: #d0dae6;
+                --sb-text-3: #7a90a8;
+                --sb-hover: rgba(255,153,0,0.13);
+                --sb-active-bg: rgba(255,153,0,0.22);
+                --sb-active-border: rgba(255,153,0,0.42);
+                --sidebar-w: 280px;
+                --topbar-h: 56px;
+                --shadow-xs: 0 1px 2px rgba(26,31,54,0.06);
+                --shadow-lg: 0 4px 16px rgba(0,0,0,0.2);
+                --font: "Instrument Sans","DM Sans","Segoe UI",system-ui,sans-serif;
+                --font-mono: "Geist Mono","DM Mono","SFMono-Regular",Consolas,monospace;
+                --r-sm: 4px;
+                --r: 8px;
+            }
+            *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+            html{font-size:14px;height:100%;}
+            body{font-family:var(--font);background:var(--bg);color:var(--text);height:100%;overflow:hidden;-webkit-font-smoothing:antialiased;}
+            .app-container{display:flex;flex-direction:column;height:100vh;}
+
+            /* ── TOPBAR ── */
+            .navbar{
+                background:linear-gradient(to right,var(--shell) 0%,var(--shell-2) 100%);
+                color:var(--shell-text);padding:0 2rem;height:var(--topbar-h);
+                display:flex;align-items:center;justify-content:space-between;
+                box-shadow:var(--shadow-lg);z-index:1000;flex-shrink:0;
+            }
+            .navbar-brand{display:flex;align-items:center;gap:0.25rem;font-size:1.1rem;font-weight:700;color:var(--shell-text);text-decoration:none;}
+            .navbar-logo{width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+            .navbar-logo img{width:50px;height:50px;object-fit:contain;filter:brightness(0) invert(1);}
+            .navbar-right{display:flex;align-items:center;gap:0.75rem;}
+            .conn-badge{display:inline-flex;align-items:center;gap:0.375rem;padding:0.28rem 0.75rem;border-radius:100px;font-size:0.72rem;font-weight:600;background:rgba(40,167,69,0.15);color:#4ade80;border:1px solid rgba(40,167,69,0.25);}
+            .conn-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:blink 2s ease-in-out infinite;}
+            @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.45;}}
+
+            /* ── UTC CLOCK ── */
+            .utc-clock{display:inline-flex;flex-direction:column;align-items:flex-end;gap:1px;padding:0.3rem 0.7rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;cursor:default;user-select:none;position:relative;overflow:hidden;transition:background 0.2s,border-color 0.2s;}
+            .utc-clock::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,153,0,0.04) 0%,transparent 60%);pointer-events:none;}
+            .utc-clock:hover{background:rgba(255,153,0,0.08);border-color:rgba(255,153,0,0.25);}
+            .utc-clock-time{font-family:var(--font-mono);font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.92);letter-spacing:0.5px;line-height:1;font-variant-numeric:tabular-nums;}
+            .utc-clock-label{font-family:var(--font-mono);font-size:0.55rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,153,0,0.75);line-height:1;}
+            .utc-colon{display:inline-block;animation:colon-blink 1s step-start infinite;}
+            @keyframes colon-blink{0%,100%{opacity:1;}50%{opacity:0.15;}}
+            @media(max-width:600px){.utc-clock{display:none;}}
+
+            /* ── SYSTEM UTILS BUTTON ── */
+            .sysutils-wrap{position:relative;}
+            .sysutils-btn{
+                display:flex;align-items:center;gap:0.45rem;
+                padding:0.3rem 0.65rem;
+                background:rgba(255,255,255,0.07);
+                border:1px solid rgba(255,255,255,0.13);
+                border-radius:8px;
+                cursor:pointer;
+                transition:background 0.15s,border-color 0.15s;
+                user-select:none;
+            }
+            .sysutils-btn:hover,.sysutils-btn.open{
+                background:rgba(255,153,0,0.12);
+                border-color:rgba(255,153,0,0.32);
+            }
+            .sysutils-btn-icon{display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+            .sysutils-btn-icon svg{width:13px;height:13px;stroke:rgba(255,255,255,0.7);transition:stroke 0.15s;}
+            .sysutils-btn:hover .sysutils-btn-icon svg,.sysutils-btn.open .sysutils-btn-icon svg{stroke:rgba(255,153,0,0.9);}
+            .sysutils-btn-label{font-size:0.75rem;font-weight:600;color:rgba(255,255,255,0.8);letter-spacing:0.1px;white-space:nowrap;}
+            .sysutils-status-dots{display:flex;align-items:center;gap:3px;}
+            .sysutils-dot{width:5px;height:5px;border-radius:50%;background:#64748b;transition:background 0.3s;}
+            .sysutils-dot.running{background:#4ade80;box-shadow:0 0 4px rgba(74,222,128,0.6);}
+            .sysutils-dot.stopped{background:#64748b;}
+            .sysutils-dot.crashed{background:#f87171;}
+            .sysutils-dot.loading{background:var(--accent);}
+            .sysutils-chevron{width:10px;height:10px;display:flex;align-items:center;justify-content:center;transition:transform 0.2s;opacity:0.5;}
+            .sysutils-btn.open .sysutils-chevron{transform:rotate(180deg);}
+            .sysutils-chevron svg{width:10px;height:10px;stroke:rgba(255,255,255,0.6);}
+
+            /* ── SYSTEM UTILS DROPDOWN PANEL ── */
+            .su-panel{
+                position:absolute;
+                top:calc(100% + 10px);
+                right:0;
+                width:430px;
+                background:#1e2d40;
+                border:1px solid rgba(255,255,255,0.13);
+                border-radius:12px;
+                overflow:hidden;
+                opacity:0;
+                transform:translateY(-8px) scale(0.97);
+                transform-origin:top right;
+                pointer-events:none;
+                transition:opacity 0.2s ease,transform 0.2s ease;
+                z-index:2000;
+                box-shadow:0 12px 40px rgba(0,0,0,0.45),0 2px 8px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.07);
+            }
+            .su-panel.visible{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+
+            .su-panel-header{
+                padding:0.65rem 0.9rem 0.6rem;
+                border-bottom:1px solid rgba(255,255,255,0.07);
+                display:flex;align-items:center;gap:0.5rem;
+            }
+            .su-panel-header-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 5px rgba(74,222,128,0.5);}
+            .su-panel-title{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.35);flex:1;}
+            .su-panel-count{font-size:0.62rem;font-family:var(--font-mono);color:rgba(255,255,255,0.25);}
+
+            .su-cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;}
+
+            /* individual service card */
+            .su-card{
+                background:rgba(255,255,255,0.05);
+                border:1px solid rgba(255,255,255,0.09);
+                border-radius:10px;
+                padding:11px 12px;
+                display:flex;flex-direction:column;gap:8px;
+                transition:border-color 0.15s,background 0.15s;
+            }
+            .su-card:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.16);}
+
+            .su-card-top{display:flex;align-items:center;gap:8px;}
+            .su-card-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+            .su-card-icon.green{background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.2);}
+            .su-card-icon.amber{background:rgba(255,153,0,0.1);border:1px solid rgba(255,153,0,0.22);}
+            .su-card-icon svg{width:14px;height:14px;}
+            .su-card-info{flex:1;min-width:0;}
+            .su-card-name{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+            .su-card-badge{display:inline-flex;align-items:center;gap:3px;margin-top:3px;font-size:0.58rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:2px 7px;border-radius:20px;}
+            .su-card-badge.running{background:rgba(74,222,128,0.14);color:#86efac;border:1px solid rgba(74,222,128,0.25);}
+            .su-card-badge.live{background:rgba(74,222,128,0.14);color:#86efac;border:1px solid rgba(74,222,128,0.25);}
+            .su-card-badge.stopped{background:rgba(100,116,139,0.2);color:#94a3b8;border:1px solid rgba(100,116,139,0.3);}
+            .su-card-badge.crashed{background:rgba(248,113,113,0.14);color:#fca5a5;border:1px solid rgba(248,113,113,0.25);}
+            .su-card-badge.loading{background:rgba(255,153,0,0.14);color:#fbbf24;border:1px solid rgba(255,153,0,0.25);}
+            .su-card-badge-dot{width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+            .su-card-desc{font-size:0.68rem;color:rgba(255,255,255,0.38);line-height:1.5;}
+
+            .su-card-meta{display:flex;align-items:center;justify-content:space-between;}
+            .su-card-port{font-size:0.62rem;font-family:var(--font-mono);color:rgba(255,255,255,0.3);background:rgba(255,255,255,0.05);padding:1px 6px;border-radius:4px;}
+            .su-card-pid{font-size:0.6rem;font-family:var(--font-mono);color:rgba(255,255,255,0.22);}
+
+            .su-card-actions{display:flex;gap:4px;}
+            .su-card-btn{
+                flex:1;height:25px;border-radius:6px;
+                border:1px solid rgba(255,255,255,0.1);
+                background:rgba(255,255,255,0.05);
+                color:rgba(255,255,255,0.55);
+                font-size:0.62rem;font-weight:600;letter-spacing:0.2px;
+                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;
+                transition:all 0.13s;font-family:var(--font);
+            }
+            .su-card-btn img{width:10px;height:10px;opacity:0.7;filter:invert(1);}
+            .su-card-btn:hover{background:rgba(255,255,255,0.11);color:rgba(255,255,255,0.9);}
+            .su-card-btn:disabled{opacity:0.25;cursor:not-allowed;pointer-events:none;}
+            .su-card-btn.restart:hover{background:rgba(255,153,0,0.12);border-color:rgba(255,153,0,0.35);color:#fbbf24;}
+            .su-card-btn.stop:hover{background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.3);color:#fca5a5;}
+            .su-card-btn.start:hover{background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.3);color:#86efac;}
+            .su-card-btn.rotate:hover{background:rgba(74,222,128,0.1);border-color:rgba(74,222,128,0.3);color:#86efac;}
+
+            /* ── USER PILL ── */
+            .user-menu{position:relative;}
+            .user-pill{display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0.6rem 0.3rem 0.3rem;background:rgba(255,255,255,0.08);border:1px solid var(--shell-border);border-radius:100px;cursor:pointer;transition:background 0.15s,border-color 0.15s;user-select:none;}
+            .user-pill:hover,.user-pill.open{background:rgba(255,153,0,0.15);border-color:rgba(255,153,0,0.3);}
+            .user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:white;flex-shrink:0;}
+            .user-name{font-size:0.82rem;font-weight:600;color:var(--shell-text);}
+            .user-chevron{width:14px;height:14px;display:flex;align-items:center;justify-content:center;transition:transform 0.2s;opacity:0.55;}
+            .user-pill.open .user-chevron{transform:rotate(180deg);opacity:0.85;}
+            .user-chevron svg{width:10px;height:10px;stroke:var(--shell-text);}
+            .user-dropdown{position:absolute;top:calc(100% + 8px);right:0;min-width:200px;background:#1e2d40;border:1px solid rgba(255,255,255,0.13);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.4),0 2px 8px rgba(0,0,0,0.2),inset 0 1px 0 rgba(255,255,255,0.08);overflow:hidden;opacity:0;transform:translateY(-6px) scale(0.97);transform-origin:top right;pointer-events:none;transition:opacity 0.18s ease,transform 0.18s ease;z-index:2000;}
+            .user-dropdown.visible{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+            .dropdown-header{padding:0.85rem 1rem 0.75rem;border-bottom:1px solid rgba(255,255,255,0.08);}
+            .dropdown-header-name{font-size:0.84rem;font-weight:700;color:rgba(255,255,255,0.95);margin-bottom:2px;}
+            .dropdown-header-role{font-size:0.68rem;color:rgba(255,255,255,0.35);font-family:var(--font-mono);text-transform:uppercase;letter-spacing:0.5px;}
+            .dropdown-item{display:flex;align-items:center;gap:0.6rem;padding:0.6rem 1rem;font-size:0.82rem;font-weight:500;color:rgba(255,255,255,0.7);cursor:pointer;transition:background 0.12s,color 0.12s;border:none;background:none;width:100%;text-align:left;text-decoration:none;}
+            .dropdown-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.95);}
+            .dropdown-item svg{width:14px;height:14px;flex-shrink:0;opacity:0.6;transition:opacity 0.12s;}
+            .dropdown-item:hover svg{opacity:1;}
+            .dropdown-item.logout:hover{background:rgba(220,53,69,0.12);color:#f87171;}
+            .dropdown-item.logout:hover svg{opacity:1;stroke:#f87171;}
+
+            /* ── MAIN WRAPPER ── */
+            .main-wrapper{display:flex;flex:1;overflow:hidden;}
+
+            /* ── SIDEBAR ── */
+            .sidebar{width:var(--sidebar-w);background:var(--sb-bg);border-right:1px solid var(--sb-border);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;transition:width 0.3s ease;flex-shrink:0;z-index:100;}
+            .sidebar::-webkit-scrollbar{width:4px;}
+            .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px;}
+            .sidebar.collapsed{width:60px;}
+            .sidebar-header{padding:1rem;border-bottom:1px solid var(--sb-border);display:flex;align-items:center;justify-content:space-between;min-height:52px;flex-shrink:0;}
+            .sidebar-title{font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8fa8c8;white-space:nowrap;overflow:hidden;transition:opacity 0.2s;}
+            .sidebar.collapsed .sidebar-title{opacity:0;pointer-events:none;}
+            .sidebar-toggle{background:none;border:none;cursor:pointer;color:var(--sb-text-2);padding:0.25rem;display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm);transition:color 0.15s,background 0.15s;flex-shrink:0;}
+            .sidebar-toggle:hover{color:var(--accent);background:var(--sb-hover);}
+            .sidebar-toggle img{width:18px;height:18px;filter:invert(1);opacity:0.6;transition:opacity 0.15s;}
+            .sidebar-toggle:hover img{opacity:1;filter:invert(1) sepia(1) saturate(5) hue-rotate(5deg);}
+            .sidebar-nav{padding:0.75rem 0;flex:1;}
+            .nav-section{margin-bottom:0.5rem;}
+            .nav-section-title{padding:0.6rem 1rem 0.3rem;font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#8fa8c8;white-space:nowrap;overflow:hidden;transition:opacity 0.2s;}
+            .sidebar.collapsed .nav-section-title{opacity:0;pointer-events:none;}
+            .nav-item{padding:0.65rem 1rem;cursor:pointer;display:flex;align-items:center;gap:0.75rem;color:var(--sb-text-2);font-size:0.84rem;font-weight:500;text-decoration:none;border-left:3px solid transparent;transition:all 0.15s;white-space:nowrap;overflow:hidden;position:relative;}
+            .nav-item:hover{background:var(--sb-hover);border-left-color:var(--accent);color:var(--accent);}
+            .nav-item.active{background:var(--sb-active-bg);border-left-color:var(--accent);color:var(--accent);font-weight:600;border:1px solid var(--sb-active-border);border-left:3px solid var(--accent);}
+            .nav-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+            .nav-icon img{width:18px;height:18px;object-fit:contain;filter:invert(1);opacity:0.55;transition:opacity 0.15s;}
+            .nav-item:hover .nav-icon img,.nav-item.active .nav-icon img{opacity:1;filter:invert(1) sepia(1) saturate(5) hue-rotate(5deg);}
+            .nav-label{flex:1;transition:opacity 0.2s;overflow:hidden;text-overflow:ellipsis;}
+            .sidebar.collapsed .nav-label{opacity:0;pointer-events:none;width:0;}
+
+            /* ── CONTENT ── */
+            .content-wrapper{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+            .content-header{padding:1rem 1.75rem;border-bottom:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:var(--shadow-xs);}
+            .ch-title{font-size:1rem;font-weight:700;color:var(--text);letter-spacing:-.2px;}
+            .ch-breadcrumb{font-size:.72rem;color:var(--text-4);margin-top:2px;}
+            .ch-breadcrumb .sep{margin:0 .3rem;}
+            .ch-breadcrumb .cur{color:var(--text-3);}
+            .content-area{flex:1;overflow:hidden;background:var(--bg);position:relative;}
+            .page{display:none;width:100%;height:100%;}
+            .page.active{display:block;animation:fade-in .18s ease;}
+            @keyframes fade-in{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+            .page iframe{width:100%;height:100%;border:none;display:block;}
+
+            /* ── SECTION SWITCH LOADER ── */
+            #section-loader{position:absolute;inset:0;z-index:500;background:rgba(245,246,248,0.85);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;opacity:0;pointer-events:none;transition:opacity 0.2s ease;}
+            #section-loader.active{opacity:1;pointer-events:all;}
+            #section-loader-canvas{width:80px;height:80px;flex-shrink:0;}
+            #section-loader-canvas canvas{display:block;}
+            .section-loader-label{font-size:11px;font-family:var(--font-mono);font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:2.5px;animation:sl-pulse 1.1s ease-in-out infinite;}
+            #section-progress{position:absolute;top:0;left:0;height:2px;width:0%;background:linear-gradient(90deg,var(--accent),#ffcc55);border-radius:0 2px 2px 0;z-index:501;transition:width 0.3s ease;box-shadow:0 0 8px rgba(255,153,0,0.5);}
+            @keyframes sl-pulse{0%,100%{opacity:0.35;}50%{opacity:1;}}
+
+            /* ── LOGOUT MODAL ── */
+            .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);z-index:9000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.18s ease;}
+            .modal-backdrop.visible{opacity:1;pointer-events:auto;}
+            .modal-box{background:#1e2d40;border:1px solid rgba(255,255,255,0.13);border-radius:14px;padding:2rem 1.75rem 1.5rem;width:320px;box-shadow:0 16px 48px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);transform:translateY(12px) scale(0.97);transition:transform 0.2s ease;text-align:center;}
+            .modal-backdrop.visible .modal-box{transform:translateY(0) scale(1);}
+            .modal-icon{width:44px;height:44px;border-radius:50%;background:rgba(220,53,69,0.15);border:1px solid rgba(220,53,69,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;}
+            .modal-icon svg{width:20px;height:20px;stroke:#f87171;}
+            .modal-title{font-size:0.95rem;font-weight:700;color:rgba(255,255,255,0.95);margin-bottom:0.4rem;}
+            .modal-desc{font-size:0.78rem;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:1.5rem;}
+            .modal-actions{display:flex;gap:0.6rem;}
+            .modal-btn{flex:1;height:36px;border-radius:8px;border:1px solid transparent;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all 0.15s;}
+            .modal-btn.cancel{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);}
+            .modal-btn.cancel:hover{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.95);}
+            .modal-btn.confirm{background:rgba(220,53,69,0.18);border-color:rgba(220,53,69,0.35);color:#f87171;}
+            .modal-btn.confirm:hover{background:rgba(220,53,69,0.28);border-color:rgba(220,53,69,0.55);color:#fca5a5;box-shadow:0 0 12px rgba(220,53,69,0.2);}
+
+            /* ── MOBILE ── */
+            .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99;backdrop-filter:blur(2px);}
+            @media(max-width:768px){
+                .sidebar{position:fixed;top:var(--topbar-h);left:0;height:calc(100vh - var(--topbar-h));transform:translateX(-100%);transition:transform .3s ease;width:var(--sidebar-w) !important;z-index:200;}
+                .sidebar.open{transform:translateX(0);}
+                .sidebar-overlay.show{display:block;}
+                .navbar-brand span{display:none;}
+                .su-panel{width:calc(100vw - 2rem);right:-0.5rem;}
+                .sysutils-btn-label{display:none;}
+            }
+            @media(max-width:480px){.conn-badge{display:none;}.user-name{display:none;}}
+        </style>
+    </head>
+    <body>
+        <div class="app-container">
+
+            <!-- NAVBAR -->
+            <nav class="navbar">
+                <div class="navbar-brand">
+                    <div class="navbar-logo">
+                        <img src="/static/icons/logo.svg" alt="Logo" />
+                    </div>
+                    <span>TornadoVPN Admin Console</span>
+                </div>
+
+                <div class="navbar-right">
+                    <div class="conn-badge">
+                        <span class="conn-dot"></span>
+                        <span>Connected</span>
+                    </div>
+
+                    <!-- UTC CLOCK -->
+                    <div class="utc-clock" id="utcClock" title="Coordinated Universal Time">
+                        <span class="utc-clock-time" id="utcTime">00<span class="utc-colon">:</span>00<span class="utc-colon">:</span>00</span>
+                        <span class="utc-clock-label">UTC</span>
+                    </div>
+
+                    <!-- ── SYSTEM UTILS BUTTON + DROPDOWN ── -->
+                    <div class="sysutils-wrap" id="sysutilsWrap">
+                        <div class="sysutils-btn" id="sysutilsBtn" title="System Utils">
+                            <span class="sysutils-btn-icon">
+                                <svg viewBox="0 0 14 14" fill="none" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="7" cy="7" r="2.2"/>
+                                    <path d="M7 1.5V3M7 11v1.5M1.5 7H3M11 7h1.5M3.1 3.1l1 1M9.9 9.9l1 1M3.1 10.9l1-1M9.9 4.1l1-1"/>
+                                </svg>
+                            </span>
+                            <span class="sysutils-btn-label">System Utils</span>
+                            <div class="sysutils-status-dots">
+                                <span class="sysutils-dot loading" id="su-dot-api"></span>
+                                <span class="sysutils-dot loading" id="su-dot-kr"></span>
+                            </div>
+                            <span class="sysutils-chevron">
+                                <svg viewBox="0 0 10 6" fill="none" stroke-width="1.7" stroke-linecap="round"><path d="M1 1l4 4 4-4"/></svg>
+                            </span>
+                        </div>
+
+                        <!-- DROPDOWN PANEL -->
+                        <div class="su-panel" id="suPanel">
+                            <div class="su-panel-header">
+                                <span class="su-panel-header-dot" id="su-header-dot"></span>
+                                <span class="su-panel-title">Internal Services</span>
+                                <span class="su-panel-count" id="su-panel-count">checking…</span>
+                            </div>
+
+                            <div class="su-cards-grid">
+                                <!-- api_internal card -->
+                                <div class="su-card">
+                                    <div class="su-card-top">
+                                        <div class="su-card-icon green">
+                                            <svg viewBox="0 0 14 14" fill="none" stroke="#4ade80" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="1.5" y="3" width="11" height="8" rx="1.5"/>
+                                                <path d="M4 7h6M4 9.5h3.5"/>
+                                            </svg>
+                                        </div>
+                                        <div class="su-card-info">
+                                            <div class="su-card-name">CLIENT GATEWAY</div>
+                                            <div class="su-card-badge loading" id="badge-api_internal">
+                                                <span class="su-card-badge-dot"></span>
+                                                <span id="badge-api-text">…</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="su-card-desc">Handles auth, routing &amp; VPN session management. Exposes REST endpoints for all Client operations.</div>
+                                    <div class="su-card-meta">
+                                        <span class="su-card-port">:8080</span>
+                                        <span class="su-card-pid" id="pid-api_internal">PID —</span>
+                                    </div>
+                                    <div class="su-card-actions">
+                                        <button class="su-card-btn restart" data-svc="api_internal" data-action="restart">
+                                            <img src="/static/icons/restart.svg" alt=""/> Restart
+                                        </button>
+                                        <button class="su-card-btn stop" data-svc="api_internal" data-action="stop">
+                                            <img src="/static/icons/stop.svg" alt=""/> Stop
+                                        </button>
+                                        <button class="su-card-btn start" data-svc="api_internal" data-action="start">
+                                            <img src="/static/icons/play.svg" alt=""/> Start
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- key_rotator card -->
+                                <div class="su-card">
+                                    <div class="su-card-top">
+                                        <div class="su-card-icon amber">
+                                            <svg viewBox="0 0 14 14" fill="none" stroke="#ff9900" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M7 2v2M7 10v2M2 7h2M10 7h2"/>
+                                                <circle cx="7" cy="7" r="2"/>
+                                            </svg>
+                                        </div>
+                                        <div class="su-card-info">
+                                            <div class="su-card-name">KEY ROTATE</div>
+                                            <div class="su-card-badge loading" id="badge-key_rotator">
+                                                <span class="su-card-badge-dot"></span>
+                                                <span id="badge-kr-text">…</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="su-card-desc">Rotates WireGuard keypairs &amp; Admin Secret on a fixed schedule to ensure forward secrecy across all active tunnels.</div>
+                                    <div class="su-card-meta">
+                                        <span class="su-card-port" id="kr-age">age —</span>
+                                        <span class="su-card-pid" id="kr-interval">— h cycle</span>
+                                    </div>
+                                    <div class="su-card-actions">
+                                        <button class="su-card-btn rotate" id="kr-rotate-btn">
+                                            <img src="/static/icons/restart.svg" alt=""/> Rotate Now
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- USER PILL -->
+                    <div class="user-menu" id="userMenu">
+                        <div class="user-pill" id="userPill">
+                            <div class="user-avatar" id="userAvatar">A</div>
+                            <span class="user-name" id="userNameLabel">Admin</span>
+                            <span class="user-chevron">
+                                <svg viewBox="0 0 10 6" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 1l4 4 4-4"/></svg>
+                            </span>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <div class="dropdown-header">
+                                <div class="dropdown-header-name" id="dropdownName">Admin</div>
+                                <div class="dropdown-header-role">Administrator</div>
+                            </div>
+                            <button class="dropdown-item logout" id="logoutBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                Sign out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- MAIN -->
+            <div class="main-wrapper">
+                <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+                <!-- SIDEBAR (clean — no footer cards) -->
+                <aside class="sidebar" id="sidebar">
+                    <div class="sidebar-header">
+                        <span class="sidebar-title">Menu</span>
+                        <button class="sidebar-toggle" id="sidebarToggle" title="Toggle sidebar">
+                            <img src="/static/icons/menu.svg" alt="menu" />
+                        </button>
+                    </div>
+                    <nav class="sidebar-nav">
+                        <div class="nav-section">
+                            <div class="nav-section-title">Dashboard</div>
+                            <a class="nav-item active" data-page="dashboard" data-label="Dashboard Overview" data-crumb='Home › <span class="cur">Dashboard</span>'>
+                                <span class="nav-icon"><img src="/static/icons/dashboard_2.svg" alt="Overview"/></span>
+                                <span class="nav-label">Overview</span>
+                            </a>
+                            <a class="nav-item" data-page="analytics" data-label="Micro Services" data-crumb='Home › <span class="cur">Micro Services</span>'>
+                                <span class="nav-icon"><img src="/static/icons/micro.svg" alt="Micro Services"/></span>
+                                <span class="nav-label">Micro Services</span>
+                            </a>
+                            <a class="nav-item" data-page="sys_analytics" data-label="System Services" data-crumb='Home › <span class="cur">System Services</span>'>
+                                <span class="nav-icon"><img src="/static/icons/os_services.svg" alt="System Services"/></span>
+                                <span class="nav-label">System Services</span>
+                            </a>
+                        </div>
+                        <div class="nav-section">
+                            <div class="nav-section-title">Management</div>
+                            <a class="nav-item" data-page="sessions" data-label="VPN Sessions" data-crumb='Home › Management › <span class="cur">Sessions</span>'>
+                                <span class="nav-icon"><img src="/static/icons/plug.svg" alt="Sessions"/></span>
+                                <span class="nav-label">Sessions</span>
+                            </a>
+                            <a class="nav-item" data-page="users" data-label="User Management" data-crumb='Home › Management › <span class="cur">Users</span>'>
+                                <span class="nav-icon"><img src="/static/icons/users.svg" alt="Users"/></span>
+                                <span class="nav-label">Users</span>
+                            </a>
+                        </div>
+                        <div class="nav-section">
+                            <div class="nav-section-title">System</div>
+                            <a class="nav-item" data-page="settings" data-label="Tor Management" data-crumb='Home › System › <span class="cur">Tor</span>'>
+                                <span class="nav-icon"><img src="/static/icons/tor_manage.svg" alt="Tor Management"/></span>
+                                <span class="nav-label">Tor Management</span>
+                            </a>
+                            <a class="nav-item" data-page="logs" data-label="System Logs" data-crumb='Home › System › <span class="cur">Logs</span>'>
+                                <span class="nav-icon"><img src="/static/icons/log-manage.svg" alt="Logs"/></span>
+                                <span class="nav-label">Logs</span>
+                            </a>
+                        </div>
+                    </nav>
+                </aside>
+
+                <!-- CONTENT -->
+                <div class="content-wrapper">
+                    <div class="content-header">
+                        <div>
+                            <div class="ch-title" id="pageTitle">Dashboard Overview</div>
+                            <div class="ch-breadcrumb" id="pageBreadcrumb">Home <span class="sep">›</span> <span class="cur">Dashboard</span></div>
+                        </div>
+                    </div>
+                    <div class="content-area">
+                        <div id="section-progress"></div>
+                        <div id="section-loader">
+                            <div id="section-loader-canvas"></div>
+                            <div class="section-loader-label" id="section-loader-label">Loading…</div>
+                        </div>
+
+                        <div id="dashboard"     class="page active"><iframe src="/dashboard-page"></iframe></div>
+                        <div id="analytics"     class="page"><iframe src="/analytics-page"></iframe></div>
+                        <div id="sys_analytics" class="page"><iframe src="/sys-services-page"></iframe></div>
+                        <div id="sessions"      class="page"><iframe src="/sessions-page"></iframe></div>
+                        <div id="users"         class="page"><iframe src="/users-page"></iframe></div>
+                        <div id="settings"      class="page"><iframe src="/tor-manage"></iframe></div>
+                        <div id="logs"          class="page"><iframe src="/logs-page"></iframe></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOGOUT MODAL -->
+        <div class="modal-backdrop" id="logoutModal">
+            <div class="modal-box">
+                <div class="modal-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </div>
+                <div class="modal-title">Sign out?</div>
+                <div class="modal-desc">You'll be returned to the login screen. Any unsaved changes will be lost.</div>
+                <div class="modal-actions">
+                    <button class="modal-btn cancel" id="logoutCancel">Cancel</button>
+                    <button class="modal-btn confirm" id="logoutConfirm">Sign out</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        // ── UTC CLOCK ─────────────────────────────────────────────
+        (function () {
+            const timeEl = document.getElementById('utcTime');
+            function pad(n) { return String(n).padStart(2, '0'); }
+            function tick() {
+                const now = new Date();
+                timeEl.innerHTML =
+                    pad(now.getUTCHours()) +
+                    '<span class="utc-colon">:</span>' +
+                    pad(now.getUTCMinutes()) +
+                    '<span class="utc-colon">:</span>' +
+                    pad(now.getUTCSeconds());
+            }
+            tick();
+            const msUntilNextSecond = 1000 - (Date.now() % 1000);
+            setTimeout(() => { tick(); setInterval(tick, 1000); }, msUntilNextSecond);
+        })();
+
+        // ── TORNADO SECTION LOADER ─────────────────────────────────
+        function createTornado({ container, size=80, color=0x0f172a, speed=0.1, tiltX=0.15, tubeRadius=0.2, turns=4.5 } = {}) {
+            const scene    = new THREE.Scene();
+            const camera   = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+            camera.position.z = 18;
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(size, size);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+            class TornadoCurve extends THREE.Curve {
+                getPoint(t, opt = new THREE.Vector3()) {
+                    const h = 12, angle = t * Math.PI * 2 * turns, r = 0.5 + t * 5;
+                    return opt.set(Math.cos(angle) * r, t * h - h / 2, Math.sin(angle) * r);
+                }
+            }
+            const path  = new TornadoCurve();
+            const mat   = new THREE.MeshBasicMaterial({ color });
+            const tube  = new THREE.Mesh(new THREE.TubeGeometry(path, 150, tubeRadius, 16, false), mat);
+            const group = new THREE.Group();
+            group.add(tube);
+            const sGeo = new THREE.SphereGeometry(tubeRadius, 16, 16);
+            const bc = new THREE.Mesh(sGeo, mat); bc.position.copy(path.getPoint(0));
+            const tc = new THREE.Mesh(sGeo, mat); tc.position.copy(path.getPoint(1));
+            group.add(bc, tc);
+            group.rotation.x = tiltX;
+            scene.add(group);
+            let running = true;
+            (function loop() {
+                if (!running) return;
+                requestAnimationFrame(loop);
+                group.rotation.y += speed;
+                renderer.render(scene, camera);
+            })();
+            return { stop: () => { running = false; } };
+        }
+
+        createTornado({ container: document.getElementById('section-loader-canvas'), size: 80, color: 0x1a2332, speed: 0.13, tubeRadius: 0.2 });
+
+        const sectionLoader   = document.getElementById('section-loader');
+        const sectionProgress = document.getElementById('section-progress');
+        const sectionLabel    = document.getElementById('section-loader-label');
+        let loaderTimer = null;
+
+        function showSectionLoader(label) {
+            clearTimeout(loaderTimer);
+            sectionLabel.textContent = label || 'Loading…';
+            sectionLoader.classList.add('active');
+            sectionProgress.style.transition = 'none';
+            sectionProgress.style.width = '0%';
+            requestAnimationFrame(() => {
+                sectionProgress.style.transition = 'width 0.6s ease';
+                sectionProgress.style.width = '75%';
+            });
+        }
+        function hideSectionLoader() {
+            sectionProgress.style.transition = 'width 0.2s ease';
+            sectionProgress.style.width = '100%';
+            loaderTimer = setTimeout(() => {
+                sectionLoader.classList.remove('active');
+                setTimeout(() => { sectionProgress.style.transition = 'none'; sectionProgress.style.width = '0%'; }, 300);
+            }, 200);
+        }
+
+        // ── NAVIGATION ─────────────────────────────────────────────
+        document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+            item.addEventListener('click', e => {
+                e.preventDefault();
+                const name  = item.dataset.page;
+                const label = item.dataset.label || 'Loading…';
+                const crumb = item.dataset.crumb  || '';
+                if (item.classList.contains('active')) return;
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                item.classList.add('active');
+                document.getElementById('pageTitle').textContent = label;
+                document.getElementById('pageBreadcrumb').innerHTML = crumb.replace(/›/g, '<span class="sep">›</span>');
+                showSectionLoader(label);
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                const targetPage = document.getElementById(name);
+                if (targetPage) {
+                    targetPage.classList.add('active');
+                    const iframe = targetPage.querySelector('iframe');
+                    if (iframe) {
+                        if (iframe.dataset.loaded) { setTimeout(hideSectionLoader, 300); }
+                        else {
+                            const onLoad = () => { iframe.dataset.loaded = '1'; iframe.removeEventListener('load', onLoad); hideSectionLoader(); };
+                            iframe.addEventListener('load', onLoad);
+                            setTimeout(hideSectionLoader, 8000);
+                        }
+                    } else { setTimeout(hideSectionLoader, 400); }
+                }
+                if (window.innerWidth < 768) closeMobileSidebar();
+            });
+        });
+
+        document.querySelectorAll('.page iframe').forEach(iframe => {
+            iframe.addEventListener('load', () => { iframe.dataset.loaded = '1'; }, { once: true });
+        });
+
+        // ── SIDEBAR TOGGLE ──────────────────────────────────────────
+        const sidebar        = document.getElementById('sidebar');
+        const sidebarToggle  = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        sidebarToggle.addEventListener('click', () => {
+            if (window.innerWidth < 768) {
+                sidebar.classList.toggle('open');
+                sidebarOverlay.classList.toggle('show', sidebar.classList.contains('open'));
+            } else {
+                sidebar.classList.toggle('collapsed');
+            }
+        });
+        sidebarOverlay.addEventListener('click', () => closeMobileSidebar());
+        function closeMobileSidebar() { sidebar.classList.remove('open'); sidebarOverlay.classList.remove('show'); }
+        window.addEventListener('resize', () => { if (window.innerWidth >= 768) { sidebar.classList.remove('open'); sidebarOverlay.classList.remove('show'); } });
+
+        // ── SYSTEM UTILS DROPDOWN ───────────────────────────────────
+        const sysutilsBtn  = document.getElementById('sysutilsBtn');
+        const suPanel      = document.getElementById('suPanel');
+        const sysutilsWrap = document.getElementById('sysutilsWrap');
+
+        sysutilsBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            const isOpen = suPanel.classList.toggle('visible');
+            sysutilsBtn.classList.toggle('open', isOpen);
+            // close user dropdown if open
+            userDropdown.classList.remove('visible');
+            userPill.classList.remove('open');
+        });
+
+        document.addEventListener('click', e => {
+            if (!sysutilsWrap.contains(e.target)) {
+                suPanel.classList.remove('visible');
+                sysutilsBtn.classList.remove('open');
+            }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                suPanel.classList.remove('visible');
+                sysutilsBtn.classList.remove('open');
+            }
+        });
+
+        // ── USER DROPDOWN ───────────────────────────────────────────
+        const userPill     = document.getElementById('userPill');
+        const userDropdown = document.getElementById('userDropdown');
+        const userMenu     = document.getElementById('userMenu');
+        const openDD  = () => { userPill.classList.add('open');    userDropdown.classList.add('visible'); };
+        const closeDD = () => { userPill.classList.remove('open'); userDropdown.classList.remove('visible'); };
+        userPill.addEventListener('click', e => {
+            e.stopPropagation();
+            userDropdown.classList.contains('visible') ? closeDD() : openDD();
+            // close sysutils if open
+            suPanel.classList.remove('visible');
+            sysutilsBtn.classList.remove('open');
+        });
+        document.addEventListener('click', e => { if (!userMenu.contains(e.target)) closeDD(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDD(); });
+
+        // ── FETCH CURRENT USER ──────────────────────────────────────
+        (async () => {
+            try {
+                const res  = await fetch('/auth/me', { credentials: 'include' });
+                if (!res.ok) return;
+                const data = await res.json();
+                const name = data.username || 'Admin';
+                document.getElementById('userAvatar').textContent    = name.charAt(0).toUpperCase();
+                document.getElementById('userNameLabel').textContent = name;
+                document.getElementById('dropdownName').textContent  = name;
+            } catch {}
+        })();
+
+        // ── LOGOUT MODAL ────────────────────────────────────────────
+        const logoutModal   = document.getElementById('logoutModal');
+        const logoutBtn     = document.getElementById('logoutBtn');
+        const logoutCancel  = document.getElementById('logoutCancel');
+        const logoutConfirm = document.getElementById('logoutConfirm');
+        logoutBtn.addEventListener('click',    () => { logoutModal.classList.add('visible'); closeDD(); });
+        logoutCancel.addEventListener('click', () => logoutModal.classList.remove('visible'));
+        logoutModal.addEventListener('click',  e  => { if (e.target === logoutModal) logoutModal.classList.remove('visible'); });
+        document.addEventListener('keydown',   e  => { if (e.key === 'Escape') logoutModal.classList.remove('visible'); });
+        logoutConfirm.addEventListener('click', async () => {
+            logoutConfirm.textContent = 'Signing out…';
+            logoutConfirm.disabled = true;
+            try { await fetch('/auth/logout', { method: 'POST', credentials: 'include' }); } catch {}
+            window.location.href = '/login';
+        });
+
+        // ── API_INTERNAL SERVICE ────────────────────────────────────
+        const API_BASE = '/apps';
+        const POLL_MS  = 15000;
+        const SVC      = 'api_internal';
+
+        function applyApiState(state, pid) {
+            const badge  = document.getElementById('badge-api_internal');
+            const text   = document.getElementById('badge-api-text');
+            const pidEl  = document.getElementById('pid-api_internal');
+            const suDot  = document.getElementById('su-dot-api');
+
+            if (badge) { badge.className = `su-card-badge ${state}`; }
+            if (text)  { text.textContent = state === 'loading' ? '…' : state; }
+            if (pidEl) { pidEl.textContent = pid ? `PID ${pid}` : 'PID —'; }
+            if (suDot) { suDot.className = `sysutils-dot ${state}`; }
+            updatePanelHeader();
+        }
+
+        function setApiActionsBusy(busy) {
+            document.querySelectorAll(`[data-svc="${SVC}"]`).forEach(btn => { btn.disabled = busy; });
+        }
+
+        async function fetchApiStatus() {
+            try {
+                const res  = await fetch(`${API_BASE}/${SVC}/status`);
+                if (!res.ok) throw new Error();
+                const json = await res.json();
+                const svc  = (json.data || {})[SVC];
+                if (svc) applyApiState(svc.state, svc.pid);
+            } catch { applyApiState('stopped', null); }
+        }
+
+        async function doApiAction(action) {
+            setApiActionsBusy(true);
+            applyApiState('loading', null);
+            try { await fetch(`${API_BASE}/${SVC}/${action}`, { method: 'POST' }); } catch {}
+            await new Promise(r => setTimeout(r, action === 'restart' ? 3500 : 900));
+            await fetchApiStatus();
+            setApiActionsBusy(false);
+        }
+
+        document.querySelectorAll('.su-card-btn[data-action]').forEach(btn => {
+            btn.addEventListener('click', () => doApiAction(btn.dataset.action));
+        });
+
+        fetchApiStatus();
+        setInterval(fetchApiStatus, POLL_MS);
+
+        // ── KEY ROTATOR SERVICE ─────────────────────────────────────
+        const KR_POLL_MS = 20000;
+
+        function applyKrState(alive, data) {
+            const badge  = document.getElementById('badge-key_rotator');
+            const text   = document.getElementById('badge-kr-text');
+            const ageEl  = document.getElementById('kr-age');
+            const intEl  = document.getElementById('kr-interval');
+            const suDot  = document.getElementById('su-dot-kr');
+
+            if (!alive) {
+                if (badge)  { badge.className  = 'su-card-badge stopped'; }
+                if (text)   { text.textContent  = 'down'; }
+                if (ageEl)  { ageEl.textContent = 'age —'; }
+                if (intEl)  { intEl.textContent = '— h cycle'; }
+                if (suDot)  { suDot.className   = 'sysutils-dot stopped'; }
+                updatePanelHeader();
+                return;
+            }
+            if (badge) { badge.className  = 'su-card-badge live'; }
+            if (text)  { text.textContent  = 'live'; }
+            if (suDot) { suDot.className   = 'sysutils-dot running'; }
+            if (data) {
+                const ages   = data.key_ages || {};
+                const sample = ages.access_private || '—';
+                if (ageEl) ageEl.textContent = `key ${sample}`;
+                if (intEl) intEl.textContent = data.interval_hours != null ? `${data.interval_hours}h cycle` : '— h cycle';
+            }
+            updatePanelHeader();
+        }
+
+        function krSetBusy(busy) {
+            document.getElementById('kr-rotate-btn').disabled = busy;
+        }
+
+        async function krFetchStatus() {
+            try {
+                const res = await fetch('/api/key-rotator/health');
+                if (!res.ok) throw new Error();
+                const res2 = await fetch('/api/key-rotator/status');
+                if (!res2.ok) throw new Error();
+                const json = await res2.json();
+                applyKrState(true, json.data || json);
+            } catch { applyKrState(false, null); }
+        }
+
+        document.getElementById('kr-rotate-btn').addEventListener('click', async () => {
+            krSetBusy(true);
+            const badge = document.getElementById('badge-key_rotator');
+            const text  = document.getElementById('badge-kr-text');
+            if (badge) badge.className = 'su-card-badge loading';
+            if (text)  text.textContent = '…';
+            document.getElementById('su-dot-kr').className = 'sysutils-dot loading';
+            try { await fetch('/api/key-rotator/rotate', { method: 'POST' }); } catch {}
+            await new Promise(r => setTimeout(r, 1200));
+            await krFetchStatus();
+            krSetBusy(false);
+        });
+
+        krFetchStatus();
+        setInterval(krFetchStatus, KR_POLL_MS);
+
+        // ── PANEL HEADER SUMMARY ────────────────────────────────────
+        function updatePanelHeader() {
+            const apiDot  = document.getElementById('su-dot-api');
+            const krDot   = document.getElementById('su-dot-kr');
+            const hdrDot  = document.getElementById('su-header-dot');
+            const countEl = document.getElementById('su-panel-count');
+
+            const states = [
+                apiDot  ? apiDot.className  : '',
+                krDot   ? krDot.className   : ''
+            ];
+            const runningCount = states.filter(s => s.includes('running')).length;
+            const allRunning   = runningCount === 2;
+            const anyDown      = states.some(s => s.includes('stopped') || s.includes('crashed'));
+
+            if (hdrDot) {
+                hdrDot.style.background   = allRunning ? '#4ade80' : anyDown ? '#f87171' : '#ff9900';
+                hdrDot.style.boxShadow    = allRunning
+                    ? '0 0 5px rgba(74,222,128,0.5)'
+                    : anyDown
+                    ? '0 0 5px rgba(248,113,113,0.5)'
+                    : '0 0 5px rgba(255,153,0,0.4)';
+            }
+            if (countEl) {
+                countEl.textContent = `${runningCount} / 2 running`;
+            }
+        }
+        </script>
+    </body>
+</html>
