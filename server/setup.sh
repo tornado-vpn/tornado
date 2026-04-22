@@ -519,6 +519,26 @@ else
 fi
 
 # ─────────────────────────────────────────────
+# DNSMASQ SETUP
+# ─────────────────────────────────────────────
+echo "🌐 Installing and configuring dnsmasq..."
+# Using your cross-distro package wrapper instead of hardcoded apt
+pkg_install dnsmasq
+
+echo "⚙️ Configuring dnsmasq for VPN DNS..."
+sudo tee /etc/dnsmasq.d/tornado-vpn.conf > /dev/null <<'DNSCONF'
+interface=wg0
+listen-address=10.8.0.1
+bind-interfaces
+server=1.1.1.1
+server=8.8.8.8
+DNSCONF
+
+# Enable and start/restart the service
+sudo systemctl enable dnsmasq
+sudo systemctl restart dnsmasq
+
+# ─────────────────────────────────────────────
 # PERMISSIONS
 # ─────────────────────────────────────────────
 echo "🔧 Applying permissions..."

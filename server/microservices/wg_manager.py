@@ -116,9 +116,6 @@ def _wg1_conf(private_key: str) -> str:
 # Pool      : 10.9.0.0/24  (vpn:ipam:pool:tor in Redis)
 # Managed by: wg_manager via `wg set {WG_IFACE_PROXY} peer <key> allowed-ips <tor_ip>/32`
 #
-# NOTE: wg_manager only calls `wg set` — it never touches iptables.
-#       All firewall/routing rules live here in PostUp/PostDown exclusively.
-#
 [Interface]
 Address    = 10.9.0.1/24
 ListenPort = 51821
@@ -134,13 +131,16 @@ PostUp = iptables -t nat -A PREROUTING -i %i -p udp --dport 53 -j REDIRECT --to-
 # Redirect all TCP traffic to Tor's TransPort (Matches JSON config: 9040)
 PostUp = iptables -t nat -A PREROUTING -i %i -p tcp -j REDIRECT --to-ports 9040
 
+# -- Block QUIC/WebRTC Leaks --
+# Instantly reject all other UDP traffic trying to route through the server.
+# This forces browsers to immediately fall back to TCP for web traffic.
+PostUp = iptables -A FORWARD -i %i -p udp -j REJECT --reject-with icmp-port-unreachable
+
 # Cleanup on shutdown
 PostDown = sysctl -w net.ipv4.conf.%i.route_localnet=0
 PostDown = iptables -t nat -D PREROUTING -i %i -p udp --dport 53 -j REDIRECT --to-ports 9053
 PostDown = iptables -t nat -D PREROUTING -i %i -p tcp -j REDIRECT --to-ports 9040
-
-
-# Peers are added dynamically by wg_manager — do NOT add [Peer] blocks here.
+PostDown = iptables -D FORWARD -i %i -p udp -j REJECT --reject-with icmp-port-unreachable || true
 """
 
 
