@@ -524,27 +524,7 @@ else
     pkg_install $PKG_WIREGUARD
 fi
 
-# ─────────────────────────────────────────────
-# DNS (UNBOUND) SETUP
-# ─────────────────────────────────────────────
-echo "🌍 Installing Unbound DNS server..."
-pkg_install $PKG_UNBOUND
 
-echo "⚙️ Configuring Unbound..."
-# Ensure the unbound directory exists
-sudo mkdir -p /etc/unbound
-
-# Write the minimal config using tee (replaces manual nano)
-sudo tee /etc/unbound/unbound.conf > /dev/null <<'UNBOUNDCONF'
-server:
-    interface: 10.8.0.1
-    access-control: 10.8.0.0/24 allow
-    verbosity: 1
-UNBOUNDCONF
-
-echo "🚀 Enabling and starting Unbound..."
-sudo systemctl enable unbound
-sudo systemctl restart unbound
 
 
 # ─────────────────────────────────────────────
@@ -595,6 +575,28 @@ sudo systemctl start tornado
 # ─────────────────────────────────────────────
 echo "📊 Checking service status..."
 sudo systemctl status tornado --no-pager
+
+# ─────────────────────────────────────────────
+# DNS (UNBOUND) SETUP
+# ─────────────────────────────────────────────
+echo "🌍 Installing Unbound DNS server..."
+pkg_install $PKG_UNBOUND
+
+echo "⚙️ Configuring Unbound..."
+# Ensure the unbound directory exists
+sudo mkdir -p /etc/unbound
+
+# Write the minimal config using tee (replaces manual nano)
+sudo tee /etc/unbound/unbound.conf > /dev/null <<'UNBOUNDCONF'
+server:
+    interface: 10.8.0.1
+    access-control: 10.8.0.0/24 allow
+    verbosity: 1
+UNBOUNDCONF
+
+echo "🚀 Enabling and starting Unbound..."
+sudo systemctl enable unbound
+sudo systemctl restart unbound
 
 
 echo "✅ Setup Complete! (distro: $DISTRO_ID, family: $PKG_FAMILY)"
