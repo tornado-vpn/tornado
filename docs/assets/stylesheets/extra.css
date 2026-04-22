@@ -1,0 +1,11 @@
+/* Increase the size of the header logo */
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 2rem;  /* Default is around 1.2rem. Adjust this number until it looks right! */
+  width: auto;
+}
+
+/* Optional: Add a little padding if the larger logo touches the edges */
+.md-header__button.md-logo {
+  padding: 0.2rem; 
+}
