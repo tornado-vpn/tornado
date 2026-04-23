@@ -382,6 +382,7 @@ LOG_EXPORT_DIR=/var/log/tornado/exp/
 VPN_ENDPOINT_HOST=${VPN_ENDPOINT_HOST}
 VPN_ENDPOINT_PORT=51820
 TOR_ENDPOINT_PORT=51821
+OUTBOUND_IFACE=${DEFAULT_IFACE}
 EOF
 
 sudo chown root:tornado-services /opt/tornado/.env

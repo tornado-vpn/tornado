@@ -16,6 +16,22 @@ from utils.wg_logging_utils import get_logger, get_context_logger
 
 _CONFIG_PATH = os.environ.get("WG_MANAGER_CONFIG", "wg_manager_config.json")
 _SESSION_CONFIG_PATH = os.environ.get("SESSION_MANAGER_CONFIG", "session_manager_config.json")
+_ENV_PATH = "/opt/tornado/.env"
+
+def _load_dotenv(path: str) -> None:
+    """Manually load key=value pairs from a .env file into os.environ."""
+    try:
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, value = line.partition("=")
+                os.environ.setdefault(key.strip(), value.strip())
+    except FileNotFoundError:
+        pass  # not present in dev environments — that's fine
+
+_load_dotenv(_ENV_PATH)
 
 def _load_config(path: str) -> dict:
     try:
@@ -43,7 +59,7 @@ WG_BIN          = _cfg["wireguard"]["bin"]
 WG_QUICK_BIN    = _cfg["wireguard"]["wg_quick_bin"]
 WG_CONF_DIR     = _cfg["wireguard"]["conf_dir"]
 WG_KEYS_DIR     = _cfg["wireguard"]["keys_dir"]
-OUTBOUND_IFACE  = _cfg["wireguard"]["outbound_iface"]
+OUTBOUND_IFACE = os.environ.get("OUTBOUND_IFACE") or _cfg["wireguard"].get("outbound_iface", "eth0")
 HAPROXY_PORT    = _cfg["wireguard"]["haproxy_port"]
 
 # Dual interfaces
