@@ -61,21 +61,12 @@ If you use MkDocs, start from [docs/index.md](D:/tornado-vpn/docs/index.md).
 - `docs/`: source documentation
 - `assets/`: shared branding and icon assets
 
-## Quick Start (Server)
+## Installation & Setup
 
-```bash
-cd server
-chmod +x setup.sh
-sudo ./setup.sh
-```
+For comprehensive instructions on deploying the Tornado VPN server stack—including system requirements, necessary firewall rules, cloud deployment guidelines, and post-installation verification—please refer to our complete setup documentation:
 
-After install, verify:
+**[Read the Tornado VPN Setup Guide](https://tornado-vpn.github.io/tornado/docs/setup)**
 
-```bash
-sudo systemctl status tornado --no-pager
-curl -sSf http://127.0.0.1:8000/health
-curl -sSf http://127.0.0.1:4605/health
-```
 
 ---
 
