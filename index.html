@@ -591,7 +591,7 @@
     <a class="nav-link" href="#architecture">Architecture</a>
     <a class="nav-link" href="#security">Security</a>
     <a class="nav-link" href="#api">API</a>
-    <a class="nav-link" href="#deployment">Deployment</a>
+    <a class="nav-link" href="docs/setup/">Deployment</a>
     <a class="nav-link" href="docs/">Docs</a>
     <a class="nav-link" href="#client">Client</a>
     <a class="gh-btn" href="https://github.com/tornado-vpn/tornado" target="_blank" rel="noopener">
@@ -791,56 +791,11 @@
     </div>
   </section>
 
-  <!-- SECTION: DEPLOYMENT — FIX: added git clone command -->
-  <section class="info-section" id="deployment">
-    <div class="info-inner reveal-panel">
-      <div class="section-label">07 / Deployment</div>
-      <h2>Server Installation and Production Bootstrap</h2>
-      <p>
-        Tornado VPN ships with a Linux installer at <code>server/setup.sh</code> for
-        single-host systemd deployments. It provisions PostgreSQL, Redis, Tor, WireGuard,
-        NGINX routing, and the <code>tornado.service</code> supervisor stack.
-      </p>
-      <div class="code-block"><span class="cm"># 1. Clone the repository</span>
-<span class="ck">git</span> clone <span class="cs">https://github.com/tornado-vpn/tornado.git</span>
-<span class="ck">cd</span> <span class="cp">tornado-vpn</span>
-
-<span class="cm"># 2. Run the server installer</span>
-<span class="ck">cd</span> <span class="cp">server</span>
-<span class="ck">chmod</span> +x <span class="cp">setup.sh</span>
-<span class="ck">sudo</span> ./setup.sh
-
-<span class="cm"># 3. Post-install verification</span>
-<span class="ck">sudo</span> systemctl <span class="cv">status</span> <span class="cp">tornado</span> --no-pager
-<span class="ck">curl</span> -sSf <span class="cs">http://127.0.0.1:8000/health</span>
-<span class="ck">curl</span> -sSf <span class="cs">http://127.0.0.1:4605/health</span></div>
-      <div class="stack-grid">
-        <div class="stack-card">
-          <h3>Host Model</h3>
-          <p>Single Linux host, services under <code>/opt/tornado</code>, systemd-managed runtime.</p>
-        </div>
-        <div class="stack-card">
-          <h3>Installer Inputs</h3>
-          <p>Prompts for DB password, admin credentials, and VPN endpoint host values.</p>
-        </div>
-        <div class="stack-card">
-          <h3>Critical Config</h3>
-          <p>Writes <code>.env</code>, configures IP forwarding/NAT, and enables Redis keyspace expiry handling.</p>
-        </div>
-        <div class="stack-card">
-          <h3>Docs</h3>
-          <p>See <code>docs/setup.md</code> and <code>docs/operations.md</code> for runbook-grade details.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <
-
+  
   <!-- SECTION: CLIENT — FIX: images open in lightbox on click -->
   <section class="info-section" id="client">
     <div class="info-inner reveal-panel">
-      <div class="section-label">08 / Tornado VPN Client</div>
+      <div class="section-label">07 / Tornado VPN Client</div>
       <h2>Desktop Client for Linux and Windows</h2>
       <p>
         The client apps in <code>client/linux</code> and <code>client/windows</code> provide encrypted

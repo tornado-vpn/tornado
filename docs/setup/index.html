@@ -734,10 +734,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#install-steps" class="md-nav__link">
+  <a href="#getting-the-source-code" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Install Steps
+        Getting the Source Code
       
     </span>
   </a>
@@ -760,6 +760,17 @@
     <span class="md-ellipsis">
       
         Post-Install Verification
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-security-firewall-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network Security &amp; Firewall Requirements
       
     </span>
   </a>
@@ -1062,10 +1073,15 @@
 <li>WireGuard package install</li>
 <li>Systemd unit creation for <code>tornado.service</code></li>
 </ol>
-<h2 id="install-steps">Install Steps</h2>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>server
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>chmod<span class="w"> </span>+x<span class="w"> </span>setup.sh
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>sudo<span class="w"> </span>./setup.sh
+<h2 id="getting-the-source-code">Getting the Source Code</h2>
+<p>Before running the installer, clone the Tornado VPN repository to your server. </p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>git<span class="w"> </span>clone<span class="w"> </span><span class="o">[</span>https://github.com/tornado-vpn/tornado.git<span class="o">](</span>https://github.com/tornado-vpn/tornado.git<span class="o">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">cd</span><span class="w"> </span>tornado/server
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>chmod<span class="w"> </span>+x<span class="w"> </span>setup.sh
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>sudo<span class="w"> </span>./setup.sh
 </span></code></pre></div>
 <p>During prompts, provide:</p>
 <ul>
@@ -1095,6 +1111,52 @@
 <p>Check client API health:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>curl<span class="w"> </span>-sSf<span class="w"> </span>http://127.0.0.1:4605/health
 </span></code></pre></div>
+<h2 id="network-security-firewall-requirements">Network Security &amp; Firewall Requirements</h2>
+<p>Inbound Firewall Rules (Cloud Security Groups)</p>
+<p>If you are deploying on AWS, GCP, or Azure, you must configure your instance's Security Group to allow the following inbound traffic. Without these rules, the VPN tunnels and API endpoints will be unreachable.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Protocol</th>
+<th style="text-align: left;">Port Range</th>
+<th style="text-align: left;">Source</th>
+<th style="text-align: left;">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>TCP</strong></td>
+<td style="text-align: left;"><code>22</code></td>
+<td style="text-align: left;"><code>0.0.0.0/0</code></td>
+<td style="text-align: left;">SSH access for server management</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>TCP</strong></td>
+<td style="text-align: left;"><code>80</code></td>
+<td style="text-align: left;"><code>0.0.0.0/0</code></td>
+<td style="text-align: left;">HTTP traffic (NGINX reverse proxy for Admin API)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>TCP</strong></td>
+<td style="text-align: left;"><code>4605</code></td>
+<td style="text-align: left;"><code>0.0.0.0/0</code></td>
+<td style="text-align: left;">Custom TCP for the Client Connect API</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>UDP</strong></td>
+<td style="text-align: left;"><code>51820</code></td>
+<td style="text-align: left;"><code>0.0.0.0/0</code></td>
+<td style="text-align: left;">WireGuard Lane 1 (<code>wg0</code>)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>UDP</strong></td>
+<td style="text-align: left;"><code>51821</code></td>
+<td style="text-align: left;"><code>0.0.0.0/0</code></td>
+<td style="text-align: left;">WireGuard Lane 2 (<code>wg1</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note: For enhanced security, restrict SSH (Port 22) to your specific administrator IP rather than <code>0.0.0.0/0</code>.</em></p>
 <h2 id="service-topology-after-install">Service Topology After Install</h2>
 <pre class="mermaid"><code>flowchart TB
   Systemd[systemd: tornado.service]
