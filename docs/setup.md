@@ -42,10 +42,17 @@ This guide describes production-style installation for the server stack using `s
 11. WireGuard package install
 12. Systemd unit creation for `tornado.service`
 
-## Install Steps
+## Getting the Source Code
+
+Before running the installer, clone the Tornado VPN repository to your server. 
 
 ```bash
-cd server
+
+git clone [https://github.com/tornado-vpn/tornado.git](https://github.com/tornado-vpn/tornado.git)
+
+cd tornado/server
+
+
 chmod +x setup.sh
 sudo ./setup.sh
 ```
@@ -88,6 +95,22 @@ Check client API health:
 ```bash
 curl -sSf http://127.0.0.1:4605/health
 ```
+
+## Network Security & Firewall Requirements
+
+Inbound Firewall Rules (Cloud Security Groups)
+
+If you are deploying on AWS, GCP, or Azure, you must configure your instance's Security Group to allow the following inbound traffic. Without these rules, the VPN tunnels and API endpoints will be unreachable.
+
+| Protocol | Port Range | Source    | Purpose |
+| :--- | :--- | :--- | :--- |
+| **TCP** | `22` | `0.0.0.0/0` | SSH access for server management |
+| **TCP** | `80` | `0.0.0.0/0` | HTTP traffic (NGINX reverse proxy for Admin API) |
+| **TCP** | `4605` | `0.0.0.0/0` | Custom TCP for the Client Connect API |
+| **UDP** | `51820` | `0.0.0.0/0` | WireGuard Lane 1 (`wg0`) |
+| **UDP** | `51821` | `0.0.0.0/0` | WireGuard Lane 2 (`wg1`) |
+
+*Note: For enhanced security, restrict SSH (Port 22) to your specific administrator IP rather than `0.0.0.0/0`.*
 
 ## Service Topology After Install
 
