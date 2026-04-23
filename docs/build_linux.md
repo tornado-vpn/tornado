@@ -55,7 +55,7 @@ cp dist/tornadovpn-client tornadovpn-client_1.0.0_amd64/usr/bin/
 cp ../../assets/icons/tornado_vpn.svg tornadovpn-client_1.0.0_amd64/usr/share/icons/hicolor/scalable/apps/tornadovpn-client.svg
 cp -r DEBIAN/* tornadovpn-client_1.0.0_amd64/DEBIAN/
 cp ../../LICENSE tornadovpn-client_1.0.0_amd64/usr/share/doc/tornadovpn-client/copyright
-cp ../../ATTRIBUTIONS.md tornadovpn-client_1.0.0_amd64/usr/share/doc/tornadovpn-client/
+cp ATTRIBUTIONS.md tornadovpn-client_1.0.0_amd64/usr/share/doc/tornadovpn-client/
 ```
 
 If you want a launcher, provide a `.desktop` file and copy it into `usr/share/applications`.

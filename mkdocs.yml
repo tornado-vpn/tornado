@@ -1,6 +1,6 @@
 site_name: Tornado VPN Docs
 site_description: Comprehensive System Documentation for Tornado VPN
-repo_url: https://github.com/yourusername/tornado-vpn
+repo_url: https://github.com/tornado-vpn/tornado
 
 extra_css:
   - assets/stylesheets/extra.css

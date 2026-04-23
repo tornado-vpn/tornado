@@ -28,7 +28,7 @@ Use the source entrypoint in `src/main.py`:
 pyinstaller --noconfirm --onedir --windowed --icon "..\..\assets\icon.ico" ^
   --add-data "..\..\assets\icons\*.svg;." ^
   --add-data "..\..\LICENSE;." ^
-  --add-data "..\..\ATTRIBUTIONS.md;." ^
+  --add-data "ATTRIBUTIONS.md;." ^
   --name "TornadoVPN-client" src\main.py
 ```
 
@@ -41,16 +41,8 @@ Expected output:
 `client/windows/setup.iss` expects:
 
 - `dist\TornadoVPN-client\*`
-- `wireguard-installer.exe`
-- `LICENSE.txt`
-- `attribution.md`
 
-If needed, generate compatibility copies from repo root files:
 
-```cmd
-copy ..\..\LICENSE LICENSE.txt
-copy ..\..\ATTRIBUTIONS.md attribution.md
-```
 
 ## 4. Build Installer
 

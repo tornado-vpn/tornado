@@ -11,19 +11,16 @@ OutputDir=.\Output
 OutputBaseFilename=TornadoVPN_Windows_Setup
 PrivilegesRequired=admin
 
-; Displays the GNU GPL v3 in the installation wizard
-LicenseFile=LICENSE.txt
+; Point directly to the root LICENSE file
+LicenseFile=..\..\LICENSE
+
+; Optional: Add an icon to the installer itself
+SetupIconFile=..\..\assets\icon.ico
 
 [Files]
-; 1. Package the PyInstaller output
+; 1. Package the PyInstaller output 
+; (This will automatically include the LICENSE and ATTRIBUTIONS.md since PyInstaller put them here)
 Source: "dist\TornadoVPN-client\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-
-; 2. Package the official WireGuard installer into a temporary folder
-Source: "wireguard-installer.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
-
-; 3. Explicitly copy your legal documents to the install directory
-Source: "LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "attribution.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Tornado VPN"; Filename: "{app}\TornadoVPN-client.exe"; IconFilename: "{app}\TornadoVPN-client.exe"
@@ -33,35 +30,41 @@ Name: "{autodesktop}\Tornado VPN"; Filename: "{app}\TornadoVPN-client.exe"; Task
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional icons:"
 
 [Run]
-; 1. Silently install WireGuard. DO_NOT_LAUNCH=1 tells the installer to skip opening its GUI.
-Filename: "{tmp}\wireguard-installer.exe"; Parameters: "/quiet DO_NOT_LAUNCH=1"; StatusMsg: "Installing WireGuard network dependencies..."; Flags: waituntilterminated; Check: WireguardNotInstalled
-
-; 2. Bulletproof Fallback: Forcefully close the WireGuard GUI in the background just in case it still managed to launch.
-Filename: "{sys}\taskkill.exe"; Parameters: "/F /IM wireguard.exe"; Flags: waituntilterminated runhidden; Check: WireguardNotInstalled
-
-; 3. Optionally launch Tornado VPN when the setup wizard finishes
+; Launch Tornado VPN when the setup wizard finishes
 Filename: "{app}\TornadoVPN-client.exe"; Description: "Launch Tornado VPN Client"; Flags: nowait postinstall skipifsilent runascurrentuser
 
-
 [Code]
-function WireguardNotInstalled: Boolean;
-var
-  IsInstalled: Boolean;
+// Helper function to check for WireGuard
+function IsWireGuardInstalled(): Boolean;
 begin
-  IsInstalled := False;
-
+  Result := False;
   // Method 1: Check if the executable physically exists in Program Files (64-bit or 32-bit)
   if FileExists(ExpandConstant('{pf64}\WireGuard\wireguard.exe')) then
-    IsInstalled := True;
+    Result := True;
   if FileExists(ExpandConstant('{pf32}\WireGuard\wireguard.exe')) then
-    IsInstalled := True;
+    Result := True;
 
   // Method 2: Check the core WireGuard registry key directly
   if RegKeyExists(HKLM64, 'SOFTWARE\WireGuard') then
-    IsInstalled := True;
+    Result := True;
   if RegKeyExists(HKEY_LOCAL_MACHINE, 'SOFTWARE\WireGuard') then
-    IsInstalled := True;
+    Result := True;
+end;
 
-  // If ANY of the above checks found WireGuard, skip the installation
-  Result := not IsInstalled;
+// InitializeSetup runs before the installer window even appears.
+function InitializeSetup(): Boolean;
+begin
+  Result := True;
+  
+  if not IsWireGuardInstalled() then
+  begin
+    // Display a critical message box to the user
+    MsgBox('WireGuard for Windows is required to run Tornado VPN but was not found on your system.' + #13#10#13#10 +
+           'Please download and install WireGuard from the official website:' + #13#10 +
+           'https://www.wireguard.com/install/' + #13#10#13#10 +
+           'After installing WireGuard, please run this setup again.', 
+           mbCriticalError, MB_OK);
+           
+    Result := False;
+  end;
 end;
