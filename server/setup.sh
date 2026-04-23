@@ -594,9 +594,19 @@ server:
     verbosity: 1
 UNBOUNDCONF
 
+# --- ADD THE NEW BLOCK HERE ---
+echo "🔗 Setting up service dependency (Unbound -> Tornado)..."
+sudo mkdir -p /etc/systemd/system/unbound.service.d/
+sudo tee /etc/systemd/system/unbound.service.d/after-tornado.conf > /dev/null <<EOF
+[Unit]
+After=tornado.service
+Wants=tornado.service
+PartOf=tornado.service
+EOF
+
 echo "🚀 Enabling and starting Unbound..."
+sudo systemctl daemon-reload
 sudo systemctl enable unbound
 sudo systemctl restart unbound
-
 
 echo "✅ Setup Complete! (distro: $DISTRO_ID, family: $PKG_FAMILY)"

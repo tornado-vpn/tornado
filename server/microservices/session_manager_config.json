@@ -11,7 +11,7 @@
     },
     "session": {
         "heartbeat_ttl": 90,
-        "hard_ttl": 300,
+        "hard_ttl": 1296000,
         "watch_interval": 10
     },
     "wireguard": {
