@@ -25,12 +25,16 @@
       --nav-h:    64px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      position: relative;
+      overflow-x: hidden;
+    }
     html { scroll-behavior: smooth; font-size: 16px; }
     body {
       font-family: "DM Sans", system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
-      overflow-x: hidden;
     }
 
     /* ── CANVAS ── */
@@ -45,7 +49,7 @@
     nav {
       position: fixed;
       top: 0; left: 0; right: 0;
-      z-index: 50;
+      z-index: 100;
       height: var(--nav-h);
       display: flex;
       align-items: center;
@@ -287,6 +291,7 @@
       overflow-x: auto;
       line-height: 2;
       white-space: pre;
+      max-width: 100%;
     }
     .code-block .cm  { color: #3a6a8a; }       /* comment  — dim blue-grey */
     .code-block .ck  { color: var(--accent2); } /* keyword  — purple */
@@ -298,6 +303,7 @@
     .api-row {
       display: flex; flex-direction: column; gap: 0.4rem;
       margin-top: 0.8rem;
+      max-width: 100%;
     }
     .api-item {
       display: flex; align-items: center; gap: 0.55rem;
@@ -554,19 +560,194 @@
       100% { transform: scaleY(0); transform-origin: bottom; opacity: 0; }
     }
 
+    /* ── HAMBURGER BUTTON ── */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      width: 40px;
+      height: 40px;
+      background: none;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      cursor: pointer;
+      padding: 0;
+      z-index: 110;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .hamburger:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.25);
+    }
+    .hamburger span {
+      display: block;
+      width: 20px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s cubic-bezier(.4,0,.2,1), opacity 0.2s;
+    }
+    .hamburger.active span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .hamburger.active span:nth-child(2) {
+      opacity: 0;
+    }
+    .hamburger.active span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    /* ── MOBILE NAV OVERLAY ── */
+    .mobile-nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 90;
+      background: rgba(4,8,15,0.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      opacity: 0;
+      transition: opacity 0.35s cubic-bezier(.4,0,.2,1);
+      pointer-events: none;
+    }
+    .mobile-nav-overlay.active {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mobile-nav-overlay .mobile-nav-link {
+      font-family: "Syne", sans-serif;
+      font-weight: 600;
+      font-size: 1.25rem;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 0.8rem 2rem;
+      border-radius: 12px;
+      transition: color 0.25s, background 0.25s, transform 0.25s;
+      letter-spacing: 0.01em;
+      width: 80%;
+      max-width: 320px;
+      text-align: center;
+    }
+    .mobile-nav-overlay .mobile-nav-link:hover,
+    .mobile-nav-overlay .mobile-nav-link:focus {
+      color: var(--text);
+      background: rgba(90,172,255,0.1);
+      transform: scale(1.03);
+    }
+    .mobile-nav-divider {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line), transparent);
+      margin: 0.6rem 0;
+    }
+    .mobile-nav-overlay .gh-btn {
+      font-size: 1rem;
+      padding: 0.7rem 1.6rem;
+      margin-top: 0.8rem;
+    }
+
+    /* ── RESPONSIVE: TABLET & MOBILE ── */
     @media (max-width: 760px) {
       nav { padding: 0 1.2rem; }
       .nav-link { display: none; }
-      #hero { padding: calc(var(--nav-h) + 0.5rem) 1.4rem 0; }
+      .nav-right .gh-btn { display: none; }
+      .hamburger { display: flex; }
+
+      #hero {
+        padding: calc(var(--nav-h) + 0.5rem) 1.4rem 0;
+        min-height: 100vh;
+        height: auto;
+      }
+      h1 { font-size: clamp(2.2rem, 9vw, 3.6rem); max-width: 14ch; }
+      .hero-sub { font-size: 0.92rem; max-width: 100%; }
+      .hero-actions { flex-direction: column; width: 100%; }
+      .hero-actions .btn-prim,
+      .hero-actions .btn-ghost {
+        justify-content: center;
+        width: 100%;
+        padding: 0.85rem 1.2rem;
+      }
+      .hero-chips { gap: 0.4rem; }
+      .chip { font-size: 0.68rem; padding: 0.2rem 0.5rem; }
+
+      .info-section {
+        min-height: unset;
+        padding: 3rem 0;
+      }
       .info-section:nth-child(odd) .info-inner,
       .info-section:nth-child(even) .info-inner {
-        margin: 0 auto; width: 90vw;
+        margin: 0 auto;
+        width: calc(100% - 2rem);
+        max-width: 560px;
       }
+      .info-inner { padding: 1.4rem; }
+
       .mini-grid { grid-template-columns: 1fr; }
-      .stat-strip { grid-template-columns: repeat(3,1fr); }
+      .stat-strip { grid-template-columns: repeat(3,1fr); gap: 0.4rem; }
+      .stat-item .sv { font-size: 1.3rem; }
       .stack-grid,
       .client-gallery,
       .doc-grid { grid-template-columns: 1fr; }
+
+      .code-block {
+        font-size: 0.7rem;
+        padding: 0.85rem;
+        border-radius: 10px;
+      }
+
+      .api-item { font-size: 0.72rem; }
+
+      #github-cta { padding: 4rem 1.4rem; min-height: auto; }
+      .cta-box h2 { font-size: clamp(1.6rem, 6vw, 2.4rem); }
+      .cta-box p { font-size: 0.9rem; }
+      .gh-big { font-size: 0.95rem; padding: 0.8rem 1.4rem; }
+      .also-links { flex-direction: column; align-items: center; gap: 0.6rem; }
+
+      footer { padding: 1.4rem 1.2rem; font-size: 0.74rem; }
+
+      .scroll-hint { bottom: 1.2rem; }
+
+      /* Lightbox mobile */
+      #lightbox { padding: 1rem; }
+      #lightbox img { max-width: 95vw; border-radius: 12px; }
+    }
+
+    /* ── RESPONSIVE: SMALL PHONES ── */
+    @media (max-width: 480px) {
+      nav { padding: 0 0.9rem; height: 56px; }
+      :root { --nav-h: 56px; }
+      .logo { font-size: 0.95rem; gap: 0.4rem; }
+      .logo-icon img { width: 28px; height: 28px; }
+
+      h1 { font-size: clamp(1.9rem, 10vw, 2.8rem); margin-bottom: 0.9rem; }
+      .badge { font-size: 0.65rem; padding: 0.22rem 0.55rem; }
+      .hero-sub { font-size: 0.85rem; line-height: 1.65; }
+
+      .info-inner { padding: 1.2rem; border-radius: 18px; }
+      .info-inner h2 { font-size: 1.2rem; }
+      .info-inner p { font-size: 0.88rem; }
+      .feat-list li { font-size: 0.82rem; }
+
+      .mini-card { padding: 0.7rem; }
+      .mini-card p { font-size: 0.78rem; }
+
+      .stat-strip { grid-template-columns: 1fr; gap: 0.35rem; }
+      .stat-item { padding: 0.5rem; }
+      .stat-item .sv { font-size: 1.2rem; }
+
+      .code-block { font-size: 0.65rem; padding: 0.7rem; line-height: 1.8; }
+
+      .cta-box p { font-size: 0.85rem; }
+      .gh-big { font-size: 0.88rem; padding: 0.7rem 1.2rem; }
+
+      .mobile-nav-overlay .mobile-nav-link { font-size: 1.1rem; padding: 0.7rem 1.5rem; }
     }
   </style>
 </head>
@@ -599,8 +780,29 @@
       <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
       GitHub
     </a>
+    <button class="hamburger" id="hamburgerBtn" aria-label="Open navigation menu" aria-expanded="false">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
   </div>
 </nav>
+
+<!-- MOBILE NAV OVERLAY -->
+<div class="mobile-nav-overlay" id="mobileNav" role="dialog" aria-label="Mobile navigation">
+  <a class="mobile-nav-link" href="#architecture">Architecture</a>
+  <a class="mobile-nav-link" href="#security">Security</a>
+  <a class="mobile-nav-link" href="#api">API</a>
+  <a class="mobile-nav-link" href="docs/setup/">Deployment</a>
+  <a class="mobile-nav-link" href="docs/">Docs</a>
+  <a class="mobile-nav-link" href="#client">Client</a>
+  <a class="mobile-nav-link" href="#download">Download</a>
+  <div class="mobile-nav-divider"></div>
+  <a class="gh-btn" href="https://github.com/tornado-vpn/tornado" target="_blank" rel="noopener">
+    <svg viewBox="0 0 16 16" style="width:17px;height:17px;"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    Star on GitHub
+  </a>
+</div>
 
 <!-- SCROLL HINT -->
 <div class="scroll-hint" id="scrollHint">
@@ -624,7 +826,7 @@
         <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         Star on GitHub
       </a>
-      <a class="btn-ghost" href="#architecture">Explore Docs ↓</a>
+      <a class="btn-ghost" href="docs/">Explore Docs ↓</a>
     </div>
     <div class="hero-chips">
       <span class="chip">WireGuard</span>
@@ -1217,6 +1419,45 @@
 
   onScroll();
   animate();
+
+  /* ── MOBILE NAV HAMBURGER ── */
+  const hamburger = document.getElementById('hamburgerBtn');
+  const mobileNav = document.getElementById('mobileNav');
+
+  function toggleMobileNav() {
+    const isOpen = mobileNav.classList.toggle('active');
+    hamburger.classList.toggle('active');
+    hamburger.setAttribute('aria-expanded', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
+
+  function closeMobileNav() {
+    mobileNav.classList.remove('active');
+    hamburger.classList.remove('active');
+    hamburger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  hamburger.addEventListener('click', toggleMobileNav);
+
+  // Close menu when a nav link is clicked
+  mobileNav.querySelectorAll('.mobile-nav-link').forEach(link => {
+    link.addEventListener('click', closeMobileNav);
+  });
+
+  // Close menu on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && mobileNav.classList.contains('active')) {
+      closeMobileNav();
+    }
+  });
+
+  // Close menu on resize to desktop
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 760 && mobileNav.classList.contains('active')) {
+      closeMobileNav();
+    }
+  });
 })();
 
 /* ── GITHUB RELEASE FETCHER ── */
